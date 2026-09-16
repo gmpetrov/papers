@@ -1,0 +1,42 @@
+{
+  "name": "@agentinfra/cli",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsup"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "commander": "latest",
+    "proper-lockfile": "^4.1.2",
+    "zod": "latest"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "import": "./dist/index.js"
+      }
+    }
+  },
+  "bin": {
+    "papers": "./dist/index.js"
+  },
+  "devDependencies": {
+    "@agentinfra/mcp": "workspace:*",
+    "@agentinfra/sdk": "workspace:*",
+    "@types/proper-lockfile": "^4.1.4"
+  },
+  "description": "CLI and stdio MCP client for Papers email and phone infrastructure",
+  "engines": {
+    "node": ">=22"
+  }
+}

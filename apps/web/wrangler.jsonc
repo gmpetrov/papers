@@ -1,0 +1,29 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "agentinfra-web",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-09-16",
+  "compatibility_flags": ["nodejs_compat"],
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      // Replace with a real cache-disabled Hyperdrive configuration before deployment.
+      "id": "00000000000000000000000000000000",
+      "localConnectionString": "postgresql://agentinfra:agentinfra_local@localhost:55433/agentinfra",
+    },
+  ],
+  "queues": {
+    "producers": [{ "binding": "JOBS_QUEUE", "queue": "papers-jobs" }],
+  },
+  "r2_buckets": [
+    { "binding": "ATTACHMENTS", "bucket_name": "papers-attachments" },
+  ],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS",
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+  },
+}

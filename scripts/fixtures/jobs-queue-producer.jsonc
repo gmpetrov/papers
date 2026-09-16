@@ -1,0 +1,10 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "papers-jobs-test-producer",
+  "main": "jobs-queue-producer.js",
+  "compatibility_date": "2026-09-16",
+  "workers_dev": false,
+  "queues": {
+    "producers": [{ "binding": "JOBS_QUEUE", "queue": "papers-jobs" }],
+  },
+}

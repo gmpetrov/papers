@@ -1,0 +1,20 @@
+{
+  "name": "@agentinfra/jobs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "wrangler deploy --dry-run --outdir dist",
+    "typecheck": "tsc --noEmit",
+    "cf:typegen": "wrangler types --env-interface JobsEnv --include-runtime false",
+    "dev:worker": "wrangler dev --test-scheduled --port 3002"
+  },
+  "dependencies": {
+    "@agentinfra/db": "workspace:*",
+    "@agentinfra/core": "workspace:*"
+  },
+  "devDependencies": {
+    "wrangler": "4.132.0",
+    "@cloudflare/workers-types": "5.20260916.1"
+  }
+}

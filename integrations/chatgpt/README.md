@@ -1,0 +1,7 @@
+# ChatGPT remote MCP plugin
+
+OpenAI's current route accepts remote MCP plugins without requiring a custom UI. Submission requires a stable public HTTPS endpoint, verified publisher identity, Apps Management write permission, public listing/policy/support URLs, accurate tool annotations, and reviewer access. Prepare five positive and three negative scenarios. Domain verification may require hosting the portal's exact challenge token. Approval precedes publication. See [official submission instructions](https://developers.openai.com/plugins/deploy/submission).
+
+Papers should submit a universal remote endpoint with OAuth. The development endpoint is `https://dev.chaindesk.ai/mcp`; do not present that tunnel as a production deployment. Follow [Connect and test](https://developers.openai.com/plugins/deploy/connect-chatgpt) for the current account-specific development flow, using the shared review scenarios. Record actual tool discovery, workspace consent, scoped read/write behavior and revocation in ChatGPT before submitting.
+
+The server currently exposes tools with no custom UI. Its OAuth metadata, PKCE and MCP behavior have automated local tests, but that does not establish ChatGPT acceptance. Production domain, publisher verification, public support/privacy/terms pages, review account, and end-to-end client evidence remain missing. Do not mark policy attestations complete based on these drafts.

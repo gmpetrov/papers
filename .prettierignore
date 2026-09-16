@@ -1,0 +1,13 @@
+node_modules
+.next
+.open-next
+.wrangler
+.turbo
+dist
+packages/db/generated
+packages/db/generated-edge
+apps/web/worker-configuration.d.ts
+pnpm-lock.yaml
+.env*
+.dev.vars*
+test-results

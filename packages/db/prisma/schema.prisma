@@ -1,0 +1,781 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated"
+}
+
+generator edge {
+  provider = "prisma-client"
+  output   = "../generated-edge"
+  runtime  = "workerd"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                 String              @id
+  name               String
+  email              String
+  emailVerified      Boolean             @default(false)
+  image              String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  role               String?
+  banned             Boolean?            @default(false)
+  banReason          String?
+  banExpires         DateTime?
+  sessions           Session[]
+  accounts           Account[]
+  teammembers        TeamMember[]
+  members            Member[]
+  invitations        Invitation[]
+  oauthclients       OauthClient[]
+  oauthrefreshtokens OauthRefreshToken[]
+  oauthaccesstokens  OauthAccessToken[]
+  oauthconsents      OauthConsent[]
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id                   String              @id
+  expiresAt            DateTime
+  token                String
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  ipAddress            String?
+  userAgent            String?
+  userId               String
+  user                 User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  impersonatedBy       String?
+  activeOrganizationId String?
+  activeTeamId         String?
+  oauthrefreshtokens   OauthRefreshToken[]
+  oauthaccesstokens    OauthAccessToken[]
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+model Organization {
+  id          String       @id
+  name        String
+  slug        String
+  logo        String?
+  createdAt   DateTime
+  metadata    String?
+  teams       Team[]
+  members     Member[]
+  invitations Invitation[]
+
+  projects Project[]
+  agents   Agent[]
+  inboxes  Inbox[]
+  keys     ApiKey[]
+  requestBuckets ApiRequestBucket[]
+  messages EmailMessage[]
+  events   Event[]
+  audits   AuditEvent[]
+  dailySmsLimit Int @default(100)
+  requireSmsApproval Boolean @default(false)
+  requireEmailApproval Boolean @default(false)
+  requireProvisioningApproval Boolean @default(false)
+  policyVersion Int @default(1)
+  approvals Approval[]
+  maxPhoneNumbers Int @default(5)
+  dailyEmailLimit Int @default(100)
+  maxInboxes Int @default(10)
+  emailUsage WorkspaceEmailUsage[]
+  phoneNumbers PhoneNumber[]
+  smsMessages SmsMessage[]
+  webhookEndpoints WebhookEndpoint[]
+
+  @@unique([slug])
+  @@map("organization")
+}
+
+model Team {
+  id             String       @id
+  name           String
+  memberCount    Int          @default(0)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime
+  updatedAt      DateTime?    @updatedAt
+  teammembers    TeamMember[]
+
+  @@index([organizationId])
+  @@map("team")
+}
+
+model TeamMember {
+  id            String    @id
+  teamId        String
+  team          Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  membershipKey String?
+  createdAt     DateTime?
+
+  @@unique([membershipKey])
+  @@index([teamId])
+  @@index([userId])
+  @@map("teamMember")
+}
+
+model Member {
+  id             String       @id
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role           String       @default("member")
+  createdAt      DateTime
+
+  @@unique([organizationId, userId])
+  @@index([organizationId])
+  @@index([userId])
+  @@map("member")
+}
+
+model Invitation {
+  id             String       @id
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  email          String
+  role           String?
+  teamId         String?
+  status         String       @default("pending")
+  expiresAt      DateTime
+  createdAt      DateTime     @default(now())
+  inviterId      String
+  user           User         @relation(fields: [inviterId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([email])
+  @@map("invitation")
+}
+
+model Jwks {
+  id         String    @id
+  publicKey  String
+  privateKey String
+  createdAt  DateTime
+  expiresAt  DateTime?
+  alg        String?
+  crv        String?
+
+  @@map("jwks")
+}
+
+model OauthClient {
+  id                               String                @id
+  clientId                         String
+  clientSecret                     String?
+  clientDiscoveryId                String?
+  disabled                         Boolean?              @default(false)
+  skipConsent                      Boolean?
+  enableEndSession                 Boolean?
+  subjectType                      String?
+  scopes                           String[]
+  clientCredentialsScopes          String[]              @default([])
+  userId                           String?
+  user                             User?                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt                        DateTime?
+  updatedAt                        DateTime?
+  name                             String?
+  uri                              String?
+  icon                             String?
+  contacts                         String[]
+  tos                              String?
+  policy                           String?
+  softwareId                       String?
+  softwareVersion                  String?
+  softwareStatement                String?
+  redirectUris                     String[]
+  postLogoutRedirectUris           String[]
+  backchannelLogoutUri             String?
+  backchannelLogoutSessionRequired Boolean?
+  tokenEndpointAuthMethod          String?
+  applicationType                  String?
+  jwks                             String?
+  jwksUri                          String?
+  grantTypes                       String[]
+  responseTypes                    String[]
+  requirePKCE                      Boolean?
+  dpopBoundAccessTokens            Boolean?              @default(false)
+  referenceId                      String?
+  metadata                         Json?
+  oauthclientresources             OauthClientResource[]
+  oauthrefreshtokens               OauthRefreshToken[]
+  oauthaccesstokens                OauthAccessToken[]
+  oauthconsents                    OauthConsent[]
+
+  @@unique([clientId])
+  @@index([userId])
+  @@map("oauthClient")
+}
+
+model OauthResource {
+  id                            String                @id
+  identifier                    String
+  name                          String
+  accessTokenTtl                Int?
+  refreshTokenTtl               Int?
+  signingAlgorithm              String?
+  signingKeyId                  String?
+  allowedScopes                 String[]
+  customClaims                  Json?
+  dpopBoundAccessTokensRequired Boolean?              @default(false)
+  disabled                      Boolean?              @default(false)
+  createdAt                     DateTime?
+  updatedAt                     DateTime?
+  policyVersion                 Int?                  @default(1)
+  metadata                      Json?
+  oauthclientresources          OauthClientResource[]
+
+  @@unique([identifier])
+  @@map("oauthResource")
+}
+
+model OauthClientResource {
+  id            String        @id
+  clientId      String
+  oauthclient   OauthClient   @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  resourceId    String
+  oauthresource OauthResource @relation(fields: [resourceId], references: [identifier], onDelete: Cascade)
+  metadata      Json?
+  createdAt     DateTime?
+
+  @@unique([clientId, resourceId], map: "oauthClientResource_clientId_resourceId_uidx")
+  @@index([clientId])
+  @@index([resourceId])
+  @@map("oauthClientResource")
+}
+
+model OauthRefreshToken {
+  id                      String             @id
+  token                   String
+  clientId                String
+  oauthclient             OauthClient        @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  sessionId               String?
+  session                 Session?           @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  userId                  String
+  user                    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  referenceId             String?
+  authorizationCodeId     String?
+  resources               String[]
+  requestedUserInfoClaims String[]
+  expiresAt               DateTime
+  createdAt               DateTime
+  revoked                 DateTime?
+  rotatedAt               DateTime?
+  rotationReplayResponse  String?
+  rotationReplayExpiresAt DateTime?
+  authTime                DateTime?
+  confirmation            Json?
+  scopes                  String[]
+  oauthaccesstokens       OauthAccessToken[]
+
+  @@unique([token])
+  @@index([clientId])
+  @@index([sessionId])
+  @@index([userId])
+  @@index([authorizationCodeId])
+  @@map("oauthRefreshToken")
+}
+
+model OauthAccessToken {
+  id                      String             @id
+  token                   String
+  clientId                String
+  oauthclient             OauthClient        @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  sessionId               String?
+  session                 Session?           @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  userId                  String?
+  user                    User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  referenceId             String?
+  authorizationCodeId     String?
+  resources               String[]
+  requestedUserInfoClaims String[]
+  refreshId               String?
+  oauthrefreshtoken       OauthRefreshToken? @relation(fields: [refreshId], references: [id], onDelete: Cascade)
+  expiresAt               DateTime
+  createdAt               DateTime
+  revoked                 DateTime?
+  confirmation            Json?
+  scopes                  String[]
+
+  @@unique([token])
+  @@index([clientId])
+  @@index([sessionId])
+  @@index([userId])
+  @@index([authorizationCodeId])
+  @@index([refreshId])
+  @@map("oauthAccessToken")
+}
+
+model OauthConsent {
+  resourceGrants Json?
+  dailyEmailLimit Int?
+  dailySmsLimit Int?
+  dailyInboxLimit Int?
+  dailyNumberLimit Int?
+  dailyUsage OAuthDailyUsage[]
+  id                      String      @id
+  clientId                String
+  oauthclient             OauthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  userId                  String?
+  user                    User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  referenceId             String?
+  resources               String[]
+  requestedUserInfoClaims String[]
+  scopes                  String[]
+  createdAt               DateTime
+  updatedAt               DateTime
+
+  @@index([clientId])
+  @@index([userId])
+  @@map("oauthConsent")
+}
+
+model OauthClientAssertion {
+  id        String   @id
+  expiresAt DateTime
+
+  @@map("oauthClientAssertion")
+}
+
+model Project {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String       @default("Default")
+  createdAt      DateTime     @default(now())
+  agents         Agent[]
+
+  @@unique([id, organizationId])
+  @@unique([organizationId, name])
+}
+
+model Agent {
+  id                String       @id @default(cuid())
+  organizationId    String
+  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId         String
+  project           Project      @relation(fields: [projectId, organizationId], references: [id, organizationId])
+  name              String
+  description       String       @default("")
+  dailySendLimit    Int          @default(100)
+  dailySmsLimit     Int          @default(100)
+  allowedSmsRecipients String[] @default([])
+  maxInboxes        Int          @default(10)
+  allowedRecipients String[]
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  inboxes           Inbox[]
+  keys              ApiKey[]
+  usage             DailyUsage[]
+  phoneNumbers      PhoneNumber[]
+
+  @@unique([id, organizationId])
+  @@index([organizationId, createdAt])
+}
+
+model Inbox {
+  id             String         @id @default(cuid())
+  organizationId String
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  agentId        String?
+  agent          Agent? @relation(fields: [agentId, organizationId], references: [id, organizationId])
+  name           String
+  address        String         @unique
+  status         String         @default("active")
+  createdAt      DateTime       @default(now())
+  messages       EmailMessage[]
+
+  @@unique([id, organizationId])
+  @@index([organizationId, createdAt])
+}
+
+model EmailMessage {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  inboxId        String
+  inbox          Inbox        @relation(fields: [inboxId, organizationId], references: [id, organizationId])
+  providerId     String?
+  messageId      String?
+  threadId       String
+  inReplyTo      String?
+  references     String[]     @default([])
+  replyTo        String[]     @default([])
+  direction      String
+  status         String
+  from           String
+  to             String[]
+  subject        String
+  text           String       @default("")
+  html           String?
+  unread         Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  attachments    Attachment[]
+
+  @@unique([inboxId, providerId])
+  @@index([organizationId, inboxId, createdAt])
+  @@index([organizationId, createdAt])
+}
+
+model Attachment {
+  id          String       @id @default(cuid())
+  messageId   String
+  message     EmailMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  providerId  String
+  filename    String
+  contentType String
+  size        Int
+  objectKey   String?
+  storageAttempts Int @default(0)
+  storageError String?
+  nextStorageAttemptAt DateTime @default(now())
+
+  @@unique([messageId, providerId])
+  @@index([objectKey, nextStorageAttemptAt])
+}
+
+model ApiKey {
+  resourceGrants Json?
+  dailyEmailLimit Int?
+  dailySmsLimit Int?
+  dailyInboxLimit Int?
+  dailyNumberLimit Int?
+  dailyUsage ApiKeyDailyUsage[]
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  agentId        String?
+  agent          Agent? @relation(fields: [agentId, organizationId], references: [id, organizationId])
+  createdBy      String
+  name           String
+  prefix         String
+  hash           String       @unique
+  scopes         String[]
+  expiresAt      DateTime
+  revokedAt      DateTime?
+  createdAt      DateTime     @default(now())
+  lastUsedAt     DateTime?
+
+  @@index([organizationId])
+}
+
+model DailyUsage {
+  id      String @id @default(cuid())
+  agentId String
+  agent   Agent  @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  day     String
+  sends   Int    @default(0)
+  smsSends Int   @default(0)
+
+  @@unique([agentId, day])
+}
+
+model WebhookEndpoint {
+  id String @id @default(cuid())
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name String
+  url String
+  eventTypes String[]
+  enabled Boolean @default(false)
+  secretCiphertext String
+  secretVersion Int @default(1)
+  previousSecretCiphertext String?
+  previousSecretExpiresAt DateTime?
+  deliveries WebhookDelivery[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId, createdAt])
+}
+
+model WebhookDelivery {
+  id String @id @default(uuid())
+  endpointId String
+  endpoint WebhookEndpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+  eventId String
+  url String
+  body String
+  status String @default("pending")
+  attempts Int @default(0)
+  availableAt DateTime @default(now())
+  leaseToken String?
+  leaseExpiresAt DateTime?
+  lastStatusCode Int?
+  lastError String?
+  createdAt DateTime @default(now())
+  deliveredAt DateTime?
+  logs WebhookDeliveryAttempt[]
+
+  @@unique([endpointId, eventId])
+  @@index([status, availableAt])
+}
+
+model WebhookDeliveryAttempt {
+  id String @id @default(uuid())
+  deliveryId String
+  delivery WebhookDelivery @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
+  attempt Int
+  startedAt DateTime @default(now())
+  finishedAt DateTime?
+  statusCode Int?
+  error String?
+
+  @@unique([deliveryId, attempt])
+}
+
+model Operation {
+  id             String   @id @default(cuid())
+  organizationId String
+  principalId    String
+  key            String
+  route          String
+  requestHash    String
+  status         String   @default("pending")
+  result         Json?
+  resourceId     String?
+  error          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([organizationId, principalId, route, key])
+  @@index([organizationId, createdAt])
+}
+
+model ProviderEvent {
+  id          String    @id
+  provider    String
+  type        String
+  payload     Json
+  status      String    @default("pending")
+  attempts    Int       @default(0)
+  availableAt DateTime  @default(now())
+  lockedAt    DateTime?
+  error       String?
+  createdAt   DateTime  @default(now())
+
+  @@index([status, availableAt])
+}
+
+model Event {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  agentId        String?
+  type           String
+  resourceId     String
+  createdAt      DateTime     @default(now())
+
+  @@index([organizationId, createdAt, id])
+}
+
+// Platform support history survives removal of the session, user, or workspace.
+// Never store session tokens here. Expiry ends access even without a stop request.
+model ImpersonationAudit {
+  id        String   @id @default(uuid())
+  sessionId String   @unique
+  actorId   String
+  targetId  String
+  startedAt DateTime
+  expiresAt DateTime
+  endedAt   DateTime?
+
+  @@index([actorId, startedAt])
+  @@index([targetId, startedAt])
+}
+
+model AuditEvent {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  actorId        String
+  impersonatedBy String?
+  action         String
+  resourceId     String
+  createdAt      DateTime     @default(now())
+
+  @@index([organizationId, createdAt])
+}
+
+model PhoneNumber {
+  id String @id @default(cuid())
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  agentId String?
+  agent Agent? @relation(fields: [agentId, organizationId], references: [id, organizationId])
+  phoneNumber String @unique
+  providerId String? @unique
+  messagingProfileId String
+  status String @default("pending")
+  providerOrderId String?
+  orderReference String? @unique
+  nextReconcileAt DateTime @default(now())
+  lastError String?
+  monthlyCost String?
+  upfrontCost String?
+  currency String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  messages SmsMessage[]
+  @@unique([id, organizationId])
+  @@index([organizationId, createdAt])
+}
+
+model SmsMessage {
+  id String @id @default(cuid())
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  phoneNumberId String
+  phoneNumber PhoneNumber @relation(fields: [phoneNumberId, organizationId], references: [id, organizationId])
+  providerId String?
+  direction String
+  status String
+  from String
+  to String
+  text String @default("")
+  unread Boolean @default(true)
+  providerOccurredAt DateTime?
+  segments Int?
+  segmentsOccurredAt DateTime?
+  costAmount Decimal? @db.Decimal(20, 10)
+  costCurrency String?
+  costOccurredAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([phoneNumberId, providerId])
+  @@index([organizationId, phoneNumberId, createdAt])
+  @@index([organizationId, createdAt])
+}
+
+model WorkspaceEmailUsage {
+ id String @id @default(cuid())
+ organizationId String
+ organization Organization @relation(fields:[organizationId],references:[id],onDelete:Cascade)
+ day String
+ sends Int @default(0)
+ smsSends Int @default(0)
+ @@unique([organizationId,day])
+}
+
+model Approval {
+  id String @id @default(uuid())
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  principalId String
+  route String
+  key String
+  requestHash String
+  parameters Json
+  resourceId String
+  policyVersion Int
+  status String @default("pending")
+  expiresAt DateTime
+  decidedBy String?
+  decidedAt DateTime?
+  operationId String? @unique
+  createdAt DateTime @default(now())
+  @@unique([organizationId, principalId, route, key, policyVersion])
+  @@index([organizationId, status, createdAt])
+}
+
+// Provider-owned profile state, shared by numbers using that profile. Not a
+// tenant-address book; never expose this table through an unscoped list API.
+model ProviderSmsOptOut {
+  messagingProfileId String
+  recipient String
+  optedOut Boolean
+  occurredAt DateTime
+  eventId String
+  @@id([messagingProfileId, recipient])
+}
+
+model ProviderSmsOptOutSync {
+  messagingProfileId String @id
+  nextPage Int @default(1)
+  availableAt DateTime @default(now())
+  leaseToken String?
+  leaseExpiresAt DateTime?
+  lastCompletedAt DateTime?
+  lastError String?
+  @@index([availableAt])
+}
+
+model ApiKeyDailyUsage {
+  id String @id @default(cuid())
+  apiKeyId String
+  apiKey ApiKey @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+  day String
+  emailSends Int @default(0)
+  smsSends Int @default(0)
+  inboxCreations Int @default(0)
+  numberPurchases Int @default(0)
+  @@unique([apiKeyId, day])
+}
+
+model OAuthDailyUsage {
+  id String @id @default(cuid())
+  consentId String
+  consent OauthConsent @relation(fields: [consentId], references: [id], onDelete: Cascade)
+  day String
+  emailSends Int @default(0)
+  smsSends Int @default(0)
+  inboxCreations Int @default(0)
+  numberPurchases Int @default(0)
+  @@unique([consentId, day])
+}
+
+model ApiRequestBucket {
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  bucket String
+  window BigInt
+  count Int
+
+  @@id([organizationId, bucket])
+  @@index([window])
+}

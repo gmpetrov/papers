@@ -1,0 +1,47 @@
+name: Verify
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: agentinfra
+          POSTGRES_PASSWORD: agentinfra_local
+          POSTGRES_DB: agentinfra_test
+        ports:
+          - 55433:5432
+        options: >-
+          --health-cmd "pg_isready -U agentinfra -d agentinfra_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://agentinfra:agentinfra_local@localhost:55433/agentinfra_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.32.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: astral-sh/setup-uv@v6
+      - run: pnpm db:generate
+      - run: pnpm db:migrate
+      - run: pnpm typecheck
+      - run: pnpm test
+      - name: Verify isolated PostgreSQL backup and restore
+        run: python3 scripts/backup-restore-check.py --container "${{ job.services.postgres.id }}"
+      - run: pnpm --filter @agentinfra/sdk build
+      - run: pnpm --filter @agentinfra/cli build
+      - run: node packages/cli/dist/index.js --help
+      - run: pnpm exec node scripts/package-install-check.mjs
+      - run: pnpm --filter @agentinfra/web cf:build
+      - run: pnpm --filter @agentinfra/jobs build
+      - run: pnpm exec turbo run build --filter=@agentinfra/python
+      - run: python3 scripts/python-package-check.py

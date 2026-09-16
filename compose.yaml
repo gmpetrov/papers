@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    ports: ["127.0.0.1:55433:5432"]
+    environment:
+      POSTGRES_USER: agentinfra
+      POSTGRES_PASSWORD: agentinfra_local
+      POSTGRES_DB: agentinfra
+    volumes: ["agentinfra-postgres:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agentinfra"]
+      interval: 2s
+      retries: 15
+volumes:
+  agentinfra-postgres:

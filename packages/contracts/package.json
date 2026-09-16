@@ -1,0 +1,17 @@
+{
+  "name": "@agentinfra/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./openapi": "./src/openapi.ts",
+    "./responses": "./src/responses.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "latest"
+  }
+}

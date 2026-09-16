@@ -1,0 +1,22 @@
+{
+  "status": "draft_not_submitted",
+  "name": "Papers",
+  "tagline": "Email and phone tools for your agents",
+  "description": "Give your agent workspace-owned inboxes and phone numbers. Read incoming email and SMS, reply to messages, and manage communication resources through scoped access. Workspace approvals and daily send limits control delegated actions. Number purchases incur provider charges. Cards are not included.",
+  "developmentMcpUrl": "https://dev.chaindesk.ai/mcp",
+  "productionMcpUrl": null,
+  "authentication": "OAuth authorization code with S256 PKCE and workspace selection",
+  "publisherIdentity": null,
+  "websiteUrl": null,
+  "supportUrl": null,
+  "privacyPolicyUrl": null,
+  "termsUrl": null,
+  "availabilityCountries": [],
+  "reviewAccountReady": false,
+  "clientCompatibilityVerified": { "chatgpt": false, "claude": false, "grok": false },
+  "starterPrompts": [
+    "Show my Papers inboxes and summarize the newest messages.",
+    "Check my Papers send allowance and whether approvals are required.",
+    "Show recent SMS messages on my Papers number."
+  ]
+}

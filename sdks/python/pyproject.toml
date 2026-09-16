@@ -1,0 +1,18 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+[project]
+name = "papers-agentinfra"
+version = "0.1.0"
+description = "Typed Python client for Papers agent infrastructure"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "httpx>=0.27,<1",
+    "pydantic>=2,<3",
+    "standardwebhooks>=1.1.0",
+]
+[dependency-groups]
+dev = ["pytest>=8", "pytest-asyncio>=0.24"]
+[tool.hatch.build.targets.wheel]
+packages = ["src/papers"]

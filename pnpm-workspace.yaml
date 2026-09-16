@@ -1,0 +1,10 @@
+packages:
+  - apps/*
+  - packages/*
+  - sdks/*
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
+  - workerd
+  - prisma
+  - "@prisma/engines"

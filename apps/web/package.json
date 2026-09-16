@@ -1,0 +1,37 @@
+{
+  "name": "@agentinfra/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --hostname 0.0.0.0 --port 3000",
+    "build": "next build",
+    "typecheck": "tsc --noEmit",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "cf:build": "opennextjs-cloudflare build",
+    "cf:typegen": "wrangler types --env-interface CloudflareEnv --include-runtime false"
+  },
+  "dependencies": {
+    "next": "16.3.5",
+    "react": "latest",
+    "react-dom": "latest",
+    "@agentinfra/auth": "workspace:*",
+    "@agentinfra/core": "workspace:*",
+    "@agentinfra/db": "workspace:*",
+    "@agentinfra/contracts": "workspace:*",
+    "@agentinfra/providers": "workspace:*",
+    "@hookform/resolvers": "latest",
+    "react-hook-form": "latest",
+    "zod": "latest",
+    "lucide-react": "latest",
+    "@agentinfra/mcp": "workspace:*",
+    "@agentinfra/sdk": "workspace:*"
+  },
+  "devDependencies": {
+    "@opennextjs/cloudflare": "1.20.6",
+    "wrangler": "latest",
+    "@cloudflare/workers-types": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest"
+  }
+}

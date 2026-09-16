@@ -1,0 +1,10 @@
+ALTER TABLE "ApiKey" ADD COLUMN "dailyEmailLimit" INTEGER, ADD COLUMN "dailySmsLimit" INTEGER;
+ALTER TABLE "ApiKey" ADD CONSTRAINT "ApiKey_dailyEmailLimit_check" CHECK ("dailyEmailLimit" IS NULL OR "dailyEmailLimit" BETWEEN 0 AND 10000), ADD CONSTRAINT "ApiKey_dailySmsLimit_check" CHECK ("dailySmsLimit" IS NULL OR "dailySmsLimit" BETWEEN 0 AND 10000);
+CREATE TABLE "ApiKeyDailyUsage" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "apiKeyId" TEXT NOT NULL REFERENCES "ApiKey"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "day" TEXT NOT NULL,
+  "emailSends" INTEGER NOT NULL DEFAULT 0,
+  "smsSends" INTEGER NOT NULL DEFAULT 0
+);
+CREATE UNIQUE INDEX "ApiKeyDailyUsage_apiKeyId_day_key" ON "ApiKeyDailyUsage"("apiKeyId", "day");

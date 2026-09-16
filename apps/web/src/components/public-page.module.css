@@ -1,0 +1,84 @@
+/* Public product pages share the landing page's type, colors, and navigation. */
+.page :global(.public-content) {
+  max-width: 1172px;
+  margin: auto;
+  padding: 72px 30px;
+}
+.page :global(.public-heading) {
+  max-width: 780px;
+  margin-bottom: 56px;
+}
+.page :global(.public-heading) h1 {
+  font-size: clamp(38px, 5vw, 64px);
+  font-weight: 450;
+  letter-spacing: -2px;
+  line-height: 1.08;
+  margin: 24px 0;
+}
+.page :global(.public-heading) p {
+  font-size: 19px;
+  line-height: 1.65;
+  color: var(--muted);
+  margin: 0 0 28px;
+}
+.page :global(.public-cards) {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+.page :global(.public-cards) section {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 28px;
+}
+.page :global(.public-cards) h2,
+.page :global(.public-detail) h2 {
+  font-size: 24px;
+  font-weight: 500;
+  margin: 0 0 16px;
+  letter-spacing: -0.5px;
+}
+.page :global(.public-cards) p,
+.page :global(.public-detail) p {
+  color: var(--muted);
+  line-height: 1.75;
+}
+.page :global(.public-cards) code {
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+.page :global(.public-detail) {
+  max-width: 820px;
+  margin-top: 52px;
+  padding-top: 32px;
+  border-top: 1px solid var(--line);
+}
+@media (max-width: 900px) {
+  .nav {
+    height: auto;
+    min-height: 92px;
+    flex-wrap: wrap;
+    gap: 18px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+  }
+  .nav :global(.nav-links) {
+    display: flex;
+    width: 100%;
+    order: 3;
+    flex-wrap: wrap;
+    gap: 16px 24px;
+  }
+  .page :global(.public-cards) {
+    grid-template-columns: 1fr;
+  }
+  .page :global(.public-content) {
+    padding: 48px 22px;
+  }
+}
+
+@media (max-width: 600px) {
+  .nav :global(.nav-actions) > a:first-child {
+    display: inline-flex;
+  }
+}

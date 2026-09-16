@@ -1,0 +1,24 @@
+{
+  "name": "@agentinfra/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./edge": "./src/edge.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "generate": "prisma generate",
+    "migrate": "prisma migrate deploy"
+  },
+  "dependencies": {
+    "@prisma/client": "7.10.0",
+    "@prisma/adapter-pg": "7.10.0",
+    "pg": "latest"
+  },
+  "devDependencies": {
+    "prisma": "7.10.0",
+    "@types/pg": "latest"
+  }
+}
