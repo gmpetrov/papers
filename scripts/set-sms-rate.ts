@@ -1,7 +1,10 @@
 /** Operator-only: use an account rate deck that includes carrier fees. */
 import { createDatabase } from "../packages/db/src/index";
 import { usdMicros } from "../packages/core/src/billing-ledger";
-const [prefix, providerCeilingUSD, expiry, ...reason] = process.argv.slice(2);
+const args = process.argv.slice(2);
+const mms = args[0] === "--mms";
+if (mms) args.shift();
+const [prefix, providerCeilingUSD, expiry, ...reason] = args;
 if (
   !prefix ||
   !/^\+[1-9]\d{0,14}$/.test(prefix) ||
@@ -10,7 +13,7 @@ if (
   !reason.length
 )
   throw new Error(
-    'Usage: set-sms-rate.ts +1202 0.21 2026-09-24T00:00:00Z "Source and covered sender type"',
+    'Usage: set-sms-rate.ts [--mms] +1202 0.21 2026-09-24T00:00:00Z "Source and covered sender type"',
   );
 const amount = usdMicros(providerCeilingUSD);
 const expiresAt = new Date(expiry);
@@ -25,20 +28,36 @@ if (
   );
 const db = createDatabase(process.env.DATABASE_URL!);
 try {
-  await db.smsRate.upsert({
-    where: { prefix },
-    create: {
-      prefix,
-      maxProviderMicrosPerSegment: amount,
-      expiresAt,
-      note: reason.join(" "),
-    },
-    update: {
-      maxProviderMicrosPerSegment: amount,
-      expiresAt,
-      note: reason.join(" "),
-    },
-  });
+  if (mms) {
+    const rate = await db.smsRate.findUniqueOrThrow({ where: { prefix } });
+    if (rate.expiresAt < expiresAt)
+      throw new Error(
+        "MMS expiry must not extend the existing SMS rate expiry",
+      );
+    await db.smsRate.update({
+      where: { prefix },
+      data: {
+        maxProviderMicrosPerMms: amount,
+        expiresAt,
+        note: `${rate.note}; MMS: ${reason.join(" ")}`,
+      },
+    });
+  } else
+    await db.smsRate.upsert({
+      where: { prefix },
+      create: {
+        prefix,
+        maxProviderMicrosPerSegment: amount,
+        expiresAt,
+        note: reason.join(" "),
+      },
+      update: {
+        maxProviderMicrosPerSegment: amount,
+        maxProviderMicrosPerMms: null,
+        expiresAt,
+        note: reason.join(" "),
+      },
+    });
   console.log(JSON.stringify({ prefix, providerCeilingUSD, expiresAt }));
 } finally {
   await db.$disconnect();

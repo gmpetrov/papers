@@ -96,6 +96,7 @@ export async function reserveSms(
   messageId: string,
   to: string,
   text: string,
+  mms = false,
 ) {
   await billingLock(tx, organizationId);
   const account = await tx.billingAccount.findUnique({
@@ -115,13 +116,17 @@ export async function reserveSms(
     .filter((r) => to.startsWith(r.prefix))
     .sort((a, b) => b.prefix.length - a.prefix.length)[0];
   assert(
-    rate && rate.maxProviderMicrosPerSegment > 0n,
+    rate &&
+      (mms
+        ? (rate.maxProviderMicrosPerMms ?? 0n) > 0n
+        : rate.maxProviderMicrosPerSegment > 0n),
     503,
     "sms_rate_unavailable",
     "This destination has no verified rate ceiling; sending is disabled",
   );
-  const amount =
-    rate.maxProviderMicrosPerSegment * 2n * BigInt(smsSegments(text));
+  const amount = mms
+    ? rate.maxProviderMicrosPerMms! * 2n
+    : rate.maxProviderMicrosPerSegment * 2n * BigInt(smsSegments(text));
   assert(
     account.balanceMicros - account.reservedMicros >= amount,
     402,

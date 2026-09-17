@@ -1,4 +1,9 @@
-import { attachmentLinkSchema, emailDetailSchema } from "../../contracts/src/responses";
+import { processTelnyxEvents } from "../src/telnyx-webhooks";
+import { validateOutgoingAttachments } from "../src/outgoing-attachments";
+import {
+  attachmentLinkSchema,
+  emailDetailSchema,
+} from "../../contracts/src/responses";
 import { beforeEach, afterAll, it, expect, vi } from "vitest";
 import { createDatabase } from "@agentinfra/db";
 import { createAuth } from "@agentinfra/auth";
@@ -14,10 +19,11 @@ import {
   verifyAttachmentLink,
 } from "../src/attachment-links";
 const provider = vi.hoisted(() => vi.fn());
+const sender = vi.hoisted(() => vi.fn());
 vi.mock("@agentinfra/providers", async (original) => ({
   ...(await original<object>()),
   resendClient: () => ({
-    emails: { receiving: { attachments: { get: provider } } },
+    emails: { send: sender, receiving: { attachments: { get: provider } } },
   }),
 }));
 const db = createDatabase(
@@ -133,6 +139,7 @@ beforeEach(async () => {
       nextStorageAttemptAt: new Date(0),
     },
   });
+  sender.mockResolvedValue({ data: { id: "outgoing-provider" }, error: null });
   provider.mockResolvedValue({
     data: {
       id: "provider-attachment",
@@ -292,7 +299,7 @@ it("stores once under competing claims and authorizes every private download", a
     emailId: "received",
     id: "provider-attachment",
   });
-  expect(fetcher.mock.calls[0]![1]).toMatchObject({ redirect: "error" });
+  expect(fetcher.mock.calls[0]![1]).toMatchObject({ redirect: "manual" });
   expect(fetcher.mock.calls[0]![1]?.headers).toBeUndefined();
   expect((await request("two")).status).toBe(404);
   expect((await request("restricted")).status).toBe(404);
@@ -322,6 +329,7 @@ it.each([
   "https://127.0.0.1/file",
   "https://inbound-cdn.resend.com.evil.test/file",
 ])("rejects unsafe provider URL %s without fetching", async (url) => {
+  sender.mockResolvedValue({ data: { id: "outgoing-provider" }, error: null });
   provider.mockResolvedValue({
     data: { id: "provider-attachment", size: 4, download_url: url },
   });
@@ -355,6 +363,7 @@ it("bounds downloads and backs off failed storage without losing message metadat
     where: { id: "attachment" },
     data: { nextStorageAttemptAt: new Date(0) },
   });
+  sender.mockResolvedValue({ data: { id: "outgoing-provider" }, error: null });
   provider.mockResolvedValue({
     data: {
       id: "provider-attachment",
@@ -378,4 +387,304 @@ it("reports missing configuration and safely encodes Unicode filenames", async (
     "filename*=UTF-8''r%C3%A9sum%C3%A9.pdf",
   );
   expect(() => attachmentDisposition("bad\ud800name")).not.toThrow();
+});
+
+const outgoingFile = {
+  filename: "hello.pdf",
+  contentType: "application/pdf",
+  content: "dGVzdA==",
+};
+async function enableSending() {
+  await db.apiKey.update({
+    where: { id: "one" },
+    data: { scopes: ["email:send", "inboxes:read", "sms:send", "sms:read"] },
+  });
+}
+const sendEmailRequest = (
+  files = [outgoingFile],
+  path = "/v1/inboxes/inbox/messages",
+) =>
+  api.request(`http://localhost:3000${path}`, {
+    method: "POST",
+    headers: {
+      Authorization: "Bearer one",
+      "Content-Type": "application/json",
+      "Idempotency-Key": "file-send",
+    },
+    body: JSON.stringify({
+      to: ["recipient@example.test"],
+      subject: "Files",
+      text: "See attached",
+      attachments: files,
+    }),
+  });
+it("stores outbound email and reply files, replays once, and binds idempotency to bytes", async () => {
+  await enableSending();
+  expect((await sendEmailRequest()).status).toBe(201);
+  expect((await sendEmailRequest()).status).toBe(200);
+  expect(sender).toHaveBeenCalledTimes(1);
+  expect(sender.mock.calls[0]![0].attachments).toEqual([outgoingFile]);
+  const file = await db.attachment.findFirstOrThrow({
+    where: { message: { direction: "outbound" } },
+  });
+  expect(objects.get(file.objectKey!)).toEqual(
+    new TextEncoder().encode("test").buffer,
+  );
+  expect(
+    (await sendEmailRequest([{ ...outgoingFile, content: "bmV3" }])).status,
+  ).toBe(409);
+  sender.mockResolvedValue({ data: { id: "reply-provider" }, error: null });
+  expect(
+    (await sendEmailRequest([outgoingFile], "/v1/messages/message/reply"))
+      .status,
+  ).toBe(201);
+  expect(
+    await db.attachment.count({
+      where: { message: { direction: "outbound" } },
+    }),
+  ).toBe(2);
+});
+it("does not send or retain an operation when storage fails", async () => {
+  await enableSending();
+  bucket.put.mockRejectedValueOnce(new Error("storage failed"));
+  expect((await sendEmailRequest()).status).toBe(500);
+  expect(sender).not.toHaveBeenCalled();
+  expect(await db.operation.count()).toBe(0);
+  expect(
+    await db.emailMessage.count({ where: { direction: "outbound" } }),
+  ).toBe(0);
+});
+it("rejects noncanonical, empty, oversized and unsupported outgoing media", () => {
+  for (const content of ["", "dGVzdA=", "dGVzdB=="])
+    expect(() =>
+      validateOutgoingAttachments([{ ...outgoingFile, content }], "email"),
+    ).toThrow();
+  expect(() =>
+    validateOutgoingAttachments(
+      [
+        {
+          ...outgoingFile,
+          content: Buffer.alloc(1_000_001).toString("base64"),
+        },
+      ],
+      "sms",
+    ),
+  ).toThrow();
+  expect(() =>
+    validateOutgoingAttachments(
+      [{ ...outgoingFile, contentType: "text/html" }],
+      "sms",
+    ),
+  ).toThrow();
+});
+async function phoneFixture() {
+  await enableSending();
+  await db.phoneNumber.create({
+    data: {
+      id: "phone",
+      organizationId: "one",
+      phoneNumber: "+12025550101",
+      messagingProfileId: "profile",
+      status: "active",
+    },
+  });
+}
+it("ingests MMS once, copies media, and restricts downloads to the phone resource and scope", async () => {
+  await phoneFixture();
+  await db.providerEvent.create({
+    data: {
+      id: "telnyx:mms-event",
+      provider: "telnyx",
+      type: "message.received",
+      availableAt: new Date(0),
+      payload: {
+        data: {
+          id: "mms-event",
+          event_type: "message.received",
+          occurred_at: new Date().toISOString(),
+          payload: {
+            id: "mms-provider",
+            type: "MMS",
+            direction: "inbound",
+            messaging_profile_id: "profile",
+            from: { phone_number: "+12025550100" },
+            to: [{ phone_number: "+12025550101" }],
+            text: "",
+            media: [
+              {
+                url: "https://media.example.test/file",
+                content_type: "image/png",
+                size: null,
+              },
+            ],
+          },
+        },
+      },
+    },
+  });
+  await processTelnyxEvents(db);
+  await processTelnyxEvents(db);
+  const message = await db.smsMessage.findFirstOrThrow();
+  const file = await db.attachment.findFirstOrThrow({
+    where: { smsMessageId: message.id },
+  });
+  expect(
+    await db.attachment.count({ where: { smsMessageId: message.id } }),
+  ).toBe(1);
+  const transport = vi.fn(async () => new Response("image"));
+  await processAttachments(db, { ATTACHMENTS: bucket }, 10, transport);
+  expect(transport).toHaveBeenCalledTimes(1);
+  expect(
+    (await db.attachment.findUniqueOrThrow({ where: { id: file.id } }))
+      .sourceUrl,
+  ).toBeNull();
+  const download = (key: string) =>
+    api.request(`/v1/attachments/${file.id}/download`, {
+      headers: { Authorization: `Bearer ${key}` },
+    });
+  expect(await (await download("one")).text()).toBe("image");
+  expect((await download("two")).status).toBe(404);
+  expect((await download("restricted")).status).toBe(404);
+  await db.apiKey.update({
+    where: { id: "one" },
+    data: { scopes: ["inboxes:read"] },
+  });
+  expect((await download("one")).status).toBe(403);
+  await db.apiKey.update({
+    where: { id: "one" },
+    data: {
+      scopes: ["sms:read"],
+      resourceGrants: { inboxIds: [], phoneNumberIds: [] },
+    },
+  });
+  expect((await download("one")).status).toBe(404);
+});
+it("sends MMS with private expiring provider links and returns safe metadata", async () => {
+  await phoneFixture();
+  const mmsApi = createApi(
+    db,
+    createAuth(db, {
+      BETTER_AUTH_URL: "https://papers.example.test",
+      BETTER_AUTH_SECRET: "attachments-test-secret-long-enough",
+    }),
+    { ...env, TELNYX_API_KEY: "test", TELNYX_STATUS: "active" },
+  );
+  fetcher.mockResolvedValue(Response.json({ data: { id: "mms-outbound" } }));
+  const send = () =>
+    mmsApi.request(
+      "https://papers.example.test/v1/phone-numbers/phone/messages",
+      {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer one",
+          "Idempotency-Key": "mms",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          to: "+12025550100",
+          text: "Attached",
+          attachments: [outgoingFile],
+        }),
+      },
+    );
+  const response = await send();
+  expect(response.status).toBe(201);
+  expect((await send()).status).toBe(200);
+  expect(fetcher).toHaveBeenCalledTimes(1);
+  const payload = JSON.parse(fetcher.mock.calls[0]![1]!.body as string);
+  expect(payload.type).toBe("MMS");
+  const mediaUrl = payload.media_urls[0];
+  const media = await mmsApi.request(mediaUrl);
+  expect(media.headers.get("content-type")).toBe("application/pdf");
+  expect(await media.text()).toBe("test");
+  expect(
+    (
+      await mmsApi.request(
+        mediaUrl.replace(/token=.*/, "token=" + "x".repeat(72)),
+      )
+    ).status,
+  ).toBe(404);
+  const file = await db.attachment.findFirstOrThrow({
+    where: { smsMessageId: { not: null } },
+  });
+  const detail = await (
+    await mmsApi.request(`/v1/sms/${file.smsMessageId}`, {
+      headers: { Authorization: "Bearer one" },
+    })
+  ).json();
+  expect(detail.attachments[0]).toMatchObject({
+    filename: "hello.pdf",
+    storageStatus: "ready",
+  });
+  expect(JSON.stringify(detail)).not.toContain(file.objectKey);
+  expect(JSON.stringify(detail)).not.toContain("providerToken");
+  await db.attachment.update({
+    where: { id: file.id },
+    data: { providerTokenExpiresAt: new Date(0) },
+  });
+  expect((await mmsApi.request(mediaUrl)).status).toBe(404);
+});
+
+it("binds approval to attachment bytes without storing file content in the approval record", async () => {
+  await enableSending();
+  await db.organization.update({
+    where: { id: "one" },
+    data: { requireEmailApproval: true },
+  });
+  expect((await sendEmailRequest()).status).toBe(409);
+  const approval = await db.approval.findFirstOrThrow();
+  expect(approval.parameters).toMatchObject({
+    attachments: [
+      { filename: "hello.pdf", contentType: "application/pdf", size: 4 },
+    ],
+  });
+  expect(JSON.stringify(approval.parameters)).not.toContain("dGVzdA==");
+  expect(bucket.put).not.toHaveBeenCalled();
+  expect(sender).not.toHaveBeenCalled();
+  await db.approval.update({
+    where: { id: approval.id },
+    data: { status: "approved" },
+  });
+  expect(
+    (await sendEmailRequest([{ ...outgoingFile, content: "bmV3" }])).status,
+  ).toBe(409);
+  expect(sender).not.toHaveBeenCalled();
+  expect((await sendEmailRequest()).status).toBe(201);
+});
+
+it.each(["inbound-cdn.resend.com", "cdn.resend.app"])(
+  "stores received files from the exact Resend CDN host %s",
+  async (host) => {
+    provider.mockResolvedValue({
+      data: {
+        id: "provider-attachment",
+        size: 4,
+        download_url: `https://${host}/file?signature=private`,
+      },
+      error: null,
+    });
+    expect(await processAttachments(db, env)).toEqual({ stored: 1 });
+    expect(await (await request("one")).text()).toBe("test");
+  },
+);
+it.each([
+  "cdn.resend.app.evil.com",
+  "evil.cdn.resend.app",
+  "resend.app",
+  "127.0.0.1",
+])("rejects unapproved attachment origin %s before fetching", async (host) => {
+  provider.mockResolvedValue({
+    data: {
+      id: "provider-attachment",
+      size: 4,
+      download_url: `https://${host}/file`,
+    },
+    error: null,
+  });
+  expect(await processAttachments(db, env)).toEqual({ stored: 0 });
+  expect(fetcher).not.toHaveBeenCalled();
+  expect(
+    (await db.attachment.findUniqueOrThrow({ where: { id: "attachment" } }))
+      .storageError,
+  ).toBe("invalid_download_origin");
 });

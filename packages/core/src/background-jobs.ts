@@ -12,7 +12,11 @@ import { processProviderEvents } from "./webhooks";
 import { processTelnyxEvents } from "./telnyx-webhooks";
 import { reconcilePhoneNumbers } from "./phone-numbers";
 import { reconcileSmsSends } from "./sms-reconciliation";
-import { processAttachments, type AttachmentBucket } from "./attachments";
+import {
+  processAttachments,
+  type AttachmentBucket,
+  type MediaTransport,
+} from "./attachments";
 
 /** Each lane keeps its own durable claims; one failed lane must not starve the rest. */
 export async function runBackgroundJobs(
@@ -20,7 +24,10 @@ export async function runBackgroundJobs(
   env: Omit<Environment, "ATTACHMENTS"> & {
     ATTACHMENTS?: Pick<AttachmentBucket, "put">;
   },
-  options: { webhookTransport?: WebhookTransport } = {},
+  options: {
+    webhookTransport?: WebhookTransport;
+    mediaTransport?: MediaTransport;
+  } = {},
 ) {
   const { ATTACHMENTS, ...providers } = env;
   const jobs = [
@@ -30,10 +37,13 @@ export async function runBackgroundJobs(
     ["request_limits", () => pruneRequestBuckets(db)],
     ["resend", () => processProviderEvents(db, providers)],
     ["telnyx", () => processTelnyxEvents(db)],
+    [
+      "attachments",
+      () => processAttachments(db, env, 10, options.mediaTransport),
+    ],
     ["phone_numbers", () => reconcilePhoneNumbers(db, providers)],
     ["sms", () => reconcileSmsSends(db)],
     ["sms_opt_outs", () => reconcileSmsOptOuts(db, providers)],
-    ["attachments", () => processAttachments(db, env)],
   ] as const;
   const customerWebhooks = options.webhookTransport;
   const allJobs = customerWebhooks

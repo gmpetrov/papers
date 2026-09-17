@@ -465,8 +465,13 @@ model EmailMessage {
 
 model Attachment {
   id          String       @id @default(cuid())
-  messageId   String
-  message     EmailMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  messageId   String?
+  message     EmailMessage? @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  smsMessageId String?
+  smsMessage SmsMessage? @relation(fields: [smsMessageId], references: [id], onDelete: Cascade)
+  sourceUrl String?
+  providerTokenHash String? @unique
+  providerTokenExpiresAt DateTime?
   providerId  String
   filename    String
   contentType String
@@ -476,6 +481,7 @@ model Attachment {
   storageError String?
   nextStorageAttemptAt DateTime @default(now())
 
+  @@index([smsMessageId])
   @@unique([messageId, providerId])
   @@index([objectKey, nextStorageAttemptAt])
 }
@@ -668,6 +674,7 @@ model PhoneNumber {
 }
 
 model SmsMessage {
+  attachments Attachment[]
   id String @id @default(cuid())
   organizationId String
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -866,6 +873,7 @@ model BillingEmailUsage {
   @@index([organizationId, period])
 }
 model SmsRate {
+  maxProviderMicrosPerMms BigInt?
   prefix String @id
   maxProviderMicrosPerSegment BigInt
   expiresAt DateTime

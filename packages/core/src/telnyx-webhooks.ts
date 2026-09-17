@@ -75,7 +75,7 @@ export async function processTelnyxEvents(db: Database, limit = 10) {
         if (
           event.event_type === "message.received" &&
           payload.direction === "inbound" &&
-          payload.type === "SMS"
+          ["SMS", "MMS"].includes(payload.type)
         ) {
           for (const recipient of payload.to) {
             const number = await tx.phoneNumber.findFirst({
@@ -130,6 +130,16 @@ export async function processTelnyxEvents(db: Database, limit = 10) {
                 from: payload.from.phone_number,
                 to: recipient.phone_number,
                 text: payload.text ?? "",
+                attachments: {
+                  create: (payload.media ?? []).map((media, index) => ({
+                    providerId: String(index),
+                    filename: `attachment-${index + 1}`,
+                    contentType:
+                      media.content_type ?? "application/octet-stream",
+                    size: Math.min(media.size ?? 0, 2147483647),
+                    sourceUrl: media.url,
+                  })),
+                },
                 providerOccurredAt: new Date(event.occurred_at),
               },
             });
@@ -153,7 +163,7 @@ export async function processTelnyxEvents(db: Database, limit = 10) {
           ["message.sent", "message.finalized"].includes(event.event_type) &&
           payload.direction === "outbound"
         ) {
-          if (payload.type === "SMS" && payload.webhook_url) {
+          if (["SMS", "MMS"].includes(payload.type) && payload.webhook_url) {
             const operationId = new URL(payload.webhook_url).searchParams.get(
               "papers_operation",
             );

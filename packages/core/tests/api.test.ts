@@ -619,6 +619,20 @@ describe("tenant and agent API", () => {
         })
       ).threadId,
     ).toBe(m.threadId);
+    const conversation = await req(
+      `/v1/inboxes/${m.inboxId}/messages?threadId=${encodeURIComponent(m.threadId)}`,
+    );
+    expect(conversation.status).toBe(200);
+    const page = await conversation.json();
+    expect(page.data.map((row: { id: string }) => row.id)).toEqual([
+      output.messageId,
+      m.id,
+    ]);
+    const missingThread = await req(
+      `/v1/inboxes/${m.inboxId}/messages?threadId=unknown-thread`,
+    );
+    expect((await missingThread.json()).data).toEqual([]);
+
     expect(
       (
         await req(

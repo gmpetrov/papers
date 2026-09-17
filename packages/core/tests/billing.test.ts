@@ -424,3 +424,45 @@ it("the $0.50 welcome balance is available for SMS without a receiving deduction
     ).reservedMicros,
   ).toBe(10000n);
 });
+
+it("requires a separate MMS ceiling and reserves it once per MMS, not per text segment", async () => {
+  await db.billingAccount.update({
+    where: { organizationId: org },
+    data: {
+      plan: "developer",
+      status: "active",
+      blocked: false,
+      periodEnd: new Date(Date.now() + 86400000),
+      balanceMicros: 100n * USD,
+    },
+  });
+  await db.smsRate.update({
+    where: { prefix: "+1202" },
+    data: {
+      maxProviderMicrosPerMms: null,
+      expiresAt: new Date(Date.now() + 86400000),
+    },
+  });
+  await expect(
+    db.$transaction((tx) =>
+      reserveSms(tx, org, "mms-no-rate", "+12025550100", "Hello", true),
+    ),
+  ).rejects.toMatchObject({ code: "sms_rate_unavailable" });
+  expect(
+    await db.billingReservation.findUnique({ where: { id: "mms-no-rate" } }),
+  ).toBeNull();
+  await db.smsRate.update({
+    where: { prefix: "+1202" },
+    data: { maxProviderMicrosPerMms: 100_000n },
+  });
+  await db.$transaction((tx) =>
+    reserveSms(tx, org, "mms-priced", "+12025550100", "x".repeat(1000), true),
+  );
+  expect(
+    (
+      await db.billingReservation.findUniqueOrThrow({
+        where: { id: "mms-priced" },
+      })
+    ).amountMicros,
+  ).toBe(200_000n);
+});

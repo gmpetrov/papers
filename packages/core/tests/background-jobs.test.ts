@@ -42,10 +42,10 @@ it("continues independent job lanes after failure without exposing exception det
     "request_limits",
     "resend",
     "telnyx",
+    "attachments",
     "numbers",
     "sms",
     "sms_opt_outs",
-    "attachments",
   ]);
   expect(result.failed).toEqual(["resend", "sms"]);
   expect(result.results.telnyx).toEqual({ processed: 1 });

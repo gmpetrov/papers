@@ -1,4 +1,7 @@
-import { nodeWebhookTransport } from "../../../packages/core/src/webhook-transport-node";
+import {
+  nodeWebhookTransport,
+  nodeMediaTransport,
+} from "../../../packages/core/src/webhook-transport-node";
 import { runBackgroundJobs } from "../../../packages/core/src/background-jobs";
 import { createDatabase } from "../../../packages/db/src/index";
 import type { AttachmentBucket } from "../../../packages/core/src/attachments";
@@ -37,7 +40,10 @@ while (!stopping) {
         TELNYX_STATUS: process.env.TELNYX_STATUS,
         ATTACHMENTS: platform.env.ATTACHMENTS,
       },
-      { webhookTransport: nodeWebhookTransport },
+      {
+        webhookTransport: nodeWebhookTransport,
+        mediaTransport: nodeMediaTransport,
+      },
     );
     if (
       cycle.failed.length ||

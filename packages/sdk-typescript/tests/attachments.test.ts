@@ -88,16 +88,41 @@ it("cancels an unexpected successful response without consuming it", async () =>
   const cancelled = vi.fn();
   const client = new Papers({
     apiKey: "test",
-    fetch: vi
-      .fn<typeof fetch>()
-      .mockResolvedValue(
-        new Response(new ReadableStream({ cancel: cancelled }), {
-          headers: { "Content-Type": "text/html" },
-        }),
-      ),
+    fetch: vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(new ReadableStream({ cancel: cancelled }), {
+        headers: { "Content-Type": "text/html" },
+      }),
+    ),
   });
   await expect(client.attachments.download("file")).rejects.toMatchObject({
     code: "invalid_response",
   });
   expect(cancelled).toHaveBeenCalledTimes(1);
+});
+
+it("forwards attachment bytes on email sends, replies, and MMS", async () => {
+  const fetcher = vi
+    .fn<typeof fetch>()
+    .mockImplementation(async () =>
+      Response.json({ id: "op", status: "completed" }),
+    );
+  const client = new Papers({ apiKey: "test", fetch: fetcher });
+  const attachments = [
+    { filename: "image.png", contentType: "image/png", content: "AAE=" },
+  ];
+  const options = { idempotencyKey: "same" };
+  await client.messages.send(
+    "inbox",
+    { to: ["a@example.test"], subject: "Files", text: "Hi", attachments },
+    options,
+  );
+  await client.messages.reply("message", { text: "Hi", attachments }, options);
+  await client.sms.send(
+    "phone",
+    { to: "+12025550100", text: "Hi", attachments },
+    options,
+  );
+  expect(fetcher).toHaveBeenCalledTimes(3);
+  for (const [, init] of fetcher.mock.calls)
+    expect(JSON.parse(init!.body as string).attachments).toEqual(attachments);
 });

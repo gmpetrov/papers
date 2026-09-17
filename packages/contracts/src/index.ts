@@ -91,12 +91,34 @@ export const inboxInput = z.object({
     .regex(/^[a-z0-9][a-z0-9._-]{2,40}$/),
   agentId: z.string().min(1).optional(),
 });
+// Canonical base64 keeps request hashes stable and rejects malformed input.
+export const outgoingAttachmentInput = z.object({
+  filename: z
+    .string()
+    .min(1)
+    .max(180)
+    .regex(/^[^\x00-\x1f\x7f/\\]+$/),
+  contentType: z
+    .string()
+    .max(100)
+    .regex(/^[a-z0-9!#$&^_.+-]+\/[a-z0-9!#$&^_.+-]+$/i),
+  content: z
+    .string()
+    .max(7_000_000)
+    .regex(/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/),
+});
+export const outgoingAttachmentsInput = z
+  .array(outgoingAttachmentInput)
+  .max(10)
+  .optional();
 export const sendEmailInput = z.object({
+  attachments: outgoingAttachmentsInput,
   to: z.array(z.email()).min(1).max(10),
   subject: z.string().max(998),
   text: z.string().min(1).max(100_000),
 });
 export const replyEmailInput = z.object({
+  attachments: outgoingAttachmentsInput,
   text: z.string().min(1).max(100_000),
 });
 export const messageUpdateInput = z.object({ unread: z.boolean() });
@@ -163,6 +185,7 @@ export const numberInput = z.object({
   agentId: z.string().min(1).optional(),
 });
 export const smsInput = z.object({
+  attachments: outgoingAttachmentsInput,
   to: z.string().regex(/^\+[1-9]\d{6,14}$/),
   text: z.string().min(1).max(1600),
 });

@@ -6,6 +6,7 @@ type Approval = {
   route: string;
   resourceId: string;
   parameters: {
+    attachments?: { filename: string; contentType: string; size: number }[];
     to?: string | string[];
     text?: string;
     subject?: string;
@@ -173,6 +174,16 @@ export function ApprovalReview() {
                 {row.parameters.from && <p>From: {row.parameters.from}</p>}
                 {row.parameters.subject !== undefined && (
                   <p>Subject: {row.parameters.subject}</p>
+                )}
+                {!!row.parameters.attachments?.length && (
+                  <ul aria-label="Attachments to send">
+                    {row.parameters.attachments.map((file, index) => (
+                      <li key={index}>
+                        {file.filename} · {file.contentType} ·{" "}
+                        {(file.size / 1024).toFixed(1)} KB
+                      </li>
+                    ))}
+                  </ul>
                 )}
                 <p>
                   Status: {status} · Expires{" "}

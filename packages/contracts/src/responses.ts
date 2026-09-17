@@ -3,13 +3,27 @@ import { z } from "zod";
 
 const dateTime = z.iso.datetime({ offset: true });
 const id = z.string().min(1);
+const approvalAttachments = z
+  .array(
+    z.object({
+      filename: z.string(),
+      contentType: z.string(),
+      size: z.number().int().nonnegative(),
+    }),
+  )
+  .optional();
 const emailParameters = z.object({
+  attachments: approvalAttachments,
   from: z.string(),
   to: z.array(z.string()),
   subject: z.string(),
   text: z.string(),
 });
-const smsParameters = z.object({ to: z.string(), text: z.string() });
+const smsParameters = z.object({
+  to: z.string(),
+  text: z.string(),
+  attachments: approvalAttachments,
+});
 const inboxParameters = z.object({
   name: z.string(),
   localPart: z.string(),
@@ -67,7 +81,15 @@ export const smsSummarySchema = z.object({
     .nullable(),
   costCurrency: z.string().nullable(),
 });
+export const attachmentInfoSchema = z.object({
+  id,
+  filename: z.string(),
+  contentType: z.string(),
+  size: z.number().int().nonnegative(),
+  storageStatus: z.enum(["ready", "pending", "failed", "unavailable"]),
+});
 export const smsDetailSchema = smsSummarySchema.extend({
+  attachments: z.array(attachmentInfoSchema),
   text: z.string(),
   contentTrust: z.literal("untrusted"),
   recipientOptOut: z.object({
@@ -189,13 +211,6 @@ export const availableNumberSchema = z.object({
 });
 export const availableNumberResultsSchema = z.object({
   data: z.array(availableNumberSchema),
-});
-export const attachmentInfoSchema = z.object({
-  id,
-  filename: z.string(),
-  contentType: z.string(),
-  size: z.number().int().nonnegative(),
-  storageStatus: z.enum(["ready", "pending", "failed", "unavailable"]),
 });
 export const emailSummarySchema = z.object({
   id,

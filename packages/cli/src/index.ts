@@ -1,13 +1,45 @@
 #!/usr/bin/env node
 import { CliAuth, defaultScopes } from "./auth";
 import { once } from "node:events";
-import { writeFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { readFile, stat, writeFile } from "node:fs/promises";
+import { basename, extname, resolve } from "node:path";
 import { createMcpServer } from "@agentinfra/mcp";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { Command } from "commander";
 import { positiveInteger, watchEvents, waitForOperation } from "./polling";
 import { Papers, PapersError } from "@papers.bot/sdk";
+async function readAttachments(paths: string[] | undefined) {
+  if (!paths?.length) return undefined;
+  if (paths.length > 10) throw new Error("At most 10 attachments");
+  const sizes = await Promise.all(paths.map((path) => stat(path)));
+  if (
+    sizes.some((s) => !s.isFile()) ||
+    sizes.reduce((n, s) => n + s.size, 0) > 5 * 1024 * 1024
+  )
+    throw new Error("Attachments exceed 5 MiB or are not files");
+  const types: Record<string, string> = {
+    ".pdf": "application/pdf",
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".gif": "image/gif",
+    ".webp": "image/webp",
+    ".txt": "text/plain",
+    ".csv": "text/csv",
+    ".mp4": "video/mp4",
+    ".mp3": "audio/mpeg",
+    ".vcf": "text/vcard",
+    ".ics": "text/calendar",
+  };
+  return Promise.all(
+    paths.map(async (path) => ({
+      filename: basename(path),
+      contentType:
+        types[extname(path).toLowerCase()] ?? "application/octet-stream",
+      content: (await readFile(path)).toString("base64"),
+    })),
+  );
+}
 const cli = new Command()
   .name("papers")
   .description("Email and phone infrastructure for agents")
@@ -119,12 +151,21 @@ messages
   .requiredOption("--to <email>")
   .requiredOption("--subject <subject>")
   .requiredOption("--text <text>")
+  .option(
+    "--attach <paths...>",
+    "Attach local files (MMS: 1 MB total; email: 5 MiB)",
+  )
   .requiredOption("--idempotency-key <key>")
   .action(async (o) =>
     print(
       await client().messages.send(
         o.inbox,
-        { to: [o.to], subject: o.subject, text: o.text },
+        {
+          to: [o.to],
+          subject: o.subject,
+          text: o.text,
+          attachments: await readAttachments(o.attach),
+        },
         { idempotencyKey: o.idempotencyKey },
       ),
     ),
@@ -132,12 +173,16 @@ messages
 messages
   .command("reply <id>")
   .requiredOption("--text <text>")
+  .option(
+    "--attach <paths...>",
+    "Attach local files (MMS: 1 MB total; email: 5 MiB)",
+  )
   .requiredOption("--idempotency-key <key>")
   .action(async (id, o) =>
     print(
       await client().messages.reply(
         id,
-        { text: o.text },
+        { text: o.text, attachments: await readAttachments(o.attach) },
         { idempotencyKey: o.idempotencyKey },
       ),
     ),
@@ -283,12 +328,20 @@ sms
   .requiredOption("--number <id>")
   .requiredOption("--to <phone>")
   .requiredOption("--text <text>")
+  .option(
+    "--attach <paths...>",
+    "Attach local files (MMS: 1 MB total; email: 5 MiB)",
+  )
   .requiredOption("--idempotency-key <key>")
   .action(async (o) =>
     print(
       await client().sms.send(
         o.number,
-        { to: o.to, text: o.text },
+        {
+          to: o.to,
+          text: o.text,
+          attachments: await readAttachments(o.attach),
+        },
         { idempotencyKey: o.idempotencyKey },
       ),
     ),

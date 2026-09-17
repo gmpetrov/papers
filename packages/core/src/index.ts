@@ -1,3 +1,5 @@
+import { bodyLimit } from "hono/body-limit";
+import { attachmentSummary, validateOutgoingAttachments, storeOutgoingAttachments } from "./outgoing-attachments";
 import {
   retailNumber,
   standardNumber,
@@ -219,6 +221,27 @@ export function createApi(
     await limitRequest(c, p);
     return downloadAttachment(p, link.attachmentId);
   });
+  // Provider-only capability: one stored outbound MMS file, one hour, no user credential.
+  app.get("/v1/attachment-media/:id", async (c) => {
+    const token = c.req.query("token") ?? "";
+    assert(token.length === 72, 404, "not_found", "Media not found");
+    const attachment = await db.attachment.findFirst({ where: {
+      id: c.req.param("id"), providerTokenHash: await hash(token),
+      providerTokenExpiresAt: { gt: new Date() },
+      smsMessage: { direction: "outbound", status: { not: "failed" } },
+    } });
+    assert(attachment?.objectKey, 404, "not_found", "Media not found");
+    assert(env.ATTACHMENTS, 503, "storage_unavailable", "Storage is unavailable");
+    const object = await env.ATTACHMENTS.get(attachment.objectKey);
+    assert(object, 404, "not_found", "Media not found");
+    return new Response(object.body, { headers: {
+      "Content-Type": attachment.contentType, "Content-Length": String(object.size),
+      "Content-Disposition": attachmentDisposition(attachment.filename),
+      "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff",
+      "Content-Security-Policy": "sandbox; default-src 'none'", "Referrer-Policy": "no-referrer",
+    } });
+  });
+  app.use("/v1/*", bodyLimit({ maxSize: 8 * 1024 * 1024, onError: () => { throw new AppError(413, "request_too_large", "Request exceeds 8 MiB"); } }));
   app.use("/v1/*", async (c, next) => {
     const p = await authenticate(db, auth, c.req.raw, resourcePath);
     await limitRequest(c, p);
@@ -860,8 +883,14 @@ export function createApi(
     assert(inbox, 404, "not_found", "Inbox not found");
     const q = listInput.parse(c.req.query());
     const data = await db.emailMessage.findMany({
-      where: { inboxId: inbox.id, organizationId: p.organizationId },
-      orderBy: { id: "desc" },
+      where: {
+        inboxId: inbox.id,
+        organizationId: p.organizationId,
+        ...(c.req.query("threadId")
+          ? { threadId: c.req.query("threadId") }
+          : {}),
+      },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take: q.limit + 1,
       ...(q.cursor ? { cursor: { id: q.cursor }, skip: 1 } : {}),
       select: {
@@ -941,16 +970,16 @@ export function createApi(
     });
   });
   const findAttachment = async (p: Principal, id: string) => {
-    authorize(p, "inboxes:read");
     const attachment = await db.attachment.findFirst({
       where: {
         id,
-        message: {
-          organizationId: p.organizationId,
-          inbox: resourceAccess(p, "inbox"),
-        },
+        OR: [
+          { message: { organizationId: p.organizationId, inbox: resourceAccess(p, "inbox") } },
+          { smsMessage: { organizationId: p.organizationId, phoneNumber: resourceAccess(p, "number") } },
+        ],
       },
     });
+    if (attachment) authorize(p, attachment.smsMessageId ? "sms:read" : "inboxes:read");
     assert(attachment, 404, "not_found", "Attachment not found");
     assert(
       env.ATTACHMENTS,
@@ -1049,9 +1078,10 @@ export function createApi(
           subject: /^re:/i.test(parent.subject)
             ? parent.subject
             : `Re: ${parent.subject}`,
-          text: replyEmailInput.parse(body).text,
+          ...replyEmailInput.parse(body),
         })
       : sendEmailInput.parse(body);
+    validateOutgoingAttachments(input.attachments, "email");
     const inbox = await db.inbox.findFirst({
       where: {
         id: parent?.inboxId ?? c.req.param("id"),
@@ -1143,7 +1173,7 @@ export function createApi(
           key,
           requestHash,
           resourceId: inbox.id,
-          parameters: { ...input, from: currentInbox.address },
+          parameters: { ...input, attachments: attachmentSummary(input.attachments), from: currentInbox.address },
           policyVersion: policy.policyVersion,
         });
         if (approval.status !== "approved")
@@ -1198,6 +1228,7 @@ export function createApi(
         billingMessageId,
         input.to.length,
       );
+      const stored = await storeOutgoingAttachments(env.ATTACHMENTS, p.organizationId, billingMessageId, input.attachments);
       const message = await tx.emailMessage.create({
         data: {
           organizationId: p.organizationId,
@@ -1207,6 +1238,7 @@ export function createApi(
           status: "pending",
           from: inbox.address,
           ...input,
+          attachments: { create: stored.records },
           threadId: parent?.threadId ?? crypto.randomUUID(),
           inReplyTo,
           references,
@@ -1253,6 +1285,7 @@ export function createApi(
         {
           from: inbox.address,
           ...input,
+          attachments: input.attachments?.map(({ contentType, ...file }) => ({ ...file, contentType })),
           headers,
           tags: [{ name: "papers_operation", value: operation.id }],
         },
@@ -1591,6 +1624,7 @@ export function createApi(
       c.req.param("id"),
       await c.req.json(),
       c.req.header("Idempotency-Key"),
+      auth.options.baseURL as string,
     );
     return c.json(result.body, result.status);
   });
@@ -1611,6 +1645,7 @@ export function createApi(
         from: true,
         to: true,
         text: true,
+        attachments: { select: { id: true, filename: true, contentType: true, size: true, objectKey: true, storageAttempts: true } },
         direction: true,
         status: true,
         unread: true,
@@ -1625,6 +1660,7 @@ export function createApi(
     });
     const publicMessage = {
       ...fields,
+      attachments: message.attachments.map(({ objectKey, storageAttempts, ...file }) => ({ ...file, storageStatus: !env.ATTACHMENTS ? "unavailable" : objectKey ? "ready" : storageAttempts >= 8 ? "failed" : "pending" })),
       costAmount:
         charge?.status === "settled"
           ? retailAmount(charge.settledMicros)

@@ -160,12 +160,22 @@ export async function processProviderEvents(
             const references = (
               headers.references?.match(/<[^<>\s]+>/g) ?? []
             ).slice(-20);
-            const parent = headers["in-reply-to"] ?? references.at(-1);
-            const previous = parent
-              ? await tx.emailMessage.findFirst({
-                  where: { inboxId: inbox.id, messageId: parent },
+            const parent = headers["in-reply-to"]?.match(/<[^<>\s]+>/g)?.at(-1);
+            const candidates = [
+              ...new Set([
+                ...(parent ? [parent] : []),
+                ...[...references].reverse(),
+              ]),
+            ];
+            const matches = candidates.length
+              ? await tx.emailMessage.findMany({
+                  where: { inboxId: inbox.id, messageId: { in: candidates } },
+                  select: { messageId: true, threadId: true },
                 })
-              : null;
+              : [];
+            const previous = candidates
+              .map((id) => matches.find((m) => m.messageId === id))
+              .find(Boolean);
             const messageId = `em_${await hash(`email-in:${inbox.id}:${mail.id}`)}`;
             if (
               await tx.billingEmailUsage.findUnique({

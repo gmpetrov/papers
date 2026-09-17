@@ -27,7 +27,7 @@
     },
   ],
   "r2_buckets": [
-    { "binding": "ATTACHMENTS", "bucket_name": "papers-attachments" },
+    { "binding": "ATTACHMENTS", "bucket_name": "papers" },
   ],
   // Keep disabled for local workerd. Deploy standalone (no origin routes) and
   // set WEBHOOK_TRANSPORT=cloudflare to use Cloudflare's public-only egress.

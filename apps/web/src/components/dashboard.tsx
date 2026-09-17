@@ -19,6 +19,7 @@ import { ApprovalReview } from "./approval-review";
 import { WorkspaceUsage } from "./workspace-usage";
 import { WorkspaceSetup } from "./workspace-setup";
 import { WorkspaceLimits } from "./workspace-limits";
+import { AttachmentPicker, encodeAttachments } from "./attachment-picker";
 import { EmailAttachments } from "./email-attachments";
 import type { AttachmentInfo } from "@agentinfra/contracts";
 import {
@@ -51,6 +52,8 @@ type Row = {
   dailyNumberLimit?: number | null;
   attachments?: AttachmentInfo[];
   id: string;
+  threadId?: string;
+  to?: string[];
   userId?: string;
   teamId?: string;
   unread?: boolean;
@@ -201,6 +204,53 @@ export function Dashboard({
   const [loadingMessages, setLoadingMessages] = useState(false);
   const messageGeneration = useRef(0);
   const [message, setMessage] = useState<Row | null>(null);
+  const [conversation, setConversation] = useState<Row[]>([]);
+  const threadRows = [...messages]
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime(),
+    )
+    .filter(
+      (row, index, rows) =>
+        rows.findIndex(
+          (candidate) =>
+            (candidate.threadId ?? candidate.id) === (row.threadId ?? row.id),
+        ) === index,
+    );
+  async function openConversation(row: Row) {
+    const generation = ++messageGeneration.current;
+    const summaries: Row[] = [];
+    let cursor: string | null = null;
+    do {
+      const query = new URLSearchParams({
+        threadId: row.threadId ?? "",
+        limit: "100",
+      });
+      if (cursor) query.set("cursor", cursor);
+      const page = await api<{ data: Row[]; nextCursor: string | null }>(
+        `/inboxes/${selected!.id}/messages?${query}`,
+      );
+      if (generation !== messageGeneration.current) return;
+      summaries.push(...page.data);
+      cursor = page.nextCursor;
+    } while (cursor);
+    const loaded: Row[] = [];
+    for (const summary of summaries) {
+      const detail = await api<Row>(`/messages/${summary.id}`);
+      if (generation !== messageGeneration.current) return;
+      if (detail.unread) {
+        await api(`/messages/${detail.id}`, "PATCH", { unread: false });
+      }
+      loaded.push({ ...detail, unread: false });
+    }
+    loaded.sort(
+      (a, b) =>
+        new Date(a.createdAt!).getTime() - new Date(b.createdAt!).getTime(),
+    );
+    if (generation !== messageGeneration.current) return;
+    setConversation(loaded);
+    setMessage(loaded.at(-1) ?? row);
+  }
   const [token, setToken] = useState("");
   const [members, setMembers] = useState<Row[]>([]);
   const [teams, setTeams] = useState<Row[]>([]);
@@ -720,17 +770,34 @@ export function Dashboard({
                                   </button>
                                 </div>
                               </div>
-                              <div className="message-view">
-                                {message.text ||
-                                  "This message has no plain-text body."}
-                              </div>
-                              <div className="panel-body">
-                                <EmailAttachments
-                                  key={message.id}
-                                  messageId={message.id}
-                                  initial={message.attachments ?? []}
-                                />
-                              </div>
+                              {conversation.map((item) => (
+                                <section
+                                  key={item.id}
+                                  aria-label={`Email from ${item.from}`}
+                                >
+                                  <div className="panel-body">
+                                    <strong>{item.from}</strong>
+                                    <small>
+                                      {" "}
+                                      · {item.direction} ·{" "}
+                                      {new Date(
+                                        item.createdAt!,
+                                      ).toLocaleString()}
+                                    </small>
+                                    <p>To: {item.to?.join(", ")}</p>
+                                  </div>
+                                  <div className="message-view">
+                                    {item.text ||
+                                      "This message has no plain-text body."}
+                                  </div>
+                                  <div className="panel-body">
+                                    <EmailAttachments
+                                      messageId={item.id}
+                                      initial={item.attachments ?? []}
+                                    />
+                                  </div>
+                                </section>
+                              ))}
                             </>
                           ) : loadingMessages && !messages.length ? (
                             <div className="panel-body" role="status">
@@ -746,25 +813,12 @@ export function Dashboard({
                                 </tr>
                               </thead>
                               <tbody>
-                                {messages.map((m) => (
+                                {threadRows.map((m) => (
                                   <tr
                                     key={m.id}
                                     className="clickable"
                                     onClick={() =>
-                                      void act(async () => {
-                                        const loaded = await api<Row>(
-                                          `/messages/${m.id}`,
-                                        );
-                                        await api(
-                                          `/messages/${m.id}`,
-                                          "PATCH",
-                                          { unread: false },
-                                        );
-                                        setMessage({
-                                          ...loaded,
-                                          unread: false,
-                                        });
-                                      })
+                                      void act(() => openConversation(m))
                                     }
                                   >
                                     <td>
@@ -1367,6 +1421,7 @@ export function Dashboard({
                     "POST",
                     {
                       text: values.text,
+                      ...(values.attachments ? { attachments: JSON.parse(values.attachments) } : {}),
                     },
                     idempotencyKey,
                   );
@@ -1380,6 +1435,7 @@ export function Dashboard({
                       to: [values.to],
                       subject: values.subject,
                       text: values.text,
+                      ...(values.attachments ? { attachments: JSON.parse(values.attachments) } : {}),
                     },
                     idempotencyKey,
                   );
@@ -1553,10 +1609,12 @@ function ActionForm({
   });
   const [error, setError] = useState("");
   const requestKeys = useRef(new Map<string, string>());
+  const [files, setFiles] = useState<File[]>([]);
   return (
     <form
       onSubmit={handleSubmit(async (v) => {
         try {
+          if (["compose", "reply"].includes(kind) && files.length) v.attachments = JSON.stringify(await encodeAttachments(files, 5 * 1024 * 1024));
           const payload = JSON.stringify(v);
           const key = requestKeys.current.get(payload) ?? crypto.randomUUID();
           requestKeys.current.set(payload, key);
@@ -1679,6 +1737,7 @@ function ActionForm({
           {error}
         </div>
       )}
+      {["compose", "reply"].includes(kind) && <AttachmentPicker files={files} onChange={setFiles} maxBytes={5 * 1024 * 1024} disabled={isSubmitting} />}
       <button className="button full" disabled={isSubmitting}>
         {isSubmitting
           ? "Working…"

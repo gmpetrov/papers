@@ -8,9 +8,11 @@ import {
 export function EmailAttachments({
   messageId,
   initial,
+  channel = "email",
 }: {
   messageId: string;
   initial: AttachmentInfo[];
+  channel?: "email" | "sms";
 }) {
   const [attachments, setAttachments] = useState(initial);
   const [busy, setBusy] = useState<string | null>(null);
@@ -21,7 +23,7 @@ export function EmailAttachments({
     setError("");
     try {
       const response = await fetch(
-        `/v1/messages/${encodeURIComponent(messageId)}`,
+        `/v1/${channel === "sms" ? "sms" : "messages"}/${encodeURIComponent(messageId)}`,
       );
       const body = await response.json();
       if (!response.ok)
@@ -71,7 +73,7 @@ export function EmailAttachments({
   }
   return (
     <section
-      aria-label="Email attachments"
+      aria-label={channel === "sms" ? "MMS attachments" : "Email attachments"}
       style={{ display: "grid", gap: 14, margin: "20px 0" }}
     >
       <div className="row-actions">

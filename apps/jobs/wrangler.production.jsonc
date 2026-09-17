@@ -12,9 +12,19 @@
   "r2_buckets": [
     {
       "binding": "ATTACHMENTS",
-      "bucket_name": "papers-attachments",
+      "bucket_name": "papers",
     },
   ],
+  "secrets": {
+    "required": [
+      "RESEND_API_KEY",
+      "TELNYX_API_KEY",
+      "CUSTOM_WEBHOOK_ENCRYPTION_KEY",
+      "STRIPE_SECRET_KEY",
+      "TELNYX_PUBLIC_KEY",
+      "TELNYX_MESSAGING_PROFILE_ID",
+    ],
+  },
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1,

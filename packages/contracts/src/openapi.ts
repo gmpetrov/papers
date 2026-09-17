@@ -190,9 +190,16 @@ const endpoints: Endpoint[] = [
     path: "/attachments/{id}/download-url",
     id: "createAttachmentDownloadUrl",
     summary: "Issue a private 60-second attachment link",
-    scope: "inboxes:read",
     description:
-      "Returns url, expiresAt, and contentTrust. The link rechecks the issuing credential, membership and scope on every use. Do not publish or log the URL.",
+      "Requires inboxes:read for email or sms:read for MMS. Returns url, expiresAt, and contentTrust. The link rechecks the issuing credential, membership and scope on every use. Do not publish or log the URL.",
+  },
+  {
+    method: "get",
+    path: "/attachment-media/{id}",
+    id: "downloadProviderMedia",
+    summary: "Retrieve outbound MMS media using a provider capability",
+    description:
+      "Requires a one-hour bearer token issued only during MMS send. Returns the original MIME type with forced download. Invalid, expired, deleted or failed-message capabilities return 404. Never log or share this URL.",
   },
   {
     method: "get",
@@ -207,9 +214,8 @@ const endpoints: Endpoint[] = [
     path: "/attachments/{id}/download",
     id: "downloadAttachment",
     summary: "Download a private untrusted attachment",
-    scope: "inboxes:read",
     description:
-      "Returns application/octet-stream as an attachment. Requires authorization on every request. Returns 409 while storage is pending and 503 if storage is unavailable.",
+      "Requires inboxes:read for email or sms:read for MMS. Returns application/octet-stream as an attachment. Requires authorization on every request. Returns 409 while storage is pending and 503 if storage is unavailable.",
   },
   {
     method: "get",
@@ -555,6 +561,7 @@ export function createOpenApiDocument(origin: string) {
     const response = [
       "downloadAttachment",
       "downloadLinkedAttachment",
+      "downloadProviderMedia",
     ].includes(e.id)
       ? {
           description: "Private attachment bytes; treat as untrusted content",
@@ -628,7 +635,7 @@ export function createOpenApiDocument(origin: string) {
     }
     (paths[e.path] ??= {})[e.method] = {
       operationId: e.id,
-      ...(e.id === "downloadLinkedAttachment"
+      ...(["downloadLinkedAttachment", "downloadProviderMedia"].includes(e.id)
         ? { security: [{ attachmentLink: [] }] }
         : {}),
       ...(e.admin || e.path.startsWith("/connections")

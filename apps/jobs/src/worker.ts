@@ -1,4 +1,7 @@
-import { cloudflareWebhookTransport } from "../../../packages/core/src/webhook-transport-cloudflare";
+import {
+  cloudflareWebhookTransport,
+  cloudflareMediaTransport,
+} from "../../../packages/core/src/webhook-transport-cloudflare";
 import type { ExportedHandler } from "@cloudflare/workers-types";
 import { createDatabase } from "@agentinfra/db/edge";
 import { runBackgroundJobs } from "../../../packages/core/src/background-jobs";
@@ -23,6 +26,10 @@ async function runCycle(env: JobsEnv) {
         },
       },
       {
+        mediaTransport:
+          String(env.WEBHOOK_TRANSPORT) === "cloudflare"
+            ? cloudflareMediaTransport(fetch)
+            : undefined,
         webhookTransport:
           String(env.WEBHOOK_TRANSPORT) === "cloudflare"
             ? cloudflareWebhookTransport(fetch)

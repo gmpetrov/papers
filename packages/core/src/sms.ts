@@ -1,4 +1,9 @@
 import {
+  attachmentSummary,
+  validateOutgoingAttachments,
+  storeOutgoingAttachments,
+} from "./outgoing-attachments";
+import {
   ensureBilling,
   reserveSms,
   releaseSmsReservation,
@@ -22,6 +27,7 @@ export async function sendSms(
   numberId: string,
   body: unknown,
   key: string | undefined,
+  mediaBaseUrl?: string,
 ) {
   authorize(p, "sms:send");
   assert(
@@ -32,6 +38,15 @@ export async function sendSms(
   );
   if (env.BILLING_ENABLED === "true") await ensureBilling(db, p.organizationId);
   const input = smsInput.parse(body);
+  validateOutgoingAttachments(input.attachments, "sms");
+  if (input.attachments?.length) {
+    assert(
+      mediaBaseUrl && new URL(mediaBaseUrl).protocol === "https:",
+      503,
+      "media_url_unavailable",
+      "MMS requires a public HTTPS API URL",
+    );
+  }
   assert(
     key && key.length <= 200,
     400,
@@ -111,7 +126,10 @@ export async function sendSms(
         key,
         requestHash,
         resourceId: number.id,
-        parameters: input,
+        parameters: {
+          ...input,
+          attachments: attachmentSummary(input.attachments),
+        },
         policyVersion: approvalPolicy.policyVersion,
       });
       if (approval.status !== "approved")
@@ -175,18 +193,35 @@ export async function sendSms(
         data: { smsSends: { increment: 1 } },
       });
     }
+    const messageId = crypto.randomUUID();
+    await reserveSms(
+      tx,
+      p.organizationId,
+      messageId,
+      input.to,
+      input.text,
+      !!input.attachments?.length,
+    );
+    const stored = await storeOutgoingAttachments(
+      env.ATTACHMENTS,
+      p.organizationId,
+      messageId,
+      input.attachments,
+      mediaBaseUrl,
+    );
     const message = await tx.smsMessage.create({
       data: {
+        id: messageId,
         organizationId: p.organizationId,
         phoneNumberId: number.id,
         direction: "outbound",
         status: "pending",
         from: number.phoneNumber,
         ...input,
+        attachments: { create: stored.records },
         unread: false,
       },
     });
-    await reserveSms(tx, p.organizationId, message.id, input.to, input.text);
     const operationId = crypto.randomUUID();
     const callback = env.TELNYX_WEBHOOK_URL
       ? new URL(env.TELNYX_WEBHOOK_URL)
@@ -218,7 +253,7 @@ export async function sendSms(
         resourceId: message.id,
       },
     });
-    return { ...op, replay: false };
+    return { ...op, replay: false, mediaUrls: stored.mediaUrls };
   });
   if ("approvalRequired" in operation)
     throw new AppError(
@@ -268,6 +303,7 @@ export async function sendSms(
       input.text,
       number.messagingProfileId,
       (operation.result as { webhookUrl?: string } | null)?.webhookUrl,
+      "mediaUrls" in operation ? operation.mediaUrls : undefined,
     );
 
     acceptedProviderId = result.data.id;

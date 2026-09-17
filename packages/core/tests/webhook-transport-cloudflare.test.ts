@@ -67,3 +67,18 @@ it("rejects unsafe URLs and aborted work before calling the network", async () =
   ).rejects.toThrow();
   expect(fetcher).not.toHaveBeenCalled();
 });
+
+it("media transport sends no credentials and leaves redirects for the bounded downloader to reject", async () => {
+  const { cloudflareMediaTransport } =
+    await import("../src/webhook-transport-cloudflare");
+  const fetcher = vi.fn(async () => new Response(null, { status: 302 }));
+  const transport = cloudflareMediaTransport(fetcher);
+  const signal = AbortSignal.timeout(1000);
+  expect(
+    (await transport("https://media.customer.com/file", signal)).status,
+  ).toBe(302);
+  expect(fetcher).toHaveBeenCalledWith("https://media.customer.com/file", {
+    signal,
+    redirect: "manual",
+  });
+});

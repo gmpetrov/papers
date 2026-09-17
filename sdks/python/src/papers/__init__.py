@@ -66,7 +66,16 @@ class SmsRecipientOptOut(BaseModel):
     observedAt: str | None = None
 
 
+class AttachmentInfo(BaseModel):
+    id: str
+    filename: str
+    contentType: str
+    size: int
+    storageStatus: Literal["ready", "pending", "failed", "unavailable"]
+
+
 class SmsMessage(BaseModel):
+    attachments: list[AttachmentInfo] = Field(default_factory=list)
     recipientOptOut: SmsRecipientOptOut | None = None
     segments: int | None = None
     costAmount: str | None = None
@@ -81,14 +90,6 @@ class SmsMessage(BaseModel):
     direction: str
     status: str
     contentTrust: str | None = None
-
-
-class AttachmentInfo(BaseModel):
-    id: str
-    filename: str
-    contentType: str
-    size: int
-    storageStatus: Literal["ready", "pending", "failed", "unavailable"]
 
 
 class AttachmentDownloadLink(BaseModel):
@@ -282,11 +283,11 @@ class Papers:
             _decode(self._http.get(f"phone-numbers/{quote(number_id, safe='')}"))
         )
 
-    def send_sms(self, number_id: str, *, to: str, text: str, idempotency_key: str):
+    def send_sms(self, number_id: str, *, to: str, text: str, idempotency_key: str, attachments: list[dict[str, str]] | None = None):
         return _decode(
             self._http.post(
                 f"phone-numbers/{quote(number_id, safe='')}/messages",
-                json={"to": to, "text": text},
+                json={"to": to, "text": text, **({"attachments": attachments} if attachments is not None else {})},
                 headers={"Idempotency-Key": idempotency_key},
             )
         )
@@ -424,20 +425,21 @@ class Papers:
         subject: str,
         text: str,
         idempotency_key: str,
+        attachments: list[dict[str, str]] | None = None,
     ):
         return _decode(
             self._http.post(
                 f"inboxes/{quote(inbox_id, safe='')}/messages",
-                json={"to": to, "subject": subject, "text": text},
+                json={"to": to, "subject": subject, "text": text, **({"attachments": attachments} if attachments is not None else {})},
                 headers={"Idempotency-Key": idempotency_key},
             )
         )
 
-    def reply_to_email(self, message_id: str, *, text: str, idempotency_key: str):
+    def reply_to_email(self, message_id: str, *, text: str, idempotency_key: str, attachments: list[dict[str, str]] | None = None):
         return _decode(
             self._http.post(
                 f"messages/{quote(message_id, safe='')}/reply",
-                json={"text": text},
+                json={"text": text, **({"attachments": attachments} if attachments is not None else {})},
                 headers={"Idempotency-Key": idempotency_key},
             )
         )
@@ -567,12 +569,12 @@ class AsyncPapers:
         )
 
     async def send_sms(
-        self, number_id: str, *, to: str, text: str, idempotency_key: str
+        self, number_id: str, *, to: str, text: str, idempotency_key: str, attachments: list[dict[str, str]] | None = None
     ):
         return _decode(
             await self._http.post(
                 f"phone-numbers/{quote(number_id, safe='')}/messages",
-                json={"to": to, "text": text},
+                json={"to": to, "text": text, **({"attachments": attachments} if attachments is not None else {})},
                 headers={"Idempotency-Key": idempotency_key},
             )
         )
@@ -717,20 +719,21 @@ class AsyncPapers:
         subject: str,
         text: str,
         idempotency_key: str,
+        attachments: list[dict[str, str]] | None = None,
     ):
         return _decode(
             await self._http.post(
                 f"inboxes/{quote(inbox_id, safe='')}/messages",
-                json={"to": to, "subject": subject, "text": text},
+                json={"to": to, "subject": subject, "text": text, **({"attachments": attachments} if attachments is not None else {})},
                 headers={"Idempotency-Key": idempotency_key},
             )
         )
 
-    async def reply_to_email(self, message_id: str, *, text: str, idempotency_key: str):
+    async def reply_to_email(self, message_id: str, *, text: str, idempotency_key: str, attachments: list[dict[str, str]] | None = None):
         return _decode(
             await self._http.post(
                 f"messages/{quote(message_id, safe='')}/reply",
-                json={"text": text},
+                json={"text": text, **({"attachments": attachments} if attachments is not None else {})},
                 headers={"Idempotency-Key": idempotency_key},
             )
         )

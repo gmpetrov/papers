@@ -172,3 +172,41 @@ it("does not fall back to headers or the webhook when retrieved envelope data is
     ).status,
   ).toBe("pending");
 });
+
+it("matches an earlier reference when the immediate parent is unknown, within the inbox", async () => {
+  await db.emailMessage.create({
+    data: {
+      id: "known-parent",
+      organizationId: "routing-0",
+      inboxId: "routing-0",
+      messageId: "<root@example.test>",
+      threadId: "existing-conversation",
+      direction: "outbound",
+      status: "sent",
+      from: addresses[0]!,
+      to: ["sender@example.test"],
+      subject: "Original",
+      text: "Hello",
+    },
+  });
+  const incoming = mail([addresses[0]!, addresses[1]!]);
+  incoming.data.headers = {
+    ...incoming.data.headers,
+    "In-Reply-To": "  <unknown@example.test>  ",
+    References: "<root@example.test> <unknown@example.test>",
+  } as typeof incoming.data.headers;
+  mock.get.mockResolvedValue(incoming);
+  await ingest("reply-references", [addresses[0]!, addresses[1]!]);
+  await processProviderEvents(db, env);
+  const replies = await db.emailMessage.findMany({
+    where: { direction: "inbound" },
+  });
+  expect(replies).toHaveLength(2);
+  expect(replies.find((m) => m.inboxId === "routing-0")?.threadId).toBe(
+    "existing-conversation",
+  );
+  expect(replies.find((m) => m.inboxId === "routing-1")?.threadId).not.toBe(
+    "existing-conversation",
+  );
+  expect(replies[0]?.inReplyTo).toBe("<unknown@example.test>");
+});

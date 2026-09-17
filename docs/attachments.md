@@ -1,11 +1,14 @@
 # Private email attachments
 
+For outbound email and inbound/outbound SMS/MMS, see the implemented
+[bidirectional attachment specification](attachments-bidirectional.md).
+
 The core storage worker (`processAttachments`) retrieves attachment metadata
 through Resend's receiving API, downloads the bytes, writes them to a private
 R2-compatible binding, and records the object key only after storage succeeds.
 Objects use workspace/message/attachment IDs, never external filenames.
 
-Downloads accept only HTTPS URLs on `inbound-cdn.resend.com`, with no credentials
+Downloads accept only HTTPS URLs on `inbound-cdn.resend.com` or `cdn.resend.app`, with no credentials
 or custom port. Redirects are rejected. Provider credentials are sent only by
 the Resend API client, never to the download URL. Each file is limited to 25 MiB;
 both metadata and actual streamed length are checked. Objects are stored and
@@ -31,9 +34,10 @@ The web runtime and local background worker share the `ATTACHMENTS` R2 binding.
 Next.js development and the jobs process persist local R2 objects under the
 repository's ignored `.wrangler/shared` directory. Run `pnpm dev` and `pnpm jobs`
 from the repository root. This local storage is a Cloudflare emulator; it does
-not upload files to a production R2 bucket. The Worker configuration names the
-private `papers-attachments` bucket, which must be created before production
-deployment. The [scheduled background Worker](background-workers.md) includes
+not upload files to a production R2 bucket. All development and production Worker configurations use the private
+`papers` bucket with attachment keys under `attachments/`. The cloud bucket
+exists; local emulation remains isolated from production. See
+[storage setup and cutover](storage.md). The [scheduled background Worker](background-workers.md) includes
 attachment processing and has passed local runtime checks; production deployment
 is still outstanding.
 

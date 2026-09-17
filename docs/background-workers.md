@@ -19,7 +19,7 @@ The Worker has passed a Wrangler bundle dry run and a local workerd test against
 PostgreSQL. It has **not been deployed**. Before deployment, replace the all-zero
 Hyperdrive ID in `apps/jobs/wrangler.jsonc` with a real configuration targeting
 the application's migrated PostgreSQL database. Disable Hyperdrive query caching
-for these mutable job queries. Bind the same private `papers-attachments` bucket
+for these mutable job queries. Bind the same private `papers` bucket
 used by the web app, and install `RESEND_API_KEY` and `TELNYX_API_KEY` as Worker
 secrets. They are not included in the repository or copied to this Worker by
 local tests. Apply migrations before enabling scheduled processing. Create the

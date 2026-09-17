@@ -20,7 +20,7 @@ it("advertises and returns exact binary attachment content over MCP", async () =
     (item: { name: string }) => item.name === "download_attachment",
   );
   expect(tool.annotations.readOnlyHint).toBe(true);
-  expect(toolScopes.download_attachment).toBe("inboxes:read");
+  expect(toolScopes.download_attachment).toEqual(["inboxes:read", "sms:read"]);
   const response = await handleMcp(
     rpc("tools/call", {
       name: "download_attachment",

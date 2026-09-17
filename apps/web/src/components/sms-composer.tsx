@@ -1,4 +1,5 @@
 "use client";
+import { AttachmentPicker, encodeAttachments } from "./attachment-picker";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -30,14 +31,21 @@ export function SmsComposer({
     defaultValues: { to: "", text: "" },
   });
   const [operation, setOperation] = useState<Operation | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [error, setError] = useState("");
   const [checking, setChecking] = useState(false);
   async function submit(values: z.infer<typeof smsInput>) {
     setError("");
-    const fingerprint = JSON.stringify({ numberId, ...values });
-    const key = keys.get(fingerprint) ?? crypto.randomUUID();
-    keys.set(fingerprint, key);
     try {
+      values = {
+        ...values,
+        ...(files.length
+          ? { attachments: await encodeAttachments(files, 1_000_000) }
+          : {}),
+      };
+      const fingerprint = JSON.stringify({ numberId, ...values });
+      const key = keys.get(fingerprint) ?? crypto.randomUUID();
+      keys.set(fingerprint, key);
       const response = await fetch(
         `/v1/phone-numbers/${encodeURIComponent(numberId)}/messages`,
         {
@@ -84,6 +92,7 @@ export function SmsComposer({
     setOperation(null);
     setError("");
     form.reset();
+    setFiles([]);
   }
   const failure = smsFailureSchema.safeParse(
     operation?.failure ?? operation?.result?.failure,
@@ -158,8 +167,14 @@ export function SmsComposer({
           {form.formState.errors.text && (
             <p role="alert">Enter a message of up to 1,600 characters.</p>
           )}
+          <AttachmentPicker
+            files={files}
+            onChange={setFiles}
+            maxBytes={1_000_000}
+            disabled={form.formState.isSubmitting}
+          />
           <button className="button" disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? "Submitting…" : "Send SMS"}
+            {form.formState.isSubmitting ? "Submitting…" : "Send SMS / MMS"}
           </button>
         </form>
       )}

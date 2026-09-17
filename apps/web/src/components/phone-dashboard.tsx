@@ -1,4 +1,6 @@
 "use client";
+import { EmailAttachments } from "./email-attachments";
+import type { AttachmentInfo } from "@agentinfra/contracts";
 import { NumberPurchase, NumberRelease } from "./number-purchase";
 import { SmsComposer } from "./sms-composer";
 import { useEffect, useRef, useState } from "react";
@@ -11,6 +13,7 @@ type NumberRow = {
   status: string;
 };
 type Sms = {
+  attachments?: AttachmentInfo[];
   recipientOptOut?: {
     status: "blocked" | "not_blocked" | "unknown";
     observedAt: string | null;
@@ -401,6 +404,12 @@ export function PhoneDashboard({ canSend }: { canSend: boolean }) {
                   proof of consent or guaranteed delivery.
                 </p>
               </div>
+              <EmailAttachments
+                key={message.id}
+                messageId={message.id}
+                channel="sms"
+                initial={message.attachments ?? []}
+              />
               <p className="notice">External message content</p>
               <pre
                 style={{

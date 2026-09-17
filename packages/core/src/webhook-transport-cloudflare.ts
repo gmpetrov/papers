@@ -29,3 +29,12 @@ export function cloudflareWebhookTransport(
     return response.status;
   };
 }
+
+/** Same standalone public-Internet-only deployment requirement as webhooks. */
+export function cloudflareMediaTransport(publicInternetFetch: typeof fetch) {
+  return (url: string, signal: AbortSignal) =>
+    publicInternetFetch(webhookEndpointInput.shape.url.parse(url), {
+      signal,
+      redirect: "manual",
+    });
+}

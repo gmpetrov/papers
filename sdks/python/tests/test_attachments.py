@@ -100,3 +100,22 @@ def test_attachment_metadata_and_empty_files():
         assert client.download_attachment("file", max_bytes=0) == b""
         with pytest.raises(ValueError):
             client.download_attachment("file", max_bytes=-1)
+
+@pytest.mark.asyncio
+async def test_outgoing_files_in_email_reply_and_sms():
+    import json
+    files = [{"filename": "photo.png", "contentType": "image/png", "content": "AAE="}]
+    calls = []
+    def handle(request):
+        assert json.loads(request.content)["attachments"] == files
+        calls.append(request)
+        return httpx.Response(200, json={"id": "op", "status": "completed"})
+    with Papers("test", transport=httpx.MockTransport(handle)) as client:
+        client.send_email("inbox", to=["a@example.test"], subject="Files", text="Hi", idempotency_key="same", attachments=files)
+        client.reply_to_email("message", text="Hi", idempotency_key="same", attachments=files)
+        client.send_sms("phone", to="+12025550100", text="Hi", idempotency_key="same", attachments=files)
+    async with AsyncPapers("test", transport=httpx.MockTransport(handle)) as client:
+        await client.send_email("inbox", to=["a@example.test"], subject="Files", text="Hi", idempotency_key="same", attachments=files)
+        await client.reply_to_email("message", text="Hi", idempotency_key="same", attachments=files)
+        await client.send_sms("phone", to="+12025550100", text="Hi", idempotency_key="same", attachments=files)
+    assert len(calls) == 6

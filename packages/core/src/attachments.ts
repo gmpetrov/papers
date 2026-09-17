@@ -12,29 +12,47 @@ export interface AttachmentBucket {
 }
 export const maxAttachmentBytes = 25 * 1024 * 1024;
 
+export type MediaTransport = (
+  url: string,
+  signal: AbortSignal,
+) => Promise<Response>;
+// Exact provider CDN hosts only; never accept arbitrary Resend subdomains.
+const resendAttachmentHosts = new Set([
+  "inbound-cdn.resend.com",
+  "cdn.resend.app",
+]);
 class StorageFailure extends Error {}
-async function download(url: string, expectedSize: number) {
+async function download(
+  url: string,
+  expectedSize: number | null,
+  mediaTransport?: MediaTransport,
+) {
   const target = new URL(url);
   if (
     target.protocol !== "https:" ||
-    target.hostname !== "inbound-cdn.resend.com" ||
+    (!mediaTransport && !resendAttachmentHosts.has(target.hostname)) ||
     target.username ||
     target.password ||
     target.port
   )
     throw new StorageFailure("invalid_download_origin");
   if (
-    !Number.isSafeInteger(expectedSize) ||
-    expectedSize < 0 ||
-    expectedSize > maxAttachmentBytes
+    expectedSize !== null &&
+    (!Number.isSafeInteger(expectedSize) ||
+      expectedSize < 0 ||
+      expectedSize > maxAttachmentBytes)
   )
     throw new StorageFailure("attachment_too_large");
-  const response = await fetch(target, {
-    redirect: "error",
-    signal: AbortSignal.timeout(20000),
-  });
-  if (!response.ok || !response.body)
+  const response = mediaTransport
+    ? await mediaTransport(target.href, AbortSignal.timeout(20000))
+    : await fetch(target, {
+        redirect: "manual",
+        signal: AbortSignal.timeout(20000),
+      });
+  if (!response.ok || !response.body) {
+    await response.body?.cancel();
     throw new StorageFailure("download_failed");
+  }
   const length = response.headers.get("content-length");
   if (length && Number(length) > maxAttachmentBytes) {
     await response.body.cancel();
@@ -48,7 +66,10 @@ async function download(url: string, expectedSize: number) {
       const { value, done } = await reader.read();
       if (done) break;
       size += value.byteLength;
-      if (size > maxAttachmentBytes || size > expectedSize)
+      if (
+        size > maxAttachmentBytes ||
+        (expectedSize !== null && size > expectedSize)
+      )
         throw new StorageFailure("attachment_size_mismatch");
       chunks.push(value);
     }
@@ -56,7 +77,7 @@ async function download(url: string, expectedSize: number) {
     await reader.cancel().catch(() => {});
     reader.releaseLock();
   }
-  if (size !== expectedSize)
+  if (expectedSize !== null && size !== expectedSize)
     throw new StorageFailure("attachment_size_mismatch");
   const bytes = new Uint8Array(size);
   let offset = 0;
@@ -71,19 +92,28 @@ export async function processAttachments(
   db: Database,
   env: { RESEND_API_KEY?: string; ATTACHMENTS?: Pick<AttachmentBucket, "put"> },
   limit = 10,
+  mediaTransport?: MediaTransport,
 ) {
-  if (!env.ATTACHMENTS || !env.RESEND_API_KEY) return { stored: 0 };
+  if (!env.ATTACHMENTS) return { stored: 0 };
   const pending = await db.attachment.findMany({
     where: {
       objectKey: null,
       storageAttempts: { lt: 8 },
       nextStorageAttemptAt: { lte: new Date() },
-      message: { direction: "inbound", providerId: { not: null } },
+      OR: [
+        ...(env.RESEND_API_KEY
+          ? [{ message: { direction: "inbound", providerId: { not: null } } }]
+          : []),
+        ...(mediaTransport
+          ? [{ smsMessage: { direction: "inbound" }, sourceUrl: { not: null } }]
+          : []),
+      ],
     },
     orderBy: { nextStorageAttemptAt: "asc" },
     take: limit,
     include: {
       message: { select: { organizationId: true, providerId: true } },
+      smsMessage: { select: { organizationId: true } },
     },
   });
   let stored = 0;
@@ -100,20 +130,32 @@ export async function processAttachments(
     });
     if (!claimed.count) continue;
     try {
-      const result = await resendClient(
-        env.RESEND_API_KEY,
-      ).emails.receiving.attachments.get({
-        emailId: attachment.message.providerId!,
-        id: attachment.providerId,
-      });
-      if (
-        result.error ||
-        !result.data ||
-        result.data.id !== attachment.providerId
-      )
-        throw new StorageFailure("provider_metadata_unavailable");
-      const bytes = await download(result.data.download_url, result.data.size);
-      const objectKey = `attachments/${encodeURIComponent(attachment.message.organizationId)}/${encodeURIComponent(attachment.messageId)}/${encodeURIComponent(attachment.id)}`;
+      let bytes: ArrayBuffer;
+      if (attachment.smsMessage && attachment.sourceUrl && mediaTransport) {
+        bytes = await download(
+          attachment.sourceUrl,
+          attachment.size || null,
+          mediaTransport,
+        );
+      } else {
+        const result = await resendClient(
+          env.RESEND_API_KEY!,
+        ).emails.receiving.attachments.get({
+          emailId: attachment.message!.providerId!,
+          id: attachment.providerId,
+        });
+        if (
+          result.error ||
+          !result.data ||
+          result.data.id !== attachment.providerId
+        )
+          throw new StorageFailure("provider_metadata_unavailable");
+        bytes = await download(result.data.download_url, result.data.size);
+      }
+      const organizationId =
+        attachment.message?.organizationId ??
+        attachment.smsMessage!.organizationId;
+      const objectKey = `attachments/${encodeURIComponent(organizationId)}/${encodeURIComponent(attachment.messageId ?? attachment.smsMessageId!)}/${encodeURIComponent(attachment.id)}`;
       await env.ATTACHMENTS.put(objectKey, bytes, {
         httpMetadata: { contentType: "application/octet-stream" },
       });
@@ -123,7 +165,12 @@ export async function processAttachments(
           nextStorageAttemptAt: lease,
           objectKey: null,
         },
-        data: { objectKey, size: bytes.byteLength, storageError: null },
+        data: {
+          objectKey,
+          size: bytes.byteLength,
+          storageError: null,
+          sourceUrl: null,
+        },
       });
       stored += updated.count;
     } catch (error) {

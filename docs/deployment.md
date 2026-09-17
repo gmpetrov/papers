@@ -6,9 +6,10 @@ Deployed September 17, 2026 at **https://www.papers.bot**.
 | --- | --- |
 | Web Worker `papers-web` | Deployed with HTTPS custom domain |
 | Jobs Worker `papers-jobs` | Deployed, Queue consumer and every-minute schedule active |
-| PostgreSQL | Dedicated Prisma Postgres database; all 30 migrations applied |
+| PostgreSQL | Dedicated Prisma Postgres database; all 32 checked-in migrations applied |
 | Hyperdrive `papers-production` | Query caching disabled; origin connection limit 5 |
-| R2 `papers-attachments` | Private bucket bound to both Workers |
+| R2 `papers` | Created and verified private; both checked-in Worker configurations target it |
+| R2 `papers-attachments` | Legacy empty bucket; retain until both live Workers switch to `papers` |
 | Queue `papers-jobs` | Producer and consumer deployed |
 | Worker secrets | Installed from the ignored production environment file |
 | Development data | Not migrated; awaiting the user's fresh-start/migration choice |
@@ -81,6 +82,19 @@ All ten package type checks passed. Before deployment the full suite passed
 255 TypeScript and 46 Python tests. Deployment exposed a jobs Worker startup
 issue caused by the Node Prisma runtime; the database package now selects its
 edge entry point under Wrangler's `workerd` export condition.
+
+## Project storage preparation — September 17, 2026
+
+The private `papers` bucket is created and passed an exact-byte remote
+write/read/delete smoke check. Public r2.dev access is disabled and there are no
+custom domains. Migration `20260917120000_multichannel_attachments` is applied
+to production. Both runtime secret inventories contain the required names.
+Both local and production configs now map `ATTACHMENTS` to `papers`. Existing
+local files were copied and verified without uploading development data.
+
+These changes are prepared for release, not deployed by this storage task.
+Keep the old bucket until both live Worker bindings have switched. See
+[storage cutover and rollback](storage.md) before the next deployment.
 
 ## Updating production
 

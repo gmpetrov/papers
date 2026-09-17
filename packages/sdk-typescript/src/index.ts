@@ -1,3 +1,8 @@
+export interface OutgoingAttachment {
+  filename: string;
+  contentType: string;
+  content: string;
+}
 export interface Agent {
   id: string;
   name: string;
@@ -63,6 +68,7 @@ export interface SmsRecipientOptOut {
   observedAt: string | null;
 }
 export interface SmsMessage {
+  attachments?: AttachmentInfo[];
   /** Present on message detail; current observed profile state, not proof of consent. */
   recipientOptOut?: SmsRecipientOptOut;
   segments: number | null;
@@ -361,7 +367,11 @@ export class Papers {
       ),
   };
   messages = {
-    reply: (id: string, input: { text: string }, options: MutationOptions) =>
+    reply: (
+      id: string,
+      input: { text: string; attachments?: OutgoingAttachment[] },
+      options: MutationOptions,
+    ) =>
       this.request<Operation>(
         `/messages/${encodeURIComponent(id)}/reply`,
         "POST",
@@ -382,7 +392,12 @@ export class Papers {
       this.request<Message>(`/messages/${encodeURIComponent(id)}`),
     send: (
       inboxId: string,
-      input: { to: string[]; subject: string; text: string },
+      input: {
+        to: string[];
+        subject: string;
+        text: string;
+        attachments?: OutgoingAttachment[];
+      },
       options: MutationOptions,
     ) =>
       this.request<Operation>(
@@ -507,7 +522,7 @@ export class Papers {
   sms = {
     send: (
       numberId: string,
-      input: { to: string; text: string },
+      input: { to: string; text: string; attachments?: OutgoingAttachment[] },
       options: MutationOptions,
     ) =>
       this.request<Operation>(

@@ -66,3 +66,21 @@ it("rejects unsafe URLs before resolving and rejects DNS rebinding to a private 
   ).rejects.toThrow("Webhook request failed");
   expect(lookup).toHaveBeenCalledTimes(1);
 });
+
+it("media downloads reject literal private addresses and DNS rebinding", async () => {
+  const { nodeMediaTransport } = await import("../src/webhook-transport-node");
+  await expect(
+    nodeMediaTransport("https://127.0.0.1/media", AbortSignal.timeout(1000)),
+  ).rejects.toThrow();
+  expect(lookup).not.toHaveBeenCalled();
+  vi.mocked(lookup).mockResolvedValueOnce([
+    { address: "127.0.0.1", family: 4 },
+  ] as never);
+  await expect(
+    nodeMediaTransport(
+      "https://media.customer.com/file",
+      AbortSignal.timeout(1000),
+    ),
+  ).rejects.toThrow("Media download failed");
+  expect(lookup).toHaveBeenCalledTimes(1);
+});

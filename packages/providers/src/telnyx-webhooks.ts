@@ -19,6 +19,16 @@ const telnyxEventSchema = z.object({
           )
           .min(1),
         text: z.string().nullable().optional(),
+        media: z
+          .array(
+            z.object({
+              url: z.string().max(8192),
+              content_type: z.string().max(100).nullish(),
+              size: z.number().int().nonnegative().nullish(),
+            }),
+          )
+          .max(10)
+          .optional(),
       })
       .passthrough(),
   }),

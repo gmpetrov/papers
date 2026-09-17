@@ -257,12 +257,14 @@ export class TelnyxProvider {
     text: string,
     messagingProfileId: string,
     webhookUrl?: string,
+    mediaUrls?: string[],
   ) {
     const result = await this.request("/messages", "POST", {
       from,
       to,
       text,
-      type: "SMS",
+      type: mediaUrls?.length ? "MMS" : "SMS",
+      ...(mediaUrls?.length ? { media_urls: mediaUrls } : {}),
       messaging_profile_id: messagingProfileId,
       use_profile_webhooks: true,
       ...(webhookUrl ? { webhook_url: webhookUrl } : {}),

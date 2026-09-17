@@ -16,7 +16,7 @@
     "producers": [{ "binding": "JOBS_QUEUE", "queue": "papers-jobs" }],
   },
   "r2_buckets": [
-    { "binding": "ATTACHMENTS", "bucket_name": "papers-attachments" },
+    { "binding": "ATTACHMENTS", "bucket_name": "papers" },
   ],
   "assets": {
     "directory": ".open-next/assets",

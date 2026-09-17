@@ -66,3 +66,42 @@ export const nodeWebhookTransport: WebhookTransport = async (input) => {
     req.end(input.body);
   });
 };
+
+/** Download provider media using the same DNS-pinned public-only connection policy. */
+export async function nodeMediaTransport(
+  url: string,
+  signal: AbortSignal,
+): Promise<Response> {
+  const destination = webhookEndpointInput.shape.url.parse(url);
+  const { Readable } = await import("node:stream");
+  return new Promise((resolve, reject) => {
+    const req = request(
+      destination,
+      {
+        method: "GET",
+        agent: false,
+        lookup: publicWebhookLookup,
+        signal,
+        maxHeaderSize: 16 * 1024,
+      },
+      (response) => {
+        if (response.statusCode !== 200) {
+          response.destroy();
+          reject(new Error("Media download failed"));
+          return;
+        }
+        const headers = new Headers();
+        if (response.headers["content-length"])
+          headers.set("content-length", response.headers["content-length"]);
+        resolve(
+          new Response(Readable.toWeb(response) as ReadableStream<Uint8Array>, {
+            status: 200,
+            headers,
+          }),
+        );
+      },
+    );
+    req.on("error", () => reject(new Error("Media download failed")));
+    req.end();
+  });
+}
