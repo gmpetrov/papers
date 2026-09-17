@@ -25,7 +25,7 @@ export function WorkspaceSetup({
   const base = origin || "https://YOUR_PAPERS_HOST";
   const snippets: Record<Client, string> = {
     cURL: `curl '${base}/v1/inboxes/${encodeURIComponent(inboxId)}/messages' \\\n  -H "Authorization: Bearer $PAPERS_API_KEY"`,
-    TypeScript: `import { Papers } from "@agentinfra/sdk";
+    TypeScript: `import { Papers } from "@papers.bot/sdk";
 
 const papers = new Papers({
   apiKey: process.env.PAPERS_API_KEY!,

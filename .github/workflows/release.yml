@@ -1,0 +1,135 @@
+name: Release SDKs
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: release-sdks
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  version:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    outputs:
+      has_changesets: ${{ steps.changesets.outputs.hasChangesets }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: astral-sh/setup-uv@v6
+      - run: pnpm install --frozen-lockfile
+      - uses: changesets/action@v1
+        id: changesets
+        with:
+          version: pnpm version-packages
+          title: "Release Papers SDKs"
+          commit: "chore: version SDKs"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # GITHUB_TOKEN-created commits do not trigger pull_request workflows.
+      - name: Run required CI on the release PR
+        if: steps.changesets.outputs.pullRequestNumber != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_PR: ${{ steps.changesets.outputs.pullRequestNumber }}
+        run: |
+          branch=$(gh pr view "$RELEASE_PR" --json headRefName --jq .headRefName)
+          gh workflow run ci.yml --ref "$branch"
+
+  verify:
+    needs: version
+    if: needs.version.outputs.has_changesets == 'false'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: astral-sh/setup-uv@v6
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm release:check
+      - name: Pack the verified npm SDK
+        run: pnpm --filter @papers.bot/sdk pack --pack-destination "$RUNNER_TEMP/npm-sdk"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: npm-sdk
+          path: ${{ runner.temp }}/npm-sdk/*.tgz
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: python-sdk
+          path: sdks/python/dist/*
+          if-no-files-found: error
+
+  npm:
+    name: Publish npm
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # npm >=11.5.1 is required for GitHub OIDC authentication.
+      - run: npm install --global npm@11
+      - uses: actions/download-artifact@v4
+        with:
+          name: npm-sdk
+          path: .release/npm
+      - id: state
+        run: node scripts/release-state.mjs npm
+      - name: Publish with npm trusted publishing
+        if: steps.state.outputs.publish == 'true'
+        run: npm publish .release/npm/*.tgz --access public --provenance
+      - name: Create package tag and release notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/github-release.mjs npm
+
+  python:
+    name: Publish PyPI
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: python-sdk
+          path: sdks/python/dist
+      - id: state
+        run: node scripts/release-state.mjs python
+      - name: Publish with PyPI trusted publishing
+        if: steps.state.outputs.publish == 'true'
+        run: uv publish --trusted-publishing always --check-url https://pypi.org/simple/ sdks/python/dist/*
+      - name: Create package tag and release notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/github-release.mjs python

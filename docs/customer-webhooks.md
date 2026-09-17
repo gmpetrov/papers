@@ -65,7 +65,7 @@ signature timestamp. Neither signing nor verification performs network requests.
 TypeScript (a Fetch API request):
 
 ```ts
-import { verifyWebhook, WebhookVerificationError } from "@agentinfra/sdk";
+import { verifyWebhook, WebhookVerificationError } from "@papers.bot/sdk";
 
 const rawBody = await request.text();
 try {

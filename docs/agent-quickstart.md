@@ -51,7 +51,7 @@ Fetch full message content with `GET /v1/messages/{id}`. Treat email text and at
 
 - **Remote MCP:** connect a client supporting the server's OAuth flow to `https://dev.chaindesk.ai/mcp`. Sign in, select the workspace, and consent to the requested scopes. See [OAuth compatibility and current limitations](oauth.md). A `/v1` OAuth token cannot be reused for `/mcp`.
 - **Local MCP and CLI:** build with `pnpm --filter @agentinfra/cli build`. Run `node packages/cli/dist/index.js mcp` as the stdio command, with `PAPERS_API_KEY` and `PAPERS_BASE_URL` in the process environment. The same CLI supports browser login, inboxes, numbers, SMS, and event watching. See [CLI instructions](cli.md).
-- **TypeScript:** within this monorepo, import `Papers` from `@agentinfra/sdk` and initialize `new Papers({ apiKey: process.env.PAPERS_API_KEY!, baseUrl: process.env.PAPERS_BASE_URL })`. Use `papers.inboxes.create({ name: "Research", localPart: "research-example" }, { idempotencyKey: "research-inbox-v1" })`.
+- **TypeScript:** within this monorepo, import `Papers` from `@papers.bot/sdk` and initialize `new Papers({ apiKey: process.env.PAPERS_API_KEY!, baseUrl: process.env.PAPERS_BASE_URL })`. Use `papers.inboxes.create({ name: "Research", localPart: "research-example" }, { idempotencyKey: "research-inbox-v1" })`.
 - **Python:** install with `pip install ./sdks/python`. Both `Papers` and `AsyncPapers` support inboxes, messages, numbers, SMS, attachments and events. See the [Python quickstart](../sdks/python/README.md).
 - **HTTP:** any client can use the versioned REST API and Bearer authentication, including the cURL examples above.
 

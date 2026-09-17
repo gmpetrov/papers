@@ -7,7 +7,7 @@ import { createMcpServer } from "@agentinfra/mcp";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { Command } from "commander";
 import { positiveInteger, watchEvents, waitForOperation } from "./polling";
-import { Papers, PapersError } from "@agentinfra/sdk";
+import { Papers, PapersError } from "@papers.bot/sdk";
 const cli = new Command()
   .name("papers")
   .description("Email and phone infrastructure for agents")

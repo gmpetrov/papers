@@ -1,6 +1,6 @@
 import { withRuntime } from "@/lib/server";
 import { handleMcp, toolScopes } from "@agentinfra/mcp";
-import { Papers } from "@agentinfra/sdk";
+import { Papers } from "@papers.bot/sdk";
 async function handle(request: Request) {
   return withRuntime(async (r) => {
     const headers = new Headers(request.headers);

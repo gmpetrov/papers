@@ -1,9 +1,9 @@
 # Papers TypeScript client
 
-This package builds locally and has not yet been published to npm.
+Install with `npm install @papers.bot/sdk`.
 
 ```typescript
-import { Papers, PapersError } from "@agentinfra/sdk";
+import { Papers, PapersError } from "@papers.bot/sdk";
 
 const papers = new Papers({
   apiKey: process.env.PAPERS_API_KEY!,
@@ -79,7 +79,7 @@ contentTrust }` for clients that need a link. It lasts 60 seconds and rechecks
 the original credential on use. Treat the URL as a temporary credential;
 do not publish or log it.
 
-Build with `pnpm --filter @agentinfra/sdk build`. The package includes ESM and
+Build with `pnpm --filter @papers.bot/sdk build`. The package includes ESM and
 TypeScript declarations. No publishing is performed by the build command.
 
 ### Webhook verification

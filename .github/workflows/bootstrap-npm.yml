@@ -1,0 +1,29 @@
+name: Bootstrap npm SDK
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: release-sdks
+  cancel-in-progress: false
+jobs:
+  bootstrap:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: npm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      - uses: astral-sh/setup-uv@v6
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm release:check
+      # First upload creates the package so its trusted publisher can be configured.
+      # Routine releases use release.yml and OIDC instead.
+      - run: node scripts/publish-packages.mjs npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

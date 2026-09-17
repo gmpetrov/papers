@@ -32,7 +32,7 @@
   },
   "devDependencies": {
     "@agentinfra/mcp": "workspace:*",
-    "@agentinfra/sdk": "workspace:*",
+    "@papers.bot/sdk": "workspace:*",
     "@types/proper-lockfile": "^4.1.4"
   },
   "description": "CLI and stdio MCP client for Papers email and phone infrastructure",

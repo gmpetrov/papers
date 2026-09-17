@@ -22,13 +22,13 @@ try {
       ),
     );
     tarballs.push(
-      join(directory, `agentinfra-${name}-${manifest.version}.tgz`),
+      join(directory, `${manifest.name.replace("@", "").replace("/", "-")}-${manifest.version}.tgz`),
     );
     await exec(
       "pnpm",
       [
         "--filter",
-        `@agentinfra/${name}`,
+        manifest.name,
         "pack",
         "--pack-destination",
         directory,
@@ -53,7 +53,7 @@ try {
   assert.match(stdout, /inboxes/);
   await writeFile(
     join(directory, "check.mts"),
-    `import { Papers } from "@agentinfra/sdk";
+    `import { Papers } from "@papers.bot/sdk";
 const client = new Papers({ apiKey: "fixture" });
 const me = await client.me();
 const remaining: number = me.sendLimits.email.remaining;
@@ -90,7 +90,7 @@ void [remaining, inboxes, numbers];
     `
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
-import { Papers } from "@agentinfra/sdk";
+import { Papers } from "@papers.bot/sdk";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 const requests = [];

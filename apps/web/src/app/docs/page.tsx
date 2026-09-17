@@ -91,7 +91,7 @@ curl ${publicAppOrigin}/v1/capabilities -H "Authorization: Bearer $PAPERS_API_KE
         Published packages and public directory listings are not yet available.
       </p>
       <h3>TypeScript in the workspace</h3>
-      <pre className="code-block">{`import { Papers } from "@agentinfra/sdk";
+      <pre className="code-block">{`import { Papers } from "@papers.bot/sdk";
 
 const papers = new Papers({
   apiKey: process.env.PAPERS_API_KEY!,
