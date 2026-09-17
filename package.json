@@ -10,7 +10,11 @@
     "db:generate": "pnpm --filter @agentinfra/db generate",
     "db:migrate": "dotenv -e .env -- pnpm --filter @agentinfra/db migrate",
     "jobs": "dotenv -e .env -- tsx apps/jobs/src/local.ts",
-    "jobs:status": "dotenv -e .env -- tsx scripts/job-status.ts"
+    "jobs:status": "dotenv -e .env -- tsx scripts/job-status.ts",
+    "cf:build:web": "node scripts/cloudflare-build.mjs web",
+    "cf:build:jobs": "node scripts/cloudflare-build.mjs jobs",
+    "cf:deploy:web": "node scripts/cloudflare-deploy.mjs web",
+    "cf:deploy:jobs": "node scripts/cloudflare-deploy.mjs jobs"
   },
   "devDependencies": {
     "@playwright/test": "latest",

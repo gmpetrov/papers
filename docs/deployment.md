@@ -20,6 +20,49 @@ for local development. `.env.production` is ignored and contains the production
 database and Google credentials; both public/auth origins include `https://`.
 Never commit environment files or secret bulk-upload bundles.
 
+## Automatic deployments from GitHub
+
+Use Cloudflare Workers Builds with the existing `gmpetrov/papers` GitHub
+connection. Each Worker has its own pipeline, rooted at `/`:
+
+| Worker | Production branch | Build command | Deploy command |
+| --- | --- | --- | --- |
+| `papers-web` | `main` | `pnpm run cf:build:web` | `pnpm run cf:deploy:web` |
+| `papers-jobs` | `main` | `pnpm run cf:build:jobs` | `pnpm run cf:deploy:jobs` |
+
+Disable preview builds for both pipelines. Set `PNPM_VERSION=10.32.1` in
+each pipeline's build variables; `.node-version` pins Node. Add `DATABASE_URL`
+from the ignored production environment file as an **encrypted build secret**
+for both Workers. Build secrets are separate from runtime secrets. Existing
+runtime credentials and the Hyperdrive binding remain configured on the Workers.
+Do not copy production secrets into GitHub or source files.
+
+The build commands generate Prisma clients, typecheck the monorepo, and build the
+target Worker. Deploy commands reject non-main builds, run `prisma migrate
+deploy`, then deploy using the production Wrangler configuration. Prisma's
+migration lock protects simultaneous migration attempts; only lock timeouts are
+retried. A migration failure prevents that pipeline's deployment. The web
+pipeline checks `/api/health` after deployment, including database connectivity.
+
+These are independent releases, not an atomic deployment of both Workers.
+Migrations and message payload changes must remain compatible with both the old
+and new Worker versions. Use additive migrations and remove old schema only in
+a later release. A failed health check marks the build failed; it does not roll
+back the Worker or database. GitHub Actions verification runs independently and
+does not gate native Cloudflare deployments from a direct push to main.
+
+Setup status (September 17, 2026): both native GitHub connections are active on
+`main`, preview builds are disabled, and both pipelines have encrypted
+`DATABASE_URL` build secrets and `PNPM_VERSION=10.32.1`. They share the
+`Papers production builds` deployment token. The local production builds and
+deployment failure guards passed verification. Commit and push these setup files
+to start the first native build; a Git-triggered deployment has not yet been
+verified. Confirm successful builds for **both** Workers and the deployed commit
+in the Cloudflare dashboard after that push.
+
+References: [GitHub integration](https://developers.cloudflare.com/workers/ci-cd/builds/git-integration/github-integration/)
+and [build configuration](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/).
+
 ## Verified in production
 
 Public pages, login, database health, API authentication, OpenAPI, and OAuth
