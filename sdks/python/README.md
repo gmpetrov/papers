@@ -1,12 +1,12 @@
 # Papers Python client
 
 The package provides synchronous `Papers` and asynchronous `AsyncPapers` clients.
-It is built locally; it has not been published to PyPI yet.
+Install with `pip install papers-bot`; the Python import remains `papers`.
 
 For development, install `uv` and pnpm. From the repository root, run
-`pnpm exec turbo run test --filter=@agentinfra/python` to synchronize the locked
+`pnpm exec turbo run test --filter=papers-bot` to synchronize the locked
 Python environment and run pytest. Run
-`pnpm exec turbo run build --filter=@agentinfra/python` to build the wheel and
+`pnpm exec turbo run build --filter=papers-bot` to build the wheel and
 source distribution. The root `pnpm test` includes Python tests, and `pnpm build`
 includes Python packaging. The private npm manifest is only a task wrapper;
 `pyproject.toml` remains the Python package metadata.

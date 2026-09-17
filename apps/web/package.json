@@ -25,7 +25,7 @@
     "zod": "latest",
     "lucide-react": "latest",
     "@agentinfra/mcp": "workspace:*",
-    "@agentinfra/sdk": "workspace:*"
+    "@papers.bot/sdk": "workspace:*"
   },
   "devDependencies": {
     "@opennextjs/cloudflare": "1.20.6",

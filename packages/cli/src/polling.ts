@@ -1,5 +1,5 @@
 import { setTimeout as delay } from "node:timers/promises";
-import type { Event, Operation, Page } from "@agentinfra/sdk";
+import type { Event, Operation, Page } from "@papers.bot/sdk";
 export function positiveInteger(value: string): number {
   const number = Number(value);
   if (!Number.isSafeInteger(number) || number < 1)

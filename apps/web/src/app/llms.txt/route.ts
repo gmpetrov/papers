@@ -41,7 +41,7 @@ Packages are not published. From the repository root:
 - CLI: pnpm --filter @agentinfra/cli build; node packages/cli/dist/index.js whoami
 - Local stdio MCP: node packages/cli/dist/index.js mcp
 - Python: pip install ./sdks/python; import Papers or AsyncPapers from papers
-- TypeScript within the workspace: import { Papers } from "@agentinfra/sdk"
+- TypeScript within the workspace: import { Papers } from "@papers.bot/sdk"
 
 Set PAPERS_API_KEY to a scoped Papers key and PAPERS_BASE_URL to ${origin}. Pass baseUrl explicitly to the TypeScript constructor or base_url to Python; the CLI reads PAPERS_BASE_URL itself. Both SDKs append /v1. The CLI also supports login through a browser instead of a static API key. GET /v1/events requires events:read.
 

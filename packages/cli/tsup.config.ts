@@ -4,5 +4,5 @@ export default defineConfig({
   entry: ["src/index.ts"],
   format: ["esm"],
   clean: true,
-  noExternal: ["@agentinfra/mcp", "@agentinfra/sdk", "@agentinfra/contracts"],
+  noExternal: ["@agentinfra/mcp", "@papers.bot/sdk", "@agentinfra/contracts"],
 });

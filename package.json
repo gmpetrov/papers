@@ -14,9 +14,16 @@
     "cf:build:web": "node scripts/cloudflare-build.mjs web",
     "cf:build:jobs": "node scripts/cloudflare-build.mjs jobs",
     "cf:deploy:web": "node scripts/cloudflare-deploy.mjs web",
-    "cf:deploy:jobs": "node scripts/cloudflare-deploy.mjs jobs"
+    "cf:deploy:jobs": "node scripts/cloudflare-deploy.mjs jobs",
+    "changeset": "changeset",
+    "version-packages": "changeset version && node scripts/sync-python-version.mjs && uv lock --project sdks/python && pnpm install --lockfile-only",
+    "release:check": "node --test scripts/release-tools.test.mjs && node scripts/sync-python-version.mjs --check && uv lock --project sdks/python --check && turbo run typecheck build --filter=@papers.bot/sdk --filter=papers-bot --filter=@agentinfra/cli && vitest run packages/sdk-typescript/tests packages/cli/tests && turbo run test --filter=papers-bot && node scripts/package-install-check.mjs && python3 scripts/python-package-check.py",
+    "publish-packages": "pnpm release:check && node scripts/publish-packages.mjs",
+    "publish:npm": "pnpm release:check && node scripts/publish-packages.mjs npm",
+    "publish:python": "pnpm release:check && node scripts/publish-packages.mjs python"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.31.1",
     "@playwright/test": "latest",
     "@types/node": "latest",
     "dotenv-cli": "latest",

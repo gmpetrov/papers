@@ -51,7 +51,7 @@ Pending attachments return a structured error; the command does not retry.
 
 ## Installed-package verification
 
-After building both `@agentinfra/sdk` and `@agentinfra/cli`, run
+After building both `@papers.bot/sdk` and `@agentinfra/cli`, run
 `pnpm exec node scripts/package-install-check.mjs` from the repository root.
 It packs and installs both npm artifacts in a temporary directory, checks the
 installed CLI executable, typechecks against the installed declarations, and

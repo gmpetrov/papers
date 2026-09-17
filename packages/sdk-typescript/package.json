@@ -1,5 +1,5 @@
 {
-  "name": "@agentinfra/sdk",
+  "name": "@papers.bot/sdk",
   "version": "0.1.0",
   "private": false,
   "type": "module",
@@ -26,6 +26,11 @@
     }
   },
   "description": "Typed TypeScript client for Papers email and phone infrastructure",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gmpetrov/papers.git",
+    "directory": "packages/sdk-typescript"
+  },
   "engines": {
     "node": ">=22"
   }

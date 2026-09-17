@@ -1,6 +1,6 @@
 import { it, expect, vi } from "vitest";
 import { watchEvents, waitForOperation, positiveInteger } from "../src/polling";
-import type { Event } from "@agentinfra/sdk";
+import type { Event } from "@papers.bot/sdk";
 const event = (id: string): Event => ({
   id,
   type: "email.received",

@@ -35,17 +35,20 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - uses: astral-sh/setup-uv@v6
+      - run: node --test scripts/release-tools.test.mjs
+      - run: node scripts/sync-python-version.mjs --check
+      - run: uv lock --project sdks/python --check
       - run: pnpm db:generate
       - run: pnpm db:migrate
       - run: pnpm typecheck
       - run: pnpm test
       - name: Verify isolated PostgreSQL backup and restore
         run: python3 scripts/backup-restore-check.py --container "${{ job.services.postgres.id }}"
-      - run: pnpm --filter @agentinfra/sdk build
+      - run: pnpm --filter @papers.bot/sdk build
       - run: pnpm --filter @agentinfra/cli build
       - run: node packages/cli/dist/index.js --help
       - run: pnpm exec node scripts/package-install-check.mjs
       - run: pnpm --filter @agentinfra/web cf:build
       - run: pnpm --filter @agentinfra/jobs build
-      - run: pnpm exec turbo run build --filter=@agentinfra/python
+      - run: pnpm exec turbo run build --filter=papers-bot
       - run: python3 scripts/python-package-check.py
