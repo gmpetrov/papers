@@ -6,8 +6,10 @@ are disconnected when that work finishes. The web app no longer reads a direct
 `DATABASE_URL` to serve requests; that variable remains useful for migrations,
 the local Node jobs process, and repository scripts.
 
-Both Wrangler configurations currently contain an all-zero placeholder
-Hyperdrive ID. The web app's local connection points to the development
+The local Wrangler configurations contain an all-zero placeholder
+Hyperdrive ID. The separate `wrangler.production.jsonc` configurations both use
+the deployed `papers-production` Hyperdrive with query caching disabled and an
+origin connection limit of five. The web app's local connection points to the development
 `agentinfra` database; the standalone jobs Worker defaults to `agentinfra_test`.
 Set `CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE` to override either
 when running Wrangler. In production, both must reference a real Hyperdrive
@@ -35,5 +37,5 @@ Hyperdrive pooling or cache settings. Those require verification against the
 provisioned Cloudflare configuration before release. See [local development](https://developers.cloudflare.com/hyperdrive/configuration/local-development/).
 
 Changes to Wrangler bindings require restarting `pnpm dev` so OpenNext refreshes
-its development bindings. Production PostgreSQL and Hyperdrive provisioning,
-configuration verification, and deployment remain outstanding.
+its development bindings. Production PostgreSQL and Hyperdrive are deployed; database connectivity and
+background processing were verified on September 17, 2026. See [deployment](deployment.md).

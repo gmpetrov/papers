@@ -1,38 +1,71 @@
-# Deployment state
+# Production deployment
 
-Verified September 16, 2026 against the connected Cloudflare account:
+Deployed September 17, 2026 at **https://www.papers.bot**.
 
 | Resource | State |
 | --- | --- |
-| `papers-attachments` R2 bucket | Created, Standard storage, Western Europe location hint |
-| Bucket public access | `r2.dev` disabled; no custom domains |
-| `papers-jobs` Queue | Created; no deployed producers or consumers yet |
-| Web Worker | Local OpenNext build/runtime verified; not deployed |
-| Jobs Worker | Dry-run bundle verified; not deployed |
-| Production PostgreSQL | Service/connection still to be selected |
-| Hyperdrive | Both configs still contain placeholder IDs |
-| Application domain | Awaiting production domain selection |
+| Web Worker `papers-web` | Deployed with HTTPS custom domain |
+| Jobs Worker `papers-jobs` | Deployed, Queue consumer and every-minute schedule active |
+| PostgreSQL | Dedicated Prisma Postgres database; all 30 migrations applied |
+| Hyperdrive `papers-production` | Query caching disabled; origin connection limit 5 |
+| R2 `papers-attachments` | Private bucket bound to both Workers |
+| Queue `papers-jobs` | Producer and consumer deployed |
+| Worker secrets | Installed from the ignored production environment file |
+| Development data | Not migrated; awaiting the user's fresh-start/migration choice |
+| Resend and Telnyx callbacks | Not switched; pending the same data decision |
 
-Both checked-in Wrangler configs already reference the exact bucket and queue
-names. Development continues using local binding emulation; creating these
-resources does not move application data or provider callbacks into production.
-No messages or attachments have been copied to the new resources.
+Production uses `apps/web/wrangler.production.jsonc` and
+`apps/jobs/wrangler.production.jsonc`. The ordinary Wrangler configurations remain
+for local development. `.env.production` is ignored and contains the production
+database and Google credentials; both public/auth origins include `https://`.
+Never commit environment files or secret bulk-upload bundles.
 
-Before deployment, configure a dedicated migrated PostgreSQL database and a
-cache-disabled Hyperdrive binding for both Workers. Set the application's
-production origin, OAuth callback URLs, provider callbacks, and Worker secrets.
-Keep the background Worker standalone without origin routes; enable its
-`WEBHOOK_TRANSPORT=cloudflare` only with that deployed configuration.
+## Verified in production
 
-Deployment must then verify database connectivity, authentication and revocation,
-signed provider ingress, scheduled/Queue processing, attachment authorization,
-and public-only customer webhook egress in the deployed runtime. Local tests
-and successful bundling do not establish these production properties.
+Public pages, login, database health, API authentication, OpenAPI, and OAuth
+metadata passed HTTP checks. Google authorization uses the production client and
+`https://www.papers.bot/api/auth/callback/google`; the browser reached Google's
+account chooser. Completing a user's Google login is still unverified.
 
-CI now builds both the web Worker and jobs Worker. The workflow is configured but
-has not yet run on GitHub.
+Unsigned provider webhooks were rejected. A signed synthetic Resend event for an
+unknown recipient was accepted, queued, and processed once without errors. Its
+test row was removed. No email or SMS was sent. Queue execution and scheduled
+background cycles reported no failures. Existing live provider callbacks still
+point to development, so these checks do not establish live production delivery.
 
-## Latest local runtime verification
+The public asset bundle was checked for production secret values; none matched.
+All ten package type checks passed. Before deployment the full suite passed
+255 TypeScript and 46 Python tests. Deployment exposed a jobs Worker startup
+issue caused by the Node Prisma runtime; the database package now selects its
+edge entry point under Wrangler's `workerd` export condition.
+
+## Updating production
+
+Run from the repository root with pnpm installed. Keep the production env file
+private. Apply reviewed migrations before deploying code that requires them:
+
+```sh
+pnpm exec dotenv -e .env.production -- pnpm --filter @agentinfra/db migrate
+pnpm exec dotenv -e .env.production -- pnpm --filter @agentinfra/web exec opennextjs-cloudflare build --config wrangler.production.jsonc
+pnpm exec wrangler deploy --config apps/web/wrangler.production.jsonc
+pnpm exec wrangler deploy --config apps/jobs/wrangler.production.jsonc
+```
+
+To update secrets, use `wrangler secret bulk` with a private JSON file and the
+appropriate production config. Remove temporary upload files afterward. Database
+credentials belong in Hyperdrive rather than Worker vars. Recheck health,
+authentication, Queue processing and scheduled logs after deployment.
+
+## Remaining cutover work
+
+Resolve whether to migrate existing workspaces, inboxes, messages, phone numbers
+and attachment objects. Coordinate development processors and production data
+before changing the shared Resend webhook and Telnyx messaging profile to the
+production endpoints. Do not route existing resources into an empty database.
+Managed backup/PITR retention, object recovery, production RPO/RTO, live delivery,
+and full interactive authentication checks remain to be verified.
+
+## Historical local runtime verification
 
 The latest Node/database verification through migration 30 passed all 251 tests
 in 34 files, plus type checks in all ten packages. It includes selected-resource
@@ -78,3 +111,54 @@ Through migration 26, the local Worker also verifies selected-resource key
 metadata, resource/event filtering for empty grants, zero provisioning allowance,
 and rejection of inbox/number creation. Existing OAuth checks still pass. Test
 keys are revoked; no provider sends or purchases occur in these checks.
+
+## Organization creation incident — September 17
+
+The production request at 09:02:14 UTC returned HTTP 500 after 12.47 seconds.
+The stored invocation contains only the `pg-pool`/Prisma stack, without the
+underlying database error message or code; no trace spans were retained.
+The subsequent user request at 09:03:02 succeeded. The production workspace has
+its owner membership, default team and default project. A disposable production
+account also created a workspace successfully, including while eight concurrent
+session reads ran; all temporary account/workspace rows were removed afterward.
+
+Authentication now records structured `auth_request_failed` diagnostics with
+nested database error codes and timeout/connection categories. SQL, parameters,
+raw error messages and credentials are excluded. This corrects the diagnostic
+gap; it does not establish or fix the original transient failure's root cause.
+The organization integration test covers owner/team/project creation, active
+workspace selection and duplicate-slug rejection. Connection limits and write
+retry behavior were not changed without evidence.
+
+## Dashboard latency — September 17
+
+The web Worker's production config now uses `placement.region: aws:us-east-1`
+to execute near the primary database. Workers remain on Cloudflare infrastructure;
+this is a proximity hint, not a deployment inside AWS. Placement applies to fetch
+handlers, so the jobs Worker configuration was not changed. Hyperdrive query
+caching stays disabled for authorization and other consistency-sensitive reads.
+
+A Paris-origin HTTP comparison used a disposable authenticated account and empty
+workspace, with five sequential samples per endpoint. Median full-response times:
+
+| Endpoint | Default placement | US-east placement, warmed |
+| --- | ---: | ---: |
+| Dashboard overview HTML | 670 ms | 305 ms |
+| Session | 461 ms | 228 ms |
+| Inbox list | 1204 ms | 345 ms |
+| Public homepage HTML | 47 ms | 174 ms |
+
+These are small synthetic samples, not field percentiles or browser load times.
+The first post-placement run was noisier (overview 627 ms, inboxes 362 ms).
+The public HTML tradeoff is expected because the same Worker serves public and
+authenticated pages. Direct static assets continue to be served near visitors.
+If public HTML latency becomes significant, split its serving path from the
+regional database-backed handlers. A login-page browser trace before the change
+showed LCP 344 ms and CLS 0; that is not an authenticated dashboard measurement.
+All temporary test accounts and workspaces were cleaned up after measurements.
+
+Dashboard loading now requests inboxes only for Overview and Inboxes, avoiding an
+unrelated blocking API request on other sections. Organization details and teams
+load concurrently. Production build and web type checks passed.
+
+Reference: https://developers.cloudflare.com/workers/configuration/placement/

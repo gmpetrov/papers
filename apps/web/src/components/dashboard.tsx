@@ -226,12 +226,14 @@ export function Dashboard({
     setLoading(true);
     setLoadingInboxes(false);
     try {
-      const i = await api<{ data: Row[]; nextCursor: string | null }>(
-        "/inboxes",
-      );
-      if (generation !== inboxGeneration.current) return;
-      setInboxes(i.data);
-      setInboxCursor(i.nextCursor);
+      if (section === "overview" || section === "inboxes") {
+        const i = await api<{ data: Row[]; nextCursor: string | null }>(
+          "/inboxes",
+        );
+        if (generation !== inboxGeneration.current) return;
+        setInboxes(i.data);
+        setInboxCursor(i.nextCursor);
+      }
       if (section === "api-keys" && admin)
         setKeys((await api<{ data: Row[] }>("/api-keys")).data);
       if (section === "integrations")
@@ -239,19 +241,23 @@ export function Dashboard({
           (await api<{ data: typeof connections }>("/connections")).data,
         );
       if (section === "settings") {
-        const m = await authClient.organization.getFullOrganization();
+        const [m, t] = await Promise.all([
+          authClient.organization.getFullOrganization(),
+          authClient.organization.listTeams({
+            query: { organizationId: activeOrganizationId },
+          }),
+        ]);
+        if (generation !== inboxGeneration.current) return;
         if (m.error) throw new Error(m.error.message);
+        if (t.error) throw new Error(t.error.message);
         setMembers(m.data?.members ?? []);
         setInvitations(m.data?.invitations ?? []);
-        const t = await authClient.organization.listTeams({
-          query: { organizationId: activeOrganizationId },
-        });
         setTeams(t.data ?? []);
       }
     } catch (e) {
       setNotice((e as Error).message);
     } finally {
-      setLoading(false);
+      if (generation === inboxGeneration.current) setLoading(false);
     }
   }, [activeOrganizationId, section, admin]);
   useEffect(() => {

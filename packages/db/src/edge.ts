@@ -1,6 +1,8 @@
 import { PrismaClient } from "../generated-edge/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import type { Database } from "./index";
+export { Prisma } from "../generated-edge/client";
+export type { Database } from "./index";
 
 // Workerd requires a statically imported Wasm module, unlike the Node client.
 export function createDatabase(connectionString: string): Database {

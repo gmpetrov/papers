@@ -1,3 +1,4 @@
+import { authErrorDiagnostics } from "./error-diagnostics";
 import { resourceConsentDatabase } from "./resource-consent";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
@@ -35,6 +36,17 @@ export function createAuth(
     );
   return betterAuth({
     appName: "Papers",
+    onAPIError: {
+      onError(error) {
+        if (error instanceof APIError && error.statusCode < 500) return;
+        console.error(
+          JSON.stringify({
+            event: "auth_request_failed",
+            errors: authErrorDiagnostics(error),
+          }),
+        );
+      },
+    },
     baseURL: env.BETTER_AUTH_URL,
     secret: env.BETTER_AUTH_SECRET,
     database: prismaAdapter(

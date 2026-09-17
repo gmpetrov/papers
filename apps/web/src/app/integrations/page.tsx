@@ -1,3 +1,4 @@
+import { publicAppOrigin } from "@/lib/public-origin";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PublicPage } from "@/components/public-page";
@@ -22,7 +23,7 @@ export default function IntegrationsPage() {
             dashboard.
           </p>
           <p>
-            <code>https://dev.chaindesk.ai/mcp</code>
+            <code>{publicAppOrigin}/mcp</code>
           </p>
         </section>
         <section>

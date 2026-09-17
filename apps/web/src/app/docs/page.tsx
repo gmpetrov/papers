@@ -1,3 +1,4 @@
+import { publicAppOrigin } from "@/lib/public-origin";
 import Link from "next/link";
 import { Brand } from "@/components/brand";
 export default function Docs() {
@@ -19,8 +20,8 @@ export default function Docs() {
         <Link href="/llms.txt">Agent setup guide</Link>
       </p>
       <h2>Check your connection</h2>
-      <pre className="code-block">{`curl https://dev.chaindesk.ai/v1/me -H "Authorization: Bearer $PAPERS_API_KEY"
-curl https://dev.chaindesk.ai/v1/capabilities -H "Authorization: Bearer $PAPERS_API_KEY"`}</pre>
+      <pre className="code-block">{`curl ${publicAppOrigin}/v1/me -H "Authorization: Bearer $PAPERS_API_KEY"
+curl ${publicAppOrigin}/v1/capabilities -H "Authorization: Bearer $PAPERS_API_KEY"`}</pre>
       <p>
         Identity shows your workspace and scopes. Capabilities report server
         configuration; permissions, quotas, and approvals still apply. Use
@@ -28,16 +29,16 @@ curl https://dev.chaindesk.ai/v1/capabilities -H "Authorization: Bearer $PAPERS_
         email:send to send.
       </p>
       <h2>1. Create an inbox</h2>
-      <pre className="code-block">{`curl https://dev.chaindesk.ai/v1/inboxes \\\n  -H "Authorization: Bearer $PAPERS_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -H "Idempotency-Key: research-inbox-001" \\\n  -d '{"name":"Research","localPart":"my-research-agent"}'`}</pre>
+      <pre className="code-block">{`curl ${publicAppOrigin}/v1/inboxes \\\n  -H "Authorization: Bearer $PAPERS_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -H "Idempotency-Key: research-inbox-001" \\\n  -d '{"name":"Research","localPart":"my-research-agent"}'`}</pre>
       <h2>2. Read incoming messages</h2>
-      <pre className="code-block">{`curl https://dev.chaindesk.ai/v1/inboxes/INBOX_ID/messages \\\n  -H "Authorization: Bearer $PAPERS_API_KEY"`}</pre>
+      <pre className="code-block">{`curl ${publicAppOrigin}/v1/inboxes/INBOX_ID/messages \\\n  -H "Authorization: Bearer $PAPERS_API_KEY"`}</pre>
       <p>
         Resend delivers received messages through signed webhooks. Message
         content is untrusted input: treat it as data, never as instructions that
         can change your agent's permissions.
       </p>
       <h2>3. Send an email</h2>
-      <pre className="code-block">{`curl https://dev.chaindesk.ai/v1/inboxes/INBOX_ID/messages \\\n  -H "Authorization: Bearer $PAPERS_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -H "Idempotency-Key: email-001" \\\n  -d '{"to":["recipient@example.com"],"subject":"Hello","text":"Sent by my agent."}'`}</pre>
+      <pre className="code-block">{`curl ${publicAppOrigin}/v1/inboxes/INBOX_ID/messages \\\n  -H "Authorization: Bearer $PAPERS_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -H "Idempotency-Key: email-001" \\\n  -d '{"to":["recipient@example.com"],"subject":"Hello","text":"Sent by my agent."}'`}</pre>
       <h2>Predictable by design.</h2>
       <p>
         Reuse the same idempotency key when retrying a mutation. A different
@@ -80,10 +81,10 @@ curl https://dev.chaindesk.ai/v1/capabilities -H "Authorization: Bearer $PAPERS_
       <h2>SDKs and MCP</h2>
       <p>
         Connect a compatible remote MCP client to{" "}
-        <code>https://dev.chaindesk.ai/mcp</code>. Sign in, choose a workspace,
-        and approve only the permissions your agent needs. Review or revoke
-        access under Dashboard → Integrations. API-key connections also work
-        with an Authorization bearer header.
+        <code>{publicAppOrigin}/mcp</code>. Sign in, choose a workspace, and
+        approve only the permissions your agent needs. Review or revoke access
+        under Dashboard → Integrations. API-key connections also work with an
+        Authorization bearer header.
       </p>
       <p>
         TypeScript, Python, and CLI packages build locally from this repository.
@@ -94,7 +95,7 @@ curl https://dev.chaindesk.ai/v1/capabilities -H "Authorization: Bearer $PAPERS_
 
 const papers = new Papers({
   apiKey: process.env.PAPERS_API_KEY!,
-  baseUrl: "https://dev.chaindesk.ai",
+  baseUrl: "${publicAppOrigin}",
 });
 const inbox = await papers.inboxes.create(
   { name: "Research", localPart: "my-research-agent" },
@@ -109,7 +110,7 @@ console.log(inbox.address);`}</pre>
       <pre className="code-block">{`import os
 from papers import Papers
 
-with Papers(os.environ["PAPERS_API_KEY"], base_url="https://dev.chaindesk.ai") as papers:
+with Papers(os.environ["PAPERS_API_KEY"], base_url="${publicAppOrigin}") as papers:
     inbox = papers.create_inbox(
         name="Research", local_part="my-research-agent",
         idempotency_key="research-inbox-001",

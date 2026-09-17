@@ -717,3 +717,40 @@ it("does not expose or accept expired invitations", async () => {
     }),
   ).toBe(0);
 });
+
+it("creates a workspace with its owner, default team and project", async () => {
+  const created = await data(
+    await call("outsider", "/organization/create", {
+      name: "Creation regression",
+      slug: "creation-regression",
+    }),
+  );
+  expect(
+    await db.member.findFirst({
+      where: { organizationId: created.id, userId: "outsider" },
+    }),
+  ).toMatchObject({ role: "owner" });
+  const team = await db.team.findFirstOrThrow({
+    where: { organizationId: created.id },
+  });
+  expect(
+    await db.teamMember.findFirst({
+      where: { teamId: team.id, userId: "outsider" },
+    }),
+  ).not.toBeNull();
+  expect(
+    await db.project.findMany({ where: { organizationId: created.id } }),
+  ).toMatchObject([{ name: "Default" }]);
+  expect(
+    (await data(await call("outsider", "/get-session"))).session
+      .activeOrganizationId,
+  ).toBe(created.id);
+  const duplicate = await call("outsider", "/organization/create", {
+    name: "Duplicate",
+    slug: "creation-regression",
+  });
+  expect(duplicate.status).toBe(400);
+  expect(
+    await db.organization.count({ where: { slug: "creation-regression" } }),
+  ).toBe(1);
+});
