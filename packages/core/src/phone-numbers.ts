@@ -1,3 +1,4 @@
+import { ensureBilling, billingLock, effectivePlan } from "./billing-ledger";
 import { resourceAccess } from "./resource-grants";
 import { reserveCredentialUsage } from "./key-usage";
 import { requestActionApproval } from "./approvals";
@@ -51,6 +52,7 @@ export async function provisionNumber(
   p: Principal,
   body: unknown,
   key?: string,
+  paidRentalId?: string,
 ) {
   authorize(p, "numbers:provision");
   assert(
@@ -60,6 +62,7 @@ export async function provisionNumber(
     "An authorized workspace administrator or credential is required",
   );
   idempotencyKey(key);
+  if (env.BILLING_ENABLED === "true") await ensureBilling(db, p.organizationId);
   const input = numberInput.parse(body);
   const agentId = input.agentId ?? p.agentId;
   if (agentId) ownedAgent(p, agentId);
@@ -145,6 +148,57 @@ export async function provisionNumber(
       "number",
       new Date().toISOString().slice(0, 10),
     );
+    await billingLock(tx, p.organizationId);
+    const billing = await tx.billingAccount.findUnique({
+      where: { organizationId: p.organizationId },
+    });
+    let rentalId: string | undefined;
+    if (billing) {
+      assert(
+        !billing.blocked && effectivePlan(billing).numbers > 0,
+        402,
+        "subscription_required",
+        "An active paid plan is required",
+      );
+      assert(
+        input.country === "US" &&
+          input.currency === "USD" &&
+          Number(input.monthlyCost) <= 1.1 &&
+          Number(input.upfrontCost) <= 1.1,
+        409,
+        "quote_required",
+        "This number requires a custom retail quote",
+      );
+      const rental = await tx.phoneRental.findFirst({
+        where: {
+          organizationId: p.organizationId,
+          ...(paidRentalId ? { id: paidRentalId } : {}),
+          phoneNumberId: null,
+          status: "active",
+          paidUntil: { gt: new Date() },
+          cancelAtPeriodEnd: false,
+        },
+      });
+      assert(
+        rental,
+        402,
+        "phone_rental_required",
+        "Purchase a $3/month phone rental in Billing first",
+      );
+      const count = await tx.phoneNumber.count({
+        where: {
+          organizationId: p.organizationId,
+          status: { notIn: ["failed", "released"] },
+        },
+      });
+      assert(
+        count < effectivePlan(billing).numbers,
+        409,
+        "quota_exceeded",
+        "Your plan phone number limit is reached",
+      );
+      rentalId = rental.id;
+    }
     const operationId = crypto.randomUUID();
     const data = {
       status: "pending",
@@ -163,6 +217,11 @@ export async function provisionNumber(
     const number = existing
       ? await tx.phoneNumber.update({ where: { id: existing.id }, data })
       : await tx.phoneNumber.create({ data });
+    if (rentalId)
+      await tx.phoneRental.update({
+        where: { id: rentalId },
+        data: { phoneNumberId: number.id },
+      });
     const operation = await tx.operation.create({
       data: {
         id: operationId,
@@ -226,6 +285,13 @@ export async function provisionNumber(
         "price_changed",
         "Number pricing changed. Search again to review the current price",
       );
+      if (env.BILLING_ENABLED === "true")
+        assert(
+          quote.phone_number_type === "local",
+          409,
+          "quote_required",
+          "Only standard US local numbers are available at this rental price",
+        );
       submitted = true;
       const order = await provider(env).provision(
         input.phoneNumber,
@@ -310,10 +376,11 @@ export async function releaseNumber(
     if (prior) return { ...prior, replay: true, number };
     ready(env);
     assert(
-      number.status === "active" && number.providerId,
+      ["active", "billing_suspended"].includes(number.status) &&
+        number.providerId,
       409,
       "number_inactive",
-      "Only an active phone number can be released",
+      "Only an assigned phone number can be released",
     );
     await tx.phoneNumber.update({
       where: { id },

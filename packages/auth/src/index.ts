@@ -1,3 +1,4 @@
+import { planFor } from "@agentinfra/contracts";
 import { authErrorDiagnostics } from "./error-diagnostics";
 import { resourceConsentDatabase } from "./resource-consent";
 import { betterAuth } from "better-auth";
@@ -14,6 +15,7 @@ import { oauthProvider } from "@better-auth/oauth-provider";
 import type { Database } from "@agentinfra/db";
 import { sendAccountEmail } from "@agentinfra/providers";
 export interface AuthEnvironment {
+  BILLING_ENABLED?: string;
   BETTER_AUTH_URL: string;
   BETTER_AUTH_SECRET: string;
   GOOGLE_CLIENT_ID?: string;
@@ -90,6 +92,20 @@ export function createAuth(
     plugins: [
       admin({ impersonationSessionDuration: 900 }),
       organization({
+        membershipLimit: async (_user, organization) => {
+          const billing = await db.billingAccount.findUnique({
+            where: { organizationId: organization.id },
+          });
+          return billing
+            ? planFor(
+                billing.status === "active" &&
+                  billing.periodEnd &&
+                  billing.periodEnd > new Date()
+                  ? billing.plan
+                  : "free",
+              ).seats
+            : 100;
+        },
         teams: { enabled: true },
         requireEmailVerificationOnInvitation: true,
         sendInvitationEmail: async (data) =>
@@ -124,6 +140,12 @@ export function createAuth(
             }
           },
           afterCreateOrganization: async ({ organization }) => {
+            if (env.BILLING_ENABLED === "true")
+              await db.billingAccount.upsert({
+                where: { organizationId: organization.id },
+                create: { organizationId: organization.id },
+                update: {},
+              });
             await db.project.create({
               data: { organizationId: organization.id, name: "Default" },
             });

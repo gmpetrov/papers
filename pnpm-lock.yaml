@@ -203,6 +203,9 @@ importers:
       standardwebhooks:
         specifier: ^1.1.1
         version: 1.1.1
+      stripe:
+        specifier: ^22.6.2
+        version: 22.6.2(@types/node@22.20.3)
       zod:
         specifier: latest
         version: 4.6.5
@@ -4239,6 +4242,15 @@ packages:
   strip-final-newline@2.0.0:
     resolution: {integrity: sha512-BrpvfNAE3dcvq7ll3xVumzjKjZQ5tI1sEUIKr3Uoks0XUl45St3FlatVqef9prk4jRDzhW6WZg+3bk93y6pLjA==}
     engines: {node: '>=6'}
+
+  stripe@22.6.2:
+    resolution: {integrity: sha512-PwRE2scocvXqDKPiskMa5vRJEAEkq46W69XyUYmAwrNSLr675lQnfqLwnsndAWizwgihOWw/irLmoFRo3ez7ew==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@types/node': '>=18'
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
 
   styled-jsx@5.1.6:
     resolution: {integrity: sha512-qSVyDTeMotdvQYoHWLNGwRFJHC+i+ZvdBRYosOFgC+Wg1vx4frN2/RG/NA7SYqqvKNLf39P2LSRA2pu6n0XYZA==}
@@ -8421,6 +8433,10 @@ snapshots:
   strip-bom@3.0.0: {}
 
   strip-final-newline@2.0.0: {}
+
+  stripe@22.6.2(@types/node@22.20.3):
+    optionalDependencies:
+      '@types/node': 22.20.3
 
   styled-jsx@5.1.6(react@19.3.0):
     dependencies:

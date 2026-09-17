@@ -1,4 +1,5 @@
 "use client";
+import { Billing } from "./billing";
 import Link from "next/link";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
@@ -105,6 +106,7 @@ const nav = [
   ["integrations", "Integrations", Plug],
   ["approvals", "Approvals", ShieldCheck],
   ["usage", "Usage", Activity],
+  ["billing", "Billing", Activity],
   ["settings", "Organization", Settings],
 ] as const;
 const nameSchema = z.object({ name: z.string().min(1).max(80) });
@@ -373,7 +375,7 @@ export function Dashboard({
           .slice(3)
           .filter(
             ([id]) =>
-              !["usage", "approvals"].includes(id) ||
+              !["usage", "approvals", "billing"].includes(id) ||
               (admin && !impersonatedBy),
           )
           .map(([id, label, Icon]) => (
@@ -920,6 +922,12 @@ export function Dashboard({
                         Only workspace owners and admins can review approvals.
                       </p>
                     ))}
+                  {section === "billing" && admin && !impersonatedBy && (
+                    <Billing
+                      key={activeOrganizationId}
+                      canEdit={org?.role === "owner"}
+                    />
+                  )}
                   {section === "usage" &&
                     (admin && !impersonatedBy ? (
                       <WorkspaceUsage key={activeOrganizationId} />

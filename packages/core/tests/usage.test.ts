@@ -40,8 +40,8 @@ beforeAll(async () => {
     ["99", "USD", "outbound", "2026-10-01", "usage-org"],
     ["99", "USD", "outbound", "2026-08-31", "usage-org"],
     ["999", "USD", "outbound", "2026-09-10", "other-org"],
-  ] as const)
-    await db.smsMessage.create({
+  ] as const) {
+    const message = await db.smsMessage.create({
       data: {
         organizationId,
         phoneNumberId: organizationId,
@@ -55,30 +55,43 @@ beforeAll(async () => {
         createdAt: new Date(date + "T00:00:00Z"),
       },
     });
+    if (amount && currency === "USD") {
+      await db.billingAccount.upsert({
+        where: { organizationId },
+        create: { organizationId },
+        update: {},
+      });
+      await db.billingReservation.create({
+        data: {
+          id: message.id,
+          organizationId,
+          amountMicros: 0n,
+          settledMicros: BigInt(Math.round(Number(amount) * 2000000)),
+          status: "settled",
+        },
+      });
+    }
+  }
 });
 afterAll(() => db.$disconnect());
-it("groups exact decimal provider costs by currency with explicit missing coverage and UTC bounds", async () => {
+it("reports only settled Papers charges with explicit missing coverage and UTC bounds", async () => {
   const data = await getWorkspaceUsage(db, owner, { month: "2026-09" });
   expect(workspaceUsageSchema.parse(data)).toEqual(data);
   expect(data.start).toBe("2026-09-01T00:00:00.000Z");
   expect(data.endExclusive).toBe("2026-10-01T00:00:00.000Z");
-  expect(data.sms).toHaveLength(3);
-  expect(data.sms.find((row) => row.currency === "USD")).toMatchObject({
-    messages: 2,
-    reportedProviderCost: "0.3",
+  expect(data.sms).toHaveLength(2);
+  expect(data.sms.find((row) => row.direction === "outbound")).toMatchObject({
+    messages: 3,
+    chargedAmount: "0.600000",
     reportedSegments: 4,
     messagesWithCost: 2,
   });
-  expect(data.sms.find((row) => row.currency === "EUR")).toMatchObject({
-    reportedProviderCost: "0",
+  expect(data.sms.find((row) => row.direction === "inbound")).toMatchObject({
     messages: 1,
-  });
-  expect(data.sms.find((row) => row.currency === null)).toMatchObject({
-    reportedProviderCost: null,
-    reportedSegments: null,
+    chargedAmount: null,
     messagesWithCost: 0,
-    messages: 1,
   });
+  expect(JSON.stringify(data)).not.toContain("reportedProviderCost");
   expect(
     (await getWorkspaceUsage(db, owner, { month: "2026-07" })).sms,
   ).toEqual([]);

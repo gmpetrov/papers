@@ -19,6 +19,11 @@ export function wakeBackgroundJobs() {
 }
 export function providerEnv(): Environment {
   return {
+    BILLING_ENABLED: process.env.BILLING_ENABLED,
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
+    STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
+    STRIPE_PORTAL_CONFIGURATION_ID: process.env.STRIPE_PORTAL_CONFIGURATION_ID,
+    BILLING_PUBLIC_ORIGIN: process.env.BETTER_AUTH_URL,
     CUSTOM_WEBHOOK_ENCRYPTION_KEY: process.env.CUSTOM_WEBHOOK_ENCRYPTION_KEY,
     EMAIL_DOMAIN: process.env.EMAIL_DOMAIN,
     RESEND_API_KEY: process.env.RESEND_API_KEY,

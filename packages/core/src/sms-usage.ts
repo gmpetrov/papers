@@ -1,3 +1,4 @@
+import { settleSms } from "./billing-ledger";
 import type { Prisma } from "@agentinfra/db";
 import { z } from "zod";
 const usage = z.object({
@@ -48,4 +49,5 @@ export async function recordSmsUsage(
         costOccurredAt: occurredAt,
       },
     });
+  if (finalCost) await settleSms(tx, messageId);
 }

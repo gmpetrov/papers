@@ -1,6 +1,9 @@
 import { responseSchemas, responseSchemaByOperation } from "./responses";
 import { z } from "zod";
 import {
+  billingCheckoutInput,
+  autoTopupInput,
+  changePlanInput,
   connectionLimitsInput,
   smsInput,
   agentInput,
@@ -30,6 +33,53 @@ type Endpoint = {
   unavailable?: boolean;
 };
 const endpoints: Endpoint[] = [
+  {
+    method: "get",
+    path: "/billing",
+    id: "getBilling",
+    summary: "Read plan, prepaid balance and financial transactions",
+    admin: true,
+    description:
+      "Owner/admin session outside impersonation. Money is returned as integer micro-USD strings.",
+  },
+  {
+    method: "post",
+    path: "/billing/checkout",
+    id: "createBillingCheckout",
+    summary: "Create a plan, phone rental or prepaid top-up checkout",
+    admin: true,
+    idempotent: true,
+    body: billingCheckoutInput,
+    description:
+      "Owner session only, outside impersonation. Payment is collected by Stripe; redirect completion does not grant credit.",
+  },
+  {
+    method: "post",
+    path: "/billing/portal",
+    id: "createBillingPortal",
+    summary: "Open Stripe billing portal",
+    admin: true,
+    description: "Owner session only, outside impersonation.",
+  },
+  {
+    method: "post",
+    path: "/billing/plan",
+    id: "changeBillingPlan",
+    summary: "Upgrade now or schedule a downgrade at renewal",
+    admin: true,
+    body: changePlanInput,
+    description: "Owner session only. Upgrades require successful payment.",
+  },
+  {
+    method: "patch",
+    path: "/billing/auto-topup",
+    id: "updateAutoTopup",
+    summary: "Opt in to automatic prepaid top-ups with a monthly ceiling",
+    admin: true,
+    body: autoTopupInput,
+    description:
+      "Owner session only, outside impersonation. Requires a previously saved payment method.",
+  },
   {
     method: "patch",
     path: "/connections/{id}/limits",
@@ -72,7 +122,7 @@ const endpoints: Endpoint[] = [
     summary: "Monthly workspace usage and reported SMS costs",
     admin: true,
     description:
-      "Owner/admin sessions only. Optional month=YYYY-MM (UTC, default current month). Groups provider costs by currency; null means unreported. Based on message creation time, not an invoice or provider billing period.",
+      "Owner/admin sessions only. Optional month=YYYY-MM (UTC, default current month). Shows customer usage charges from the prepaid ledger; null means unsettled. Based on message creation time, not an invoice or provider billing period.",
   },
   {
     method: "get",
@@ -430,7 +480,7 @@ const endpoints: Endpoint[] = [
     method: "get",
     path: "/phone-numbers/available",
     id: "searchPhoneNumbers",
-    summary: "Search available Telnyx numbers",
+    summary: "Search available phone numbers at Papers retail prices",
     scope: "numbers:read",
     description: "Requires an activated Telnyx account; otherwise returns 503.",
   },
@@ -440,7 +490,7 @@ const endpoints: Endpoint[] = [
     id: "provisionPhoneNumber",
     summary: "Purchase a workspace phone number",
     description:
-      "Requires the country and current upfront/monthly prices from search. Purchase is asynchronous; poll the operation. An unknown outcome must not be reordered.",
+      "Assigns an existing paid rental to a number using country and phoneNumber. New purchases should use owner-session POST /billing/checkout with kind=phone, country=US and phoneNumber. Inventory costs are resolved privately. Poll the operation; an unknown outcome must not be reordered.",
     scope: "numbers:provision",
     idempotent: true,
     body: numberInput,

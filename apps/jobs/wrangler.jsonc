@@ -31,7 +31,20 @@
   ],
   // Keep disabled for local workerd. Deploy standalone (no origin routes) and
   // set WEBHOOK_TRANSPORT=cloudflare to use Cloudflare's public-only egress.
-  "vars": { "TELNYX_STATUS": "active", "WEBHOOK_TRANSPORT": "disabled" },
-  "secrets": { "required": ["RESEND_API_KEY", "TELNYX_API_KEY", "CUSTOM_WEBHOOK_ENCRYPTION_KEY"] },
+  "vars": {
+    "TELNYX_STATUS": "active",
+    "WEBHOOK_TRANSPORT": "disabled",
+    "BILLING_ENABLED": "false",
+  },
+  "secrets": {
+    "required": [
+      "RESEND_API_KEY",
+      "TELNYX_API_KEY",
+      "CUSTOM_WEBHOOK_ENCRYPTION_KEY",
+      "STRIPE_SECRET_KEY",
+      "TELNYX_PUBLIC_KEY",
+      "TELNYX_MESSAGING_PROFILE_ID",
+    ],
+  },
   "observability": { "enabled": true, "head_sampling_rate": 1 },
 }

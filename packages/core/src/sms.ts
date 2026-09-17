@@ -1,3 +1,8 @@
+import {
+  ensureBilling,
+  reserveSms,
+  releaseSmsReservation,
+} from "./billing-ledger";
 import { resourceAccess } from "./resource-grants";
 import { reserveCredentialSend } from "./key-usage";
 import { assertSmsRecipientAllowed } from "./sms-opt-out";
@@ -25,6 +30,7 @@ export async function sendSms(
     "forbidden",
     "Admin or delegated agent required",
   );
+  if (env.BILLING_ENABLED === "true") await ensureBilling(db, p.organizationId);
   const input = smsInput.parse(body);
   assert(
     key && key.length <= 200,
@@ -112,6 +118,22 @@ export async function sendSms(
         return { approvalRequired: approval.id } as const;
       approvalId = approval.id;
     }
+    if (env.BILLING_ENABLED === "true") {
+      const rental = await tx.phoneRental.findFirst({
+        where: {
+          organizationId: p.organizationId,
+          phoneNumberId: number.id,
+          status: "active",
+          paidUntil: { gt: new Date() },
+        },
+      });
+      assert(
+        rental,
+        402,
+        "phone_rental_required",
+        "The phone rental must be paid before sending",
+      );
+    }
     const day = new Date().toISOString().slice(0, 10);
     await reserveCredentialSend(tx, p, "sms", day);
     if (currentNumber.agentId && currentNumber.agent) {
@@ -164,6 +186,7 @@ export async function sendSms(
         unread: false,
       },
     });
+    await reserveSms(tx, p.organizationId, message.id, input.to, input.text);
     const operationId = crypto.randomUUID();
     const callback = env.TELNYX_WEBHOOK_URL
       ? new URL(env.TELNYX_WEBHOOK_URL)
@@ -290,6 +313,12 @@ export async function sendSms(
           error: rejected ? "provider_rejected" : "provider_outcome_unknown",
         },
       });
+      if (rejected)
+        await releaseSmsReservation(
+          tx,
+          p.organizationId,
+          operation.resourceId!,
+        );
       if (rejected)
         await tx.smsMessage.updateMany({
           where: {

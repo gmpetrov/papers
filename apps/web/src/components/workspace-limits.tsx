@@ -10,7 +10,7 @@ import {
 const fields = [
   ["dailyEmailLimit", "Emails per day", 10000],
   ["dailySmsLimit", "SMS per day", 10000],
-  ["maxInboxes", "Active inboxes", 100],
+  ["maxInboxes", "Active inboxes", 1000],
   ["maxPhoneNumbers", "Phone numbers", 100],
 ] as const;
 type Usage = {

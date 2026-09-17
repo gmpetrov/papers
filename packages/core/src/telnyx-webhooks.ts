@@ -3,7 +3,7 @@ import { recordSmsUsage } from "./sms-usage";
 import { confirmSmsSend } from "./sms-delivery";
 import { Prisma, type Database } from "@agentinfra/db";
 import { verifyTelnyxWebhook, type TelnyxEvent } from "@agentinfra/providers";
-import { AppError, assert } from "./errors";
+import { AppError, assert, hash } from "./errors";
 import type { Environment } from "./index";
 export async function ingestTelnyx(
   db: Database,
@@ -82,7 +82,8 @@ export async function processTelnyxEvents(db: Database, limit = 10) {
               where: {
                 phoneNumber: recipient.phone_number,
                 messagingProfileId: payload.messaging_profile_id,
-                status: "active",
+                // In-flight deliveries can arrive after messaging is paused.
+                status: { in: ["active", "billing_suspended", "releasing"] },
               },
             });
             if (!number) continue;
@@ -113,8 +114,14 @@ export async function processTelnyxEvents(db: Database, limit = 10) {
               );
               continue;
             }
+            const messageId = `sm_${await hash(`sms-in:${number.id}:${payload.id}`)}`;
+            const retained = await tx.billingReservation.findUnique({
+              where: { id: messageId },
+            });
+            if (retained) continue;
             const message = await tx.smsMessage.create({
               data: {
+                id: messageId,
                 organizationId: number.organizationId,
                 phoneNumberId: number.id,
                 providerId: payload.id,

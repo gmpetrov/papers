@@ -1,4 +1,19 @@
 import {
+  retailNumber,
+  standardNumber,
+  retailAmount,
+  selectedNumberQuote,
+} from "./phone-retail";
+import { ensureBilling, reserveEmail, releaseEmail } from "./billing-ledger";
+import {
+  billingSummary,
+  startCheckout,
+  billingPortal,
+  changePlan,
+  updateAutoTopup,
+} from "./stripe-billing";
+export { ingestStripe } from "./stripe-billing";
+import {
   resourceAccess,
   validateResourceGrants,
   listGrantedEvents,
@@ -66,6 +81,11 @@ export { ingestTelnyx, processTelnyxEvents } from "./telnyx-webhooks";
 export { AppError } from "./errors";
 export { ingestResend, processProviderEvents } from "./webhooks";
 export interface Environment {
+  BILLING_ENABLED?: string;
+  STRIPE_SECRET_KEY?: string;
+  STRIPE_WEBHOOK_SECRET?: string;
+  STRIPE_PORTAL_CONFIGURATION_ID?: string;
+  BILLING_PUBLIC_ORIGIN?: string;
   CUSTOM_WEBHOOK_ENCRYPTION_KEY?: string;
   ATTACHMENTS?: AttachmentBucket;
   EMAIL_DOMAIN?: string;
@@ -202,9 +222,36 @@ export function createApi(
   app.use("/v1/*", async (c, next) => {
     const p = await authenticate(db, auth, c.req.raw, resourcePath);
     await limitRequest(c, p);
+    if (env.BILLING_ENABLED === "true")
+      await ensureBilling(db, p.organizationId);
     c.set("principal", p);
     await next();
   });
+  app.get("/v1/billing", async (c) =>
+    c.json({
+      ...(await billingSummary(db, c.get("principal"))),
+    }),
+  );
+  app.post("/v1/billing/checkout", async (c) =>
+    c.json(
+      await startCheckout(
+        db,
+        env,
+        c.get("principal"),
+        await c.req.json(),
+        c.req.header("Idempotency-Key"),
+      ),
+    ),
+  );
+  app.post("/v1/billing/portal", async (c) =>
+    c.json(await billingPortal(db, env, c.get("principal"))),
+  );
+  app.post("/v1/billing/plan", async (c) =>
+    c.json(await changePlan(db, env, c.get("principal"), await c.req.json())),
+  );
+  app.patch("/v1/billing/auto-topup", async (c) =>
+    c.json(await updateAutoTopup(db, c.get("principal"), await c.req.json())),
+  );
   const filter = (p: Principal) => ({
     organizationId: p.organizationId,
     ...(p.agentId ? { agentId: p.agentId } : {}),
@@ -1144,9 +1191,17 @@ export function createApi(
           data: { sends: { increment: 1 } },
         });
       }
+      const billingMessageId = crypto.randomUUID();
+      await reserveEmail(
+        tx,
+        p.organizationId,
+        billingMessageId,
+        input.to.length,
+      );
       const message = await tx.emailMessage.create({
         data: {
           organizationId: p.organizationId,
+          id: billingMessageId,
           inboxId: inbox.id,
           direction: "outbound",
           status: "pending",
@@ -1213,6 +1268,8 @@ export function createApi(
             where: { id: operation.id, status: { in: ["pending", "unknown"] } },
             data: { status: "failed", error: result.error!.name },
           });
+          if (failed.count)
+            await releaseEmail(tx, p.organizationId, operation.resourceId!);
           if (failed.count)
             await tx.emailMessage.updateMany({
               where: { id: operation.resourceId!, status: "pending" },
@@ -1442,14 +1499,16 @@ export function createApi(
         phoneNumber: true,
         status: true,
         lastError: true,
-        monthlyCost: true,
-        upfrontCost: true,
-        currency: true,
         createdAt: true,
       },
     });
     return c.json({
-      data: data.slice(0, q.limit),
+      data: data.slice(0, q.limit).map((n) => ({
+        ...n,
+        monthlyCost: "3.00",
+        upfrontCost: "0.00",
+        currency: "USD",
+      })),
       nextCursor: data.length > q.limit ? data[q.limit - 1]!.id : null,
       status: env.TELNYX_STATUS ?? "under_review",
     });
@@ -1460,11 +1519,15 @@ export function createApi(
       .string()
       .regex(/^[A-Z]{2}$/)
       .parse(c.req.query("country") ?? "US");
-    return c.json(
-      await new TelnyxProvider(env.TELNYX_API_KEY, env.TELNYX_STATUS).search(
-        country,
-      ),
-    );
+    const inventory = await new TelnyxProvider(
+      env.TELNYX_API_KEY,
+      env.TELNYX_STATUS,
+    ).search(country);
+    return c.json({
+      data: inventory.data
+        .filter((q) => standardNumber(country, q))
+        .map(retailNumber),
+    });
   });
   app.get("/v1/phone-numbers/:id", async (c) => {
     const p = c.get("principal");
@@ -1499,8 +1562,6 @@ export function createApi(
         id: true,
         phoneNumberId: true,
         segments: true,
-        costAmount: true,
-        costCurrency: true,
         from: true,
         to: true,
         direction: true,
@@ -1509,8 +1570,16 @@ export function createApi(
         createdAt: true,
       },
     });
+    const charges = await db.billingReservation.findMany({
+      where: { id: { in: data.map((m) => m.id) }, status: "settled" },
+    });
+    const byId = new Map(charges.map((c) => [c.id, c.settledMicros]));
     return c.json({
-      data: data.slice(0, q.limit),
+      data: data.slice(0, q.limit).map((m) => ({
+        ...m,
+        costAmount: byId.has(m.id) ? retailAmount(byId.get(m.id)!) : null,
+        costCurrency: byId.has(m.id) ? "USD" : null,
+      })),
       nextCursor: data.length > q.limit ? data[q.limit - 1]?.id : null,
     });
   });
@@ -1539,8 +1608,6 @@ export function createApi(
         phoneNumberId: true,
         phoneNumber: { select: { messagingProfileId: true } },
         segments: true,
-        costAmount: true,
-        costCurrency: true,
         from: true,
         to: true,
         text: true,
@@ -1552,7 +1619,18 @@ export function createApi(
     });
     assert(message, 404, "not_found", "SMS message not found");
     await audit(p, "sms.read", message.id);
-    const { phoneNumber, ...publicMessage } = message;
+    const { phoneNumber, ...fields } = message;
+    const charge = await db.billingReservation.findUnique({
+      where: { id: message.id },
+    });
+    const publicMessage = {
+      ...fields,
+      costAmount:
+        charge?.status === "settled"
+          ? retailAmount(charge.settledMicros)
+          : null,
+      costCurrency: charge?.status === "settled" ? "USD" : null,
+    };
     const state = await db.providerSmsOptOut.findUnique({
       where: {
         messagingProfileId_recipient: {
@@ -1577,11 +1655,24 @@ export function createApi(
     });
   });
   app.post("/v1/phone-numbers", async (c) => {
+    authorize(c.get("principal"), "numbers:provision");
+    const selection = z
+      .object({
+        country: z.string().regex(/^[A-Z]{2}$/),
+        phoneNumber: z.string().regex(/^\+[1-9]\d{6,14}$/),
+        agentId: z.string().optional(),
+      })
+      .parse(await c.req.json());
+    const quote = await selectedNumberQuote(
+      env,
+      selection.country,
+      selection.phoneNumber,
+    );
     const result = await provisionNumber(
       db,
       env,
       c.get("principal"),
-      await c.req.json(),
+      { ...quote, agentId: selection.agentId },
       c.req.header("Idempotency-Key"),
     );
     return c.json(result.body, result.status);

@@ -33,7 +33,10 @@ export default async function Page({
       impersonatedBy: session.session.impersonatedBy ?? null,
     };
   });
-  if (!data) redirect("/login");
+  if (!data)
+    redirect(
+      `/login?next=${encodeURIComponent("/dashboard/" + ((await params).section?.join("/") ?? ""))}`,
+    );
   return (
     <Dashboard
       key={data.activeOrganizationId}

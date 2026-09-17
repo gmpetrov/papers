@@ -1,3 +1,4 @@
+import { reserveEmail, effectivePlan, ensureBilling } from "./billing-ledger";
 import { confirmEmailSend } from "./email-delivery";
 import { Prisma, type Database } from "@agentinfra/db";
 import {
@@ -6,7 +7,7 @@ import {
   type ResendEvent,
 } from "@agentinfra/providers";
 import type { Environment } from "./index";
-import { AppError, assert } from "./errors";
+import { AppError, assert, hash } from "./errors";
 export async function ingestResend(
   db: Database,
   env: Environment,
@@ -135,7 +136,9 @@ export async function processProviderEvents(
         const inboxes = await db.inbox.findMany({
           where: { address: { in: recipients }, status: "active" },
         });
-        for (const inbox of inboxes)
+        for (const inbox of inboxes) {
+          if (env.BILLING_ENABLED === "true")
+            await ensureBilling(db, inbox.organizationId);
           await db.$transaction(async (tx) => {
             if (
               await tx.emailMessage.findUnique({
@@ -163,8 +166,44 @@ export async function processProviderEvents(
                   where: { inboxId: inbox.id, messageId: parent },
                 })
               : null;
+            const messageId = `em_${await hash(`email-in:${inbox.id}:${mail.id}`)}`;
+            if (
+              await tx.billingEmailUsage.findUnique({
+                where: { id: messageId },
+              })
+            )
+              return;
+            if (
+              (await reserveEmail(
+                tx,
+                inbox.organizationId,
+                messageId,
+                1,
+                true,
+              )) === false
+            )
+              return;
+            const billing = await tx.billingAccount.findUnique({
+              where: { organizationId: inbox.organizationId },
+            });
+            const stored = billing
+              ? await tx.attachment.aggregate({
+                  where: { message: { organizationId: inbox.organizationId } },
+                  _sum: { size: true },
+                })
+              : null;
+            let availableBytes = billing
+              ? effectivePlan(billing).storageGB * 1_000_000_000 -
+                (stored?._sum.size ?? 0)
+              : Infinity;
+            const allowedAttachments = mail.attachments.filter((a) => {
+              if (a.size > availableBytes) return false;
+              availableBytes -= a.size;
+              return true;
+            });
             const message = await tx.emailMessage.create({
               data: {
+                id: messageId,
                 organizationId: inbox.organizationId,
                 inboxId: inbox.id,
                 providerId: mail.id,
@@ -182,7 +221,7 @@ export async function processProviderEvents(
                 html: mail.html,
                 createdAt: new Date(mail.created_at),
                 attachments: {
-                  create: mail.attachments.map((a) => ({
+                  create: allowedAttachments.map((a) => ({
                     providerId: a.id,
                     filename: a.filename ?? "attachment",
                     contentType: a.content_type,
@@ -200,6 +239,7 @@ export async function processProviderEvents(
               },
             });
           });
+        }
       } else if (event.type === "email.sent") {
         if (event.data.message_id)
           await db.emailMessage.updateMany({

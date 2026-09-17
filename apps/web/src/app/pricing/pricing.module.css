@@ -1,0 +1,213 @@
+.plans {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+.card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+}
+.featured {
+  border: 1.5px solid var(--green);
+  box-shadow: 0 8px 30px #315c4509;
+  background: #f4f7ef;
+}
+.cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 42px;
+}
+.cardTop h2 {
+  font-size: 25px;
+  font-weight: 550;
+  letter-spacing: -0.7px;
+  margin: 0;
+}
+.badge {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.6px;
+  color: var(--green);
+  background: #e2ecd8;
+  padding: 7px 8px;
+  border-radius: 4px;
+  max-width: 115px;
+}
+.subtitle {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.65;
+  min-height: 48px;
+}
+.price {
+  font-size: 58px;
+  font-weight: 450;
+  letter-spacing: -3px;
+  margin: 20px 0 2px;
+}
+.price span {
+  font-size: 14px;
+  letter-spacing: 0;
+  color: var(--muted);
+  margin-left: 8px;
+}
+.period {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 8px 0 27px;
+}
+.cta {
+  width: 100%;
+  justify-content: space-between;
+}
+.features {
+  list-style: none;
+  padding: 25px 0 0;
+  margin: 25px 0 0;
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 17px;
+  font-size: 14px;
+}
+.features li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.features svg {
+  color: var(--green);
+  flex: none;
+  margin-top: 2px;
+}
+.features small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 4px;
+}
+.fine {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.7;
+  margin: 22px 0 65px;
+  max-width: 850px;
+}
+.phone {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 70px;
+  background: #f0f2ea;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 42px;
+}
+.kicker {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--green);
+}
+.phone h2 {
+  font-size: 35px;
+  line-height: 1.15;
+  letter-spacing: -1px;
+  font-weight: 450;
+  margin: 24px 0;
+}
+.phone p {
+  line-height: 1.8;
+  color: #687269;
+  font-size: 15px;
+}
+.wallet {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 25px;
+}
+.walletHead {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  color: var(--green);
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+}
+.wallet ol {
+  padding-left: 22px;
+  margin-bottom: 0;
+}
+.wallet li {
+  padding-left: 5px;
+  margin-top: 20px;
+  color: var(--green);
+}
+.wallet strong {
+  font-weight: 550;
+}
+.wallet li span {
+  display: block;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--muted);
+  margin-top: 5px;
+}
+.faq {
+  max-width: 800px;
+  margin: 75px auto 15px;
+}
+.faq h2 {
+  font-size: 32px;
+  font-weight: 450;
+  letter-spacing: -1px;
+  margin-bottom: 25px;
+}
+.faq details {
+  border-bottom: 1px solid var(--line);
+  padding: 20px 0;
+}
+.faq summary {
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.faq p {
+  color: #687269;
+  font-size: 14px;
+  line-height: 1.8;
+  max-width: 740px;
+}
+@media (max-width: 900px) {
+  .plans {
+    grid-template-columns: 1fr;
+  }
+  .card {
+    padding: 26px;
+  }
+  .subtitle {
+    min-height: 0;
+  }
+  .phone {
+    grid-template-columns: 1fr;
+    gap: 25px;
+    padding: 25px;
+  }
+  .price {
+    margin-top: 12px;
+  }
+  .fine {
+    margin-bottom: 35px;
+  }
+  .faq {
+    margin-top: 45px;
+  }
+}

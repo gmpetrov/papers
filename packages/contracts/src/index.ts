@@ -1,3 +1,12 @@
+export {
+  billingCheckoutInput,
+  autoTopupInput,
+  changePlanInput,
+  plans,
+  planFor,
+  topupAmounts,
+  type PlanId,
+} from "./plans";
 import { z } from "zod";
 export const attachmentInfoSchema = z.object({
   id: z.string(),
@@ -117,7 +126,7 @@ export const policyInput = z.object({
     .max(100)
     .optional(),
   dailySendLimit: z.number().int().min(0).max(10000),
-  maxInboxes: z.number().int().min(0).max(100),
+  maxInboxes: z.number().int().min(0).max(1000),
   allowedRecipients: z.array(z.email()).max(100).default([]),
 });
 export const workspacePolicyInput = z.strictObject({
@@ -126,7 +135,7 @@ export const workspacePolicyInput = z.strictObject({
   requireProvisioningApproval: z.boolean().optional(),
   dailyEmailLimit: z.number().int().min(0).max(10000),
   dailySmsLimit: z.number().int().min(0).max(10000),
-  maxInboxes: z.number().int().min(0).max(100),
+  maxInboxes: z.number().int().min(0).max(1000),
   maxPhoneNumbers: z.number().int().min(0).max(100),
 });
 export type WorkspacePolicy = z.infer<typeof workspacePolicyInput>;
@@ -138,9 +147,18 @@ export const numberSearchInput = z.object({
 });
 export const numberInput = z.object({
   country: z.string().regex(/^[A-Z]{2}$/),
-  monthlyCost: z.string().regex(/^\d+(\.\d+)?$/),
-  upfrontCost: z.string().regex(/^\d+(\.\d+)?$/),
-  currency: z.string().regex(/^[A-Z]{3}$/),
+  monthlyCost: z
+    .string()
+    .regex(/^\d+(\.\d+)?$/)
+    .default("3.00"),
+  upfrontCost: z
+    .string()
+    .regex(/^\d+(\.\d+)?$/)
+    .default("0.00"),
+  currency: z
+    .string()
+    .regex(/^[A-Z]{3}$/)
+    .default("USD"),
   phoneNumber: z.string().regex(/^\+[1-9]\d{6,14}$/),
   agentId: z.string().min(1).optional(),
 });

@@ -1,25 +1,23 @@
 {
   "compatibility_date": "2026-09-16",
-  "compatibility_flags": [
-    "nodejs_compat"
-  ],
+  "compatibility_flags": ["nodejs_compat"],
   "workers_dev": false,
   "preview_urls": false,
   "hyperdrive": [
     {
       "binding": "HYPERDRIVE",
-      "id": "b19f03d88c9a4da38113235b2c7587f4"
-    }
+      "id": "b19f03d88c9a4da38113235b2c7587f4",
+    },
   ],
   "r2_buckets": [
     {
       "binding": "ATTACHMENTS",
-      "bucket_name": "papers-attachments"
-    }
+      "bucket_name": "papers-attachments",
+    },
   ],
   "observability": {
     "enabled": true,
-    "head_sampling_rate": 1
+    "head_sampling_rate": 1,
   },
   "name": "papers-jobs",
   "main": "src/worker.ts",
@@ -30,17 +28,16 @@
         "max_batch_size": 10,
         "max_batch_timeout": 1,
         "max_retries": 3,
-        "retry_delay": 60
-      }
-    ]
+        "retry_delay": 60,
+      },
+    ],
   },
   "triggers": {
-    "crons": [
-      "* * * * *"
-    ]
+    "crons": ["* * * * *"],
   },
   "vars": {
     "TELNYX_STATUS": "active",
-    "WEBHOOK_TRANSPORT": "cloudflare"
-  }
+    "WEBHOOK_TRANSPORT": "cloudflare",
+    "BILLING_ENABLED": "true",
+  },
 }

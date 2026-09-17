@@ -166,9 +166,7 @@ export const phoneNumberPageSchema = z.object({
 const numberPrice = z
   .string()
   .regex(/^\d+(\.\d+)?$/)
-  .describe(
-    "Provider price as an exact decimal string. Do not convert to floating point when requesting a purchase.",
-  );
+  .describe("Papers retail price as an exact decimal string.");
 export const availableNumberSchema = z.object({
   phone_number: z.string(),
   phone_number_type: z.string().optional(),
@@ -272,12 +270,12 @@ export const workspaceUsageSchema = z.object({
       messagesWithCost: count,
       messagesWithSegments: count,
       reportedSegments: count.nullable(),
-      reportedProviderCost: smsSummarySchema.shape.costAmount,
+      chargedAmount: smsSummarySchema.shape.costAmount,
     }),
   ),
   basis: z.literal("message_created_at"),
-  costSource: z.literal("provider_callbacks"),
-  billingStatus: z.literal("not_implemented"),
+  costSource: z.literal("papers_ledger"),
+  billingStatus: z.literal("prepaid"),
 });
 export const eventPageSchema = z.object({
   data: z.array(

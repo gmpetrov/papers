@@ -103,6 +103,7 @@ model Organization {
   members     Member[]
   invitations Invitation[]
 
+  billing BillingAccount?
   projects Project[]
   agents   Agent[]
   inboxes  Inbox[]
@@ -778,4 +779,95 @@ model ApiRequestBucket {
 
   @@id([organizationId, bucket])
   @@index([window])
+}
+
+
+// Financial records are independent of message retention. Amounts are integer micro-USD.
+model BillingAccount {
+  organizationId String @id
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  stripeCustomerId String? @unique
+  stripeSubscriptionId String? @unique
+  plan String @default("free")
+  status String @default("free")
+  periodStart DateTime @default(now())
+  periodEnd DateTime?
+  balanceMicros BigInt @default(0)
+  reservedMicros BigInt @default(0)
+  blocked Boolean @default(false)
+  autoTopup Boolean @default(false)
+  autoTopupAmountCents Int @default(2500)
+  autoTopupThresholdCents Int @default(500)
+  autoTopupMonthlyLimitCents Int @default(10000)
+  paymentMethodId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ledger BillingLedger[]
+  reservations BillingReservation[]
+  checkouts BillingCheckout[]
+  rentals PhoneRental[]
+  emailUsage BillingEmailUsage[]
+}
+model BillingLedger {
+  id String @id @default(uuid())
+  organizationId String
+  account BillingAccount @relation(fields: [organizationId], references: [organizationId], onDelete: Cascade)
+  key String @unique
+  kind String
+  amountMicros BigInt
+  resourceId String?
+  description String
+  createdAt DateTime @default(now())
+  @@index([organizationId, createdAt])
+}
+model BillingReservation {
+  id String @id
+  organizationId String
+  account BillingAccount @relation(fields: [organizationId], references: [organizationId], onDelete: Cascade)
+  amountMicros BigInt
+  settledMicros BigInt @default(0)
+  status String @default("reserved")
+  occurredAt DateTime?
+  createdAt DateTime @default(now())
+  @@index([organizationId, status])
+}
+model BillingCheckout {
+  id String @id @default(uuid())
+  organizationId String
+  account BillingAccount @relation(fields: [organizationId], references: [organizationId], onDelete: Cascade)
+  kind String
+  selection String
+  amountCents Int @default(0)
+  status String @default("pending")
+  stripeSessionId String? @unique
+  paymentIntentId String? @unique
+  createdAt DateTime @default(now())
+  @@index([organizationId, createdAt])
+}
+model PhoneRental {
+  id String @id
+  organizationId String
+  account BillingAccount @relation(fields: [organizationId], references: [organizationId], onDelete: Cascade)
+  phoneNumberId String? @unique
+  status String @default("pending")
+  paidUntil DateTime?
+  cancelAtPeriodEnd Boolean @default(false)
+  createdAt DateTime @default(now())
+  @@index([organizationId, status])
+}
+model BillingEmailUsage {
+  id String @id
+  organizationId String
+  account BillingAccount @relation(fields: [organizationId], references: [organizationId], onDelete: Cascade)
+  period String
+  units Int
+  status String @default("reserved")
+  createdAt DateTime @default(now())
+  @@index([organizationId, period])
+}
+model SmsRate {
+  prefix String @id
+  maxProviderMicrosPerSegment BigInt
+  expiresAt DateTime
+  note String
 }

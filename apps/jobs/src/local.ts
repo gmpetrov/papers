@@ -28,8 +28,12 @@ while (!stopping) {
       {
         CUSTOM_WEBHOOK_ENCRYPTION_KEY:
           process.env.CUSTOM_WEBHOOK_ENCRYPTION_KEY,
+        STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
+        BILLING_ENABLED: process.env.BILLING_ENABLED,
         RESEND_API_KEY: process.env.RESEND_API_KEY,
         TELNYX_API_KEY: process.env.TELNYX_API_KEY,
+        TELNYX_PUBLIC_KEY: process.env.TELNYX_PUBLIC_KEY,
+        TELNYX_MESSAGING_PROFILE_ID: process.env.TELNYX_MESSAGING_PROFILE_ID,
         TELNYX_STATUS: process.env.TELNYX_STATUS,
         ATTACHMENTS: platform.env.ATTACHMENTS,
       },

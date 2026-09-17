@@ -1,45 +1,43 @@
 {
   "compatibility_date": "2026-09-16",
-  "compatibility_flags": [
-    "nodejs_compat"
-  ],
+  "compatibility_flags": ["nodejs_compat"],
   "workers_dev": false,
   "preview_urls": false,
   "hyperdrive": [
     {
       "binding": "HYPERDRIVE",
-      "id": "b19f03d88c9a4da38113235b2c7587f4"
-    }
+      "id": "b19f03d88c9a4da38113235b2c7587f4",
+    },
   ],
   "r2_buckets": [
     {
       "binding": "ATTACHMENTS",
-      "bucket_name": "papers-attachments"
-    }
+      "bucket_name": "papers-attachments",
+    },
   ],
   "observability": {
     "enabled": true,
-    "head_sampling_rate": 1
+    "head_sampling_rate": 1,
   },
   "name": "papers-web",
   "main": ".open-next/worker.js",
   "routes": [
     {
       "pattern": "www.papers.bot",
-      "custom_domain": true
-    }
+      "custom_domain": true,
+    },
   ],
   "queues": {
     "producers": [
       {
         "binding": "JOBS_QUEUE",
-        "queue": "papers-jobs"
-      }
-    ]
+        "queue": "papers-jobs",
+      },
+    ],
   },
   "assets": {
     "directory": ".open-next/assets",
-    "binding": "ASSETS"
+    "binding": "ASSETS",
   },
   "vars": {
     "BETTER_AUTH_URL": "https://www.papers.bot",
@@ -47,9 +45,10 @@
     "EMAIL_DOMAIN": "papers.bot",
     "AUTH_EMAIL_FROM": "Papers <accounts@papers.bot>",
     "TELNYX_STATUS": "active",
-    "TELNYX_WEBHOOK_URL": "https://www.papers.bot/api/webhooks/telnyx"
+    "TELNYX_WEBHOOK_URL": "https://www.papers.bot/api/webhooks/telnyx",
+    "BILLING_ENABLED": "true",
   },
   "placement": {
-    "region": "aws:us-east-1"
-  }
+    "region": "aws:us-east-1",
+  },
 }

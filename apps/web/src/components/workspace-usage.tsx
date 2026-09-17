@@ -10,7 +10,7 @@ type Usage = {
     messagesWithCost: number;
     messagesWithSegments: number;
     reportedSegments: number | null;
-    reportedProviderCost: string | null;
+    chargedAmount: string | null;
   }[];
 };
 export function WorkspaceUsage() {
@@ -59,8 +59,8 @@ export function WorkspaceUsage() {
           />
         </label>
         <p>
-          Counts use the month each message was created. Provider costs may
-          arrive later. Unreported costs are excluded from totals.
+          Counts use the month each message was created. Usage charges may
+          arrive later. Pending charges are excluded from totals.
         </p>
         {error && <p role="alert">{error}</p>}
         {loading ? (
@@ -91,7 +91,7 @@ export function WorkspaceUsage() {
                         <th>CURRENCY</th>
                         <th>MESSAGES</th>
                         <th>REPORTED SEGMENTS</th>
-                        <th>REPORTED COST</th>
+                        <th>USAGE CHARGES</th>
                         <th>COST COVERAGE</th>
                       </tr>
                     </thead>
@@ -108,7 +108,7 @@ export function WorkspaceUsage() {
                               reported
                             </small>
                           </td>
-                          <td>{row.reportedProviderCost ?? "Not reported"}</td>
+                          <td>{row.chargedAmount ?? "Not reported"}</td>
                           <td>
                             {row.messagesWithCost}/{row.messages} messages
                             reported
@@ -125,8 +125,8 @@ export function WorkspaceUsage() {
           )
         )}
         <p className="notice">
-          Provider costs are shown separately by currency. Subscription billing
-          and invoices are not available yet. This view is not an invoice.
+          Charges reflect deductions from your Papers prepaid balance. Manage
+          subscriptions and invoices in Billing.
         </p>
       </div>
     </section>

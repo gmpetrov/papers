@@ -1,3 +1,4 @@
+import { effectivePlan } from "./billing-ledger";
 import type { Prisma } from "@agentinfra/db";
 import { assert } from "./errors";
 
@@ -10,9 +11,15 @@ export async function assertInboxCapacity(
   const organization = await tx.organization.findUniqueOrThrow({
     where: { id: organizationId },
   });
+  const billing = await tx.billingAccount.findUnique({
+    where: { organizationId },
+  });
+  const maxInboxes = billing
+    ? Math.min(organization.maxInboxes, effectivePlan(billing).inboxes)
+    : organization.maxInboxes;
   assert(
     (await tx.inbox.count({ where: { organizationId, status: "active" } })) <
-      organization.maxInboxes,
+      maxInboxes,
     409,
     "quota_exceeded",
     "Inbox limit reached",

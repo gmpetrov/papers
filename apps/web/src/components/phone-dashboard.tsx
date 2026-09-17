@@ -51,6 +51,26 @@ export function PhoneDashboard({ canSend }: { canSend: boolean }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [revision, setRevision] = useState(0);
+  const [checkoutNotice, setCheckoutNotice] = useState("");
+  useEffect(() => {
+    const status = new URLSearchParams(window.location.search).get("checkout");
+    if (status === "canceled") {
+      setCheckoutNotice(
+        "Checkout canceled. You can choose another number whenever you are ready.",
+      );
+      return;
+    }
+    if (status !== "success") return;
+    setCheckoutNotice(
+      "Checkout submitted. Your number will appear below after payment confirmation and activation. If the number is no longer available, the rental is canceled and refunded automatically.",
+    );
+    let checks = 0;
+    const timer = window.setInterval(() => {
+      setRevision((v) => v + 1);
+      if (++checks >= 15) window.clearInterval(timer);
+    }, 4000);
+    return () => window.clearInterval(timer);
+  }, []);
   const request = useRef<AbortController | null>(null);
   useEffect(() => {
     const controller = new AbortController();
@@ -186,7 +206,8 @@ export function PhoneDashboard({ canSend }: { canSend: boolean }) {
               {purchasing ? "Close search" : "Get a number"}
             </button>
           )}
-          {selected?.status === "active" &&
+          {selected &&
+            ["active", "billing_suspended"].includes(selected.status) &&
             canSend &&
             providerStatus === "active" && (
               <button
@@ -255,6 +276,11 @@ export function PhoneDashboard({ canSend }: { canSend: boolean }) {
           address={selected.phoneNumber}
           keys={keys.current}
         />
+      )}
+      {checkoutNotice && (
+        <p className="notice" role="status">
+          {checkoutNotice}
+        </p>
       )}
       {error && (
         <p role="alert" className="notice error">
@@ -346,7 +372,7 @@ export function PhoneDashboard({ canSend }: { canSend: boolean }) {
                 {new Date(message.createdAt).toLocaleString()}
               </p>
               <p>
-                Segments: {message.segments ?? "Not reported"} · Provider cost:{" "}
+                Segments: {message.segments ?? "Not reported"} · Usage charge:{" "}
                 {message.costAmount != null && message.costCurrency
                   ? `${message.costAmount} ${message.costCurrency}`
                   : "Not reported"}

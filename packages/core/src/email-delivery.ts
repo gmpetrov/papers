@@ -41,6 +41,10 @@ export async function confirmEmailSend(
         ...(message.status === "pending" ? { status: "sent" } : {}),
       },
     });
+    await tx.billingEmailUsage.updateMany({
+      where: { id: message.id, status: "reserved" },
+      data: { status: "settled" },
+    });
     if (operation.status !== "completed") {
       await tx.operation.update({
         where: { id: operation.id },

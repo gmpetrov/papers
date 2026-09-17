@@ -10,8 +10,12 @@ async function runCycle(env: JobsEnv) {
       db,
       {
         CUSTOM_WEBHOOK_ENCRYPTION_KEY: env.CUSTOM_WEBHOOK_ENCRYPTION_KEY,
+        STRIPE_SECRET_KEY: env.STRIPE_SECRET_KEY,
+        BILLING_ENABLED: env.BILLING_ENABLED,
         RESEND_API_KEY: env.RESEND_API_KEY,
         TELNYX_API_KEY: env.TELNYX_API_KEY,
+        TELNYX_PUBLIC_KEY: env.TELNYX_PUBLIC_KEY,
+        TELNYX_MESSAGING_PROFILE_ID: env.TELNYX_MESSAGING_PROFILE_ID,
         TELNYX_STATUS: env.TELNYX_STATUS,
         ATTACHMENTS: {
           put: (key, value, options) =>

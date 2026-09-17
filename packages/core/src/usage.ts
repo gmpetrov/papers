@@ -1,3 +1,4 @@
+import { retailAmount } from "./phone-retail";
 import type { Database } from "@agentinfra/db";
 import type { Principal } from "./principal";
 import { z } from "zod";
@@ -38,12 +39,22 @@ export async function getWorkspaceUsage(
         where,
         _count: { _all: true },
       }),
-      db.smsMessage.groupBy({
-        by: ["direction", "costCurrency"],
-        where,
-        _count: { _all: true, costAmount: true, segments: true },
-        _sum: { costAmount: true, segments: true },
-      }),
+      db.$queryRaw<
+        {
+          direction: string;
+          messages: bigint;
+          messagesWithCost: bigint;
+          messagesWithSegments: bigint;
+          reportedSegments: bigint | null;
+          chargeMicros: string | null;
+        }[]
+      >`
+        SELECT m.direction, COUNT(*) AS messages,
+          COUNT(r.id) AS "messagesWithCost", COUNT(m.segments) AS "messagesWithSegments",
+          SUM(m.segments) AS "reportedSegments", SUM(r."settledMicros")::text AS "chargeMicros"
+        FROM "SmsMessage" m LEFT JOIN "BillingReservation" r ON r.id=m.id AND r.status='settled'
+        WHERE m."organizationId"=${p.organizationId} AND m."createdAt">=${start} AND m."createdAt"<${end}
+        GROUP BY m.direction ORDER BY m.direction`,
     ],
     { isolationLevel: "RepeatableRead" },
   );
@@ -58,15 +69,19 @@ export async function getWorkspaceUsage(
     })),
     sms: sms.map((row) => ({
       direction: row.direction,
-      currency: row.costCurrency,
-      messages: row._count._all,
-      messagesWithCost: row._count.costAmount,
-      messagesWithSegments: row._count.segments,
-      reportedSegments: row._sum.segments,
-      reportedProviderCost: row._sum.costAmount?.toString() ?? null,
+      currency: "USD",
+      messages: Number(row.messages),
+      messagesWithCost: Number(row.messagesWithCost),
+      messagesWithSegments: Number(row.messagesWithSegments),
+      reportedSegments:
+        row.reportedSegments === null ? null : Number(row.reportedSegments),
+      chargedAmount:
+        row.chargeMicros === null
+          ? null
+          : retailAmount(BigInt(row.chargeMicros)),
     })),
     basis: "message_created_at",
-    costSource: "provider_callbacks",
-    billingStatus: "not_implemented",
+    costSource: "papers_ledger",
+    billingStatus: "prepaid",
   };
 }

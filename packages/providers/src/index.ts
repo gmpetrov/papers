@@ -237,6 +237,13 @@ export class TelnyxProvider {
         ),
       ).data;
   }
+  async configureMessagingProfile(providerNumberId: string, profileId: string) {
+    return this.request(
+      `/phone_numbers/${encodeURIComponent(providerNumberId)}/messaging`,
+      "PATCH",
+      { messaging_profile_id: profileId },
+    );
+  }
   async assignMessaging(phone: string, profileId: string) {
     return this.request(
       `/messaging_phone_numbers/${encodeURIComponent(phone)}`,

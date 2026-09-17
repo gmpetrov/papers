@@ -12,7 +12,15 @@
     "EMAIL_DOMAIN",
     "AUTH_EMAIL_FROM",
     "TELNYX_STATUS",
-    "TELNYX_API_KEY"
+    "TELNYX_API_KEY",
+    "TELNYX_PUBLIC_KEY",
+    "TELNYX_MESSAGING_PROFILE_ID",
+    "TELNYX_WEBHOOK_URL",
+    "CUSTOM_WEBHOOK_ENCRYPTION_KEY",
+    "BILLING_ENABLED",
+    "STRIPE_SECRET_KEY",
+    "STRIPE_WEBHOOK_SECRET",
+    "STRIPE_PORTAL_CONFIGURATION_ID"
   ],
   "tasks": {
     "test": {
@@ -23,22 +31,12 @@
       "persistent": true
     },
     "build": {
-      "dependsOn": [
-        "^build"
-      ],
-      "outputs": [
-        ".next/**",
-        "!.next/cache/**",
-        "dist/**"
-      ]
+      "dependsOn": ["^build"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
     "typecheck": {
-      "dependsOn": [
-        "^typecheck"
-      ]
+      "dependsOn": ["^typecheck"]
     }
   },
-  "globalDependencies": [
-    "tsconfig.json"
-  ]
+  "globalDependencies": ["tsconfig.json"]
 }

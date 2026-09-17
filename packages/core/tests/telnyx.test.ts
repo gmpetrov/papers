@@ -408,6 +408,35 @@ it("records exact SMS segments/cost from signed finalized events without regress
   ).toBe("0");
 });
 
+it("accounts for an in-flight incoming SMS after billing suspension", async () => {
+  await db.phoneNumber.update({
+    where: { id: numberId },
+    data: { status: "billing_suspended" },
+  });
+  try {
+    await ingestTelnyx(
+      db,
+      env,
+      request(
+        event("suspended-inbound-event", {
+          id: "suspended-inbound-message",
+          cost: { amount: "0.004", currency: "USD" },
+        }),
+      ),
+    );
+    await processDueEvents();
+    const message = await db.smsMessage.findFirstOrThrow({
+      where: { providerId: "suspended-inbound-message" },
+    });
+    expect(message.costAmount?.toString()).toBe("0.004");
+  } finally {
+    await db.phoneNumber.update({
+      where: { id: numberId },
+      data: { status: "active" },
+    });
+  }
+});
+
 it("enriches duplicate inbound messages with cost while preserving one message and one received event", async () => {
   await ingestTelnyx(
     db,

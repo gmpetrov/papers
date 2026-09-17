@@ -213,7 +213,19 @@ export async function listApprovals(
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     take: limit + 1,
   });
-  const data = rows.slice(0, limit);
+  const data = rows.slice(0, limit).map((row) =>
+    row.route === "number.provision"
+      ? {
+          ...row,
+          parameters: {
+            ...(row.parameters as Record<string, unknown>),
+            monthlyCost: "3.00",
+            upfrontCost: "0.00",
+            currency: "USD",
+          },
+        }
+      : row,
+  );
   return {
     policyVersion: policy.policyVersion,
     data,

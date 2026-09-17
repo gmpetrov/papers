@@ -17,6 +17,7 @@
     "hono": "latest",
     "ipaddr.js": "^2.5.0",
     "standardwebhooks": "^1.1.1",
+    "stripe": "^22.6.2",
     "zod": "latest"
   }
 }

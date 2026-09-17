@@ -1,3 +1,5 @@
+import { reconcileBillingPhones } from "./billing-phones";
+import { processStripeEvents, autoTopups } from "./stripe-billing";
 import { pruneRequestBuckets } from "./request-limits";
 import { reconcileSmsOptOuts } from "./sms-opt-out-sync";
 import {
@@ -22,6 +24,9 @@ export async function runBackgroundJobs(
 ) {
   const { ATTACHMENTS, ...providers } = env;
   const jobs = [
+    ["stripe", () => processStripeEvents(db, providers)],
+    ["auto_topups", () => autoTopups(db, providers)],
+    ["billing_phones", () => reconcileBillingPhones(db, providers)],
     ["request_limits", () => pruneRequestBuckets(db)],
     ["resend", () => processProviderEvents(db, providers)],
     ["telnyx", () => processTelnyxEvents(db)],

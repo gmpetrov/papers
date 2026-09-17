@@ -69,14 +69,15 @@ curl ${publicAppOrigin}/v1/capabilities -H "Authorization: Bearer $PAPERS_API_KE
       <h2>Phone numbers</h2>
       <p>
         Search available numbers with GET
-        /v1/phone-numbers/available?country=US. Purchase with POST
-        /v1/phone-numbers, passing phoneNumber, country, monthlyCost,
-        upfrontCost, and currency from the search result, plus an
-        Idempotency-Key. Poll the returned operation until activation completes.
-        Send SMS with POST /v1/phone-numbers/ID/messages. Release a number with
-        DELETE /v1/phone-numbers/ID and a new Idempotency-Key. Purchases and
-        releases require their own scopes; carrier registration may still be
-        required for messaging.
+        /v1/phone-numbers/available?country=US. Subscribe from the Phone numbers
+        page after choosing a number. Stripe Checkout charges $3/month, then
+        activation starts automatically. An owner session can also POST
+        /v1/billing/checkout with kind=phone, country=US, phoneNumber and an
+        Idempotency-Key. Search prices are Papers retail prices. Send SMS with
+        POST /v1/phone-numbers/ID/messages. Release a number with DELETE
+        /v1/phone-numbers/ID and a new Idempotency-Key. Purchases and releases
+        require their own scopes; carrier registration may still be required for
+        messaging.
       </p>
       <h2>SDKs and MCP</h2>
       <p>
