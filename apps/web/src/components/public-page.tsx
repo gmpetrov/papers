@@ -1,17 +1,17 @@
-import Link from "next/link";
-import styles from "./public-page.module.css";
-import type { ReactNode } from "react";
-import { ArrowRight } from "lucide-react";
-import { Brand } from "./brand";
+import Link from 'next/link';
+import styles from './public-page.module.css';
+import type { ReactNode } from 'react';
+import { ArrowRight } from 'lucide-react';
+import { Brand } from './brand';
 
 export function PublicNav() {
   return (
     <nav className={`site-nav ${styles.nav}`} aria-label="Main navigation">
       <Brand />
       <div className="nav-links">
-        <Link href="/email">Email</Link>
-        <Link href="/phone">Phone</Link>
-        <Link href="/integrations">Integrations</Link>
+        {/* <Link href="/email">Email</Link> */}
+        {/* <Link href="/phone">Phone</Link> */}
+        {/* <Link href="/integrations">Integrations</Link> */}
         <Link href="/pricing">Pricing</Link>
         <Link href="/docs">Docs</Link>
       </div>

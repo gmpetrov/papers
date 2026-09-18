@@ -1,4 +1,5 @@
-import Link from "next/link";
+import Image from 'next/image';
+import Link from 'next/link';
 import {
   ArrowRight,
   ArrowUpRight,
@@ -8,70 +9,70 @@ import {
   KeyRound,
   Repeat2,
   ScrollText,
-} from "lucide-react";
-import { Brand } from "@/components/brand";
-import { PublicNav } from "@/components/public-page";
-import { buttonVariants } from "@/components/ui/button";
-import { Passport } from "@/components/landing/passport";
-import { CodeExample } from "@/components/design-system/code-example";
-import { Guilloche, Stamp } from "@/components/design-system/paper";
+} from 'lucide-react';
+import { Brand } from '@/components/brand';
+import { PublicNav } from '@/components/public-page';
+import { buttonVariants } from '@/components/ui/button';
+import { Passport } from '@/components/landing/passport';
+import { CodeExample } from '@/components/design-system/code-example';
+import { Guilloche, Stamp } from '@/components/design-system/paper';
 
 const credentials = [
   {
-    title: "An inbox of its own.",
-    label: "Inbox",
+    title: 'An inbox of its own.',
+    label: 'Inbox',
     icon: Mail,
-    href: "/email",
-    description: "A real email address. Sends, receives, keeps history.",
+    href: '/email',
+    description: 'A real email address. Sends, receives, keeps history.',
     details: [
-      "A persistent address for your workspace.",
-      "Send, receive, and reply. Conversation history and attachments included.",
-      "Incoming mail through signed webhooks or a simple poll.",
+      'A persistent address for your workspace.',
+      'Send, receive, and reply. Conversation history and attachments included.',
+      'Incoming mail through signed webhooks or a simple poll.',
     ],
     facts: [
-      ["Address", "research@papers.bot"],
-      ["History", "Persistent conversations"],
-      ["Delivery", "Webhook · poll"],
+      ['Address', 'research@papers.bot'],
+      ['History', 'Persistent conversations'],
+      ['Delivery', 'Webhook · poll'],
     ],
   },
   {
-    title: "A direct line.",
-    label: "Number",
+    title: 'A direct line.',
+    label: 'Number',
     icon: Phone,
-    href: "/phone",
-    description: "A dedicated phone number. Two-way SMS.",
+    href: '/phone',
+    description: 'A dedicated phone number. Two-way SMS.',
     details: [
-      "A dedicated number, with availability and activation requirements shown before you order.",
-      "Two-way SMS through the same API as email.",
-      "Release it when you no longer need it.",
+      'A dedicated number, with availability and activation requirements shown before you order.',
+      'Two-way SMS through the same API as email.',
+      'Release it when you no longer need it.',
     ],
     facts: [
-      ["Number", "Dedicated to your workspace"],
-      ["Availability", "Check before ordering"],
-      ["Channels", "SMS"],
+      ['Number', 'Dedicated to your workspace'],
+      ['Availability', 'Check before ordering'],
+      ['Channels', 'SMS'],
     ],
   },
   {
-    title: "Access, on your terms.",
-    label: "Control",
+    title: 'Access, on your terms.',
+    label: 'Control',
     icon: ShieldCheck,
-    href: "/integrations",
-    description: "Scoped access. Limits and approvals you set.",
+    href: '/integrations',
+    description: 'Scoped access. Limits and approvals you set.',
     details: [
-      "Grant access to the resources and actions an agent needs.",
-      "Set workspace limits and review requests that need approval.",
-      "Connect through MCP, SDKs, a CLI, or HTTP.",
+      'Grant access to the resources and actions an agent needs.',
+      'Set workspace limits and review requests that need approval.',
+      'Connect through MCP, SDKs, a CLI, or HTTP.',
     ],
     facts: [
-      ["Access", "Scoped API keys · OAuth"],
-      ["Limits", "Set by your workspace"],
-      ["Approvals", "Review before retry"],
+      ['Access', 'Scoped API keys · OAuth'],
+      ['Limits', 'Set by your workspace'],
+      ['Approvals', 'Review before retry'],
     ],
   },
 ];
 const samples = [
   {
-    label: "TypeScript",
+    label: 'TypeScript',
     code: `import { Papers } from "@papers.bot/sdk";
 
 const papers = new Papers({
@@ -87,7 +88,7 @@ const inbox = await papers.inboxes.create(
 console.log(inbox.address);`,
   },
   {
-    label: "Python",
+    label: 'Python',
     code: `import os
 from papers import Papers
 
@@ -102,7 +103,7 @@ with Papers(
     print(inbox.address)`,
   },
   {
-    label: "cURL",
+    label: 'cURL',
     code: `curl https://www.papers.bot/v1/inboxes \\
   -H "Authorization: Bearer $PAPERS_API_KEY" \\
   -H "Content-Type: application/json" \\
@@ -110,7 +111,7 @@ with Papers(
   -d '{"name":"Research","localPart":"research"}'`,
   },
   {
-    label: "MCP",
+    label: 'MCP',
     code: `https://www.papers.bot/mcp
 
 Connect with an OAuth-compatible MCP client.
@@ -135,9 +136,9 @@ export default function Landing() {
               <em>AI agents</em>
             </h1>
             <p>
-              Give your agents a place in the real world. A real inbox, a
-              dedicated number, and the permissions to get things done. All
-              through one API.
+              Papers.bot is the identity API for AI agents. Every agent gets a
+              real inbox, a real number, and a real card, the way a person gets
+              them from Gmail, a carrier, and a bank.
             </p>
             <div className="credential-summary">
               {credentials.map(({ label, icon: Icon, description }) => (
@@ -151,12 +152,12 @@ export default function Landing() {
               ))}
             </div>
             <div className="papers-actions">
-              <Link href="/login" className={buttonVariants({ size: "lg" })}>
-                Give your agent its papers <ArrowRight />
+              <Link href="/login" className={buttonVariants({ size: 'lg' })}>
+                Start for free <ArrowRight />
               </Link>
               <Link
                 href="/docs"
-                className={buttonVariants({ variant: "outline", size: "lg" })}
+                className={buttonVariants({ variant: 'link', size: 'lg' })}
               >
                 Read the docs
               </Link>
@@ -164,20 +165,32 @@ export default function Landing() {
           </div>
           <Passport />
         </section>
-        <div className="papers-connections">
-          <span>
-            Connect through
-            <br />
-            MCP & API
-          </span>
-          <span className="font-serif">Claude</span>
-          <span>ChatGPT</span>
-          <span className="font-serif">Grok</span>
-          <span className="font-mono">Python</span>
-          <span className="font-mono">TypeScript</span>
-          <span className="font-mono">cURL</span>
-          <span className="font-mono">MCP</span>
-        </div>
+        <section className="papers-tool-strip" aria-labelledby="tools-heading">
+          <h2 id="tools-heading">works with your favorite tools</h2>
+          <ul className="papers-connections">
+            {[
+              ['Claude Code', 'claudecode'],
+              ['Codex', 'codex'],
+              ['Cursor', 'cursor'],
+              ['OpenClaw', 'openclaw'],
+              ['Replit', 'replit'],
+              ['Lovable', 'lovable'],
+              ['Vercel', 'vercel'],
+              ['Devin', 'devin'],
+              ['Hermes', 'hermesagent'],
+              ['Grok Bot', 'grok'],
+            ].map(([name, logo]) => (
+              <li key={name} title={name} data-tool={logo}>
+                <Image
+                  src={`/logos/${logo}.svg`}
+                  alt={name}
+                  width={32}
+                  height={32}
+                />
+              </li>
+            ))}
+          </ul>
+        </section>
         <section className="papers-section" id="papers">
           <div className="papers-section-intro">
             <h2>
@@ -200,9 +213,9 @@ export default function Landing() {
                       {label}
                     </span>
                     <Stamp>
-                      {label === "Control"
-                        ? "On your terms"
-                        : "Ready for agents"}
+                      {label === 'Control'
+                        ? 'On your terms'
+                        : 'Ready for agents'}
                     </Stamp>
                   </header>
                   <div className="credential-content">
@@ -288,27 +301,27 @@ export default function Landing() {
             {[
               [
                 KeyRound,
-                "Scopes",
-                "Least privilege by default",
-                "Choose the inboxes, numbers, and actions each key can access. Add send access only when needed.",
+                'Scopes',
+                'Least privilege by default',
+                'Choose the inboxes, numbers, and actions each key can access. Add send access only when needed.',
               ],
               [
                 ShieldCheck,
-                "Approvals",
-                "A human in the loop",
-                "Review the exact request. Approving permits one matching retry; it does not execute the action.",
+                'Approvals',
+                'A human in the loop',
+                'Review the exact request. Approving permits one matching retry; it does not execute the action.',
               ],
               [
                 Repeat2,
-                "Idempotency",
-                "Retries that never double-send",
-                "Reuse the key, get the same result. A different payload on the same key returns a conflict.",
+                'Idempotency',
+                'Retries that never double-send',
+                'Reuse the key, get the same result. A different payload on the same key returns a conflict.',
               ],
               [
                 ScrollText,
-                "History",
-                "Every conversation on the record",
-                "Keep sent and received messages together. Signed webhooks bring events into your workflow.",
+                'History',
+                'Every conversation on the record',
+                'Keep sent and received messages together. Signed webhooks bring events into your workflow.',
               ],
             ].map(([Icon, label, title, text]) => {
               const I = Icon as typeof Mail;
@@ -337,7 +350,7 @@ export default function Landing() {
             <p>Your workspace. Your permissions. Their next conversation.</p>
           </div>
           <div className="papers-actions">
-            <Link href="/login" className={buttonVariants({ size: "lg" })}>
+            <Link href="/login" className={buttonVariants({ size: 'lg' })}>
               Create your workspace <ArrowRight />
             </Link>
             <Link href="/docs">
