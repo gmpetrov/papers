@@ -140,7 +140,7 @@ export default function Landing() {
               real inbox, a real number, and a real card, the way a person gets
               them from Gmail, a carrier, and a bank.
             </p>
-            <div className="credential-summary">
+            <div className="credential-summary credential-ledger">
               {credentials.map(({ label, icon: Icon, description }) => (
                 <div key={label}>
                   <strong>
@@ -165,8 +165,14 @@ export default function Landing() {
           </div>
           <Passport />
         </section>
-        <section className="papers-tool-strip" aria-labelledby="tools-heading">
-          <h2 id="tools-heading">works with your favorite tools</h2>
+
+        <section
+          className="papers-tool-strip papers-tools-folded"
+          aria-labelledby="tools-heading"
+        >
+          <h2 id="tools-heading" className="tools-title-simple">
+            works with your favorite tools
+          </h2>
           <ul className="papers-connections">
             {[
               ['Claude Code', 'claudecode'],
