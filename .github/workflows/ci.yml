@@ -40,6 +40,7 @@ jobs:
       - run: uv lock --project sdks/python --check
       - run: pnpm db:generate
       - run: pnpm db:migrate
+      - run: pnpm exec tsx scripts/check-migration-order.ts
       - run: pnpm typecheck
       - run: pnpm test
       - name: Verify isolated PostgreSQL backup and restore

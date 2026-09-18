@@ -33,10 +33,11 @@ creating another bucket or exposing attachments publicly.
   emulator bucket, preserving its key and checking SHA-256 equality. Development
   files have not been uploaded to cloud storage.
 
-Cloud provisioning and database preparation do not publish a new app version.
-The checked-in binding change takes effect in production on the next deployment
-of each Worker. Keep `papers-attachments` until both live bindings are switched;
-removing a bucket still referenced by a live Worker would break that Worker.
+Commit `5cfdfaf` deployed through both main-branch builds on September 17 at
+19:53 UTC. Both live Workers now bind `ATTACHMENTS` to `papers`, and database
+health passes. The empty legacy bucket is retained for rollback; these live
+Worker versions no longer reference it. The migration ordering correction
+identified by fresh-database CI is documented in [deployment.md](deployment.md).
 
 ## Local development
 

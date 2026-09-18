@@ -97,7 +97,7 @@ to use actual Telnyx reported cost. Set SMS rates first, then use
 account's verified MMS rate including carrier fees. Updating an SMS rate clears
 the old MMS ceiling to prevent inadvertently extending its validity.
 
-Apply migration `20260917120000_multichannel_attachments`, regenerate Prisma,
+Apply migration `20260917160000_multichannel_attachments`, regenerate Prisma,
 then deploy web and jobs together. Reuse the existing private `ATTACHMENTS`
 binding pointing to the private `papers` bucket and the jobs Worker's
 production public transport configuration. Production storage provisioning and

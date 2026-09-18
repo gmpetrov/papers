@@ -8,8 +8,8 @@ Deployed September 17, 2026 at **https://www.papers.bot**.
 | Jobs Worker `papers-jobs` | Deployed, Queue consumer and every-minute schedule active |
 | PostgreSQL | Dedicated Prisma Postgres database; all 32 checked-in migrations applied |
 | Hyperdrive `papers-production` | Query caching disabled; origin connection limit 5 |
-| R2 `papers` | Created and verified private; both checked-in Worker configurations target it |
-| R2 `papers-attachments` | Legacy empty bucket; retain until both live Workers switch to `papers` |
+| R2 `papers` | Private; both live Workers use `ATTACHMENTS → papers` |
+| R2 `papers-attachments` | Legacy empty bucket retained for rollback; live Workers no longer reference it |
 | Queue `papers-jobs` | Producer and consumer deployed |
 | Worker secrets | Installed from the ignored production environment file |
 | Development data | Not migrated; awaiting the user's fresh-start/migration choice |
@@ -87,14 +87,40 @@ edge entry point under Wrangler's `workerd` export condition.
 
 The private `papers` bucket is created and passed an exact-byte remote
 write/read/delete smoke check. Public r2.dev access is disabled and there are no
-custom domains. Migration `20260917120000_multichannel_attachments` is applied
+custom domains. Migration `20260917160000_multichannel_attachments` is applied
 to production. Both runtime secret inventories contain the required names.
 Both local and production configs now map `ATTACHMENTS` to `papers`. Existing
 local files were copied and verified without uploading development data.
 
-These changes are prepared for release, not deployed by this storage task.
-Keep the old bucket until both live Worker bindings have switched. See
-[storage cutover and rollback](storage.md) before the next deployment.
+Commit `5cfdfaf` deployed successfully through both native Cloudflare Builds
+on September 17 at 19:53 UTC. Live web version
+`3dfcef19-0fc7-486d-a5ea-b8fc29bfb46c` and jobs version
+`4666ca1b-5c5b-4570-982e-7b24a1001f8e` both bind `ATTACHMENTS` to `papers`.
+Production health confirmed database connectivity. See
+[storage cutover and rollback](storage.md).
+
+The independent GitHub Verify run failed on a fresh database: the original
+`20260917120000_multichannel_attachments` sorted before billing created SmsRate.
+The migration is renamed to `20260917160000_multichannel_attachments` with
+identical SQL and checksum. The migrate command first runs a guarded history
+normalizer: only a successful old record with the exact expected checksum may
+be renamed; application data and schema are unchanged. Unknown or failed history
+stops for operator review. Fresh databases apply the corrected sequence.
+Existing development, test and production history has been normalized.
+`scripts/check-migration-order.ts` verifies fresh creation, existing history,
+repeat runs and checksum-mismatch rejection; it is now included in CI.
+The correction needs a follow-up push to rerun GitHub verification.
+
+Migration verification also exposed stale session advisory locks from using the
+Prisma Postgres transaction pooler. `packages/db/migration-url.ts` now uses
+`DIRECT_URL` when configured, otherwise switches the exact Prisma Postgres pooled
+hostname to `db.prisma.io` for CLI migrations and the history preparation step.
+Application connections remain pooled; other database providers should supply
+their direct URL explicitly. This follows
+[Prisma's connection guidance](https://www.prisma.io/docs/postgres/database/connection-pooling).
+The stale migration-lock sessions were recovered, and production `migrate deploy`
+completed successfully with all 32 migrations applied and none pending. The
+regression check also verifies direct-URL selection and override behavior.
 
 ## Updating production
 
