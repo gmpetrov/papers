@@ -123,7 +123,7 @@ At 1100px and below, the sidebar narrows to 220px and complex dashboard layouts 
 
 ## Elevation & Depth
 
-Operational panels are flat: card tone and one-pixel ink borders establish separation, with default card ring shadows suppressed. The passport is the deliberate dimensional exception: its cover uses `8px 24px 30px -14px #14151855`, and its inner page uses `8px 20px 30px -20px #14151855`.
+Operational panels are flat: card tone and one-pixel ink borders establish separation, with default card ring shadows suppressed. The passport is the deliberate dimensional exception: its cover uses `8px 24px 30px -14px #14151855`, the open spread uses `8px 24px 36px -24px #14151855`, and its inner fold uses `inset 14px 0 18px -16px #14151866`.
 
 Passport opening uses a 650ms transform with `cubic-bezier(0.16, 1, 0.3, 1)`. Control color transitions use 150ms. Preserve the reduced-motion rule, which reduces animation and transition durations to 0.01ms and disables smooth scrolling.
 
@@ -182,7 +182,7 @@ import { CodeExample } from "@/components/design-system/code-example";
 
 Use the quickstart repository installation guidance. Do not assume an SDK package is published; the repository README and application documentation differ on package naming.
 
-Navigation uses quiet sans-serif rows, a bordered card surface for the current page, and a small red active marker. Keep current-page semantics, skip navigation, and the mobile toggle accessible. The passport is an illustrative landing interaction; it must not imply backend features absent from the product. Decorative guilloche SVGs remain hidden from assistive technology.
+Navigation uses quiet sans-serif rows, a bordered card surface for the current page, and a small red active marker. Keep current-page semantics, skip navigation, and the mobile toggle accessible. The passport opens into a two-page spread: working language tabs and copyable code on the left, illustrative identity details on the right. Preserve both facing pages on mobile, with code scrolling within its page. The spread is at most 600px wide and 440px high (430px on mobile). The closed cover stays centered over the spread. It must not imply backend features absent from the product. The hero guilloche belongs to the full-width hero, not the passport column: oversize it beyond the top and right boundaries and crop only at the hero boundary, with a mobile fade that keeps body text clear. Decorative guilloche SVGs remain hidden from assistive technology.
 
 ### Extending the system
 

@@ -1,5 +1,5 @@
 import { createDatabase } from "@agentinfra/db/edge";
-import { createAuth } from "@agentinfra/auth";
+import { createAuth, resolveAuthEnvironment } from "@agentinfra/auth";
 import { createApi, type Environment } from "@agentinfra/core";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 // The database record is authoritative; queue notification failure is recoverable by cron.
@@ -44,11 +44,7 @@ export async function runtime(request?: Request) {
   const db = createDatabase(bindings.HYPERDRIVE.connectionString);
   const auth = createAuth(
     db,
-    {
-      ...process.env,
-      BETTER_AUTH_URL: process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
-      BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET!,
-    },
+    resolveAuthEnvironment(bindings, process.env),
     {
       resourceGrants:
         request && new URL(request.url).pathname === "/api/auth/oauth2/consent"

@@ -1,6 +1,6 @@
 import { afterAll, expect, it } from "vitest";
 import { createDatabase } from "@agentinfra/db";
-import { createAuth } from "../src/index";
+import { createAuth, resolveAuthEnvironment } from "../src/index";
 
 const db = createDatabase(
   "postgresql://agentinfra:agentinfra_local@localhost:55433/agentinfra_test",
@@ -13,6 +13,51 @@ const auth = createAuth(db, {
   GOOGLE_CLIENT_SECRET: "fixture-google-secret",
 });
 afterAll(() => db.$disconnect());
+
+it("uses the binding origin for Google login and still rejects untrusted browser origins", async () => {
+  const devOrigin = "https://dev.chaindesk.ai";
+  const devAuth = createAuth(
+    db,
+    resolveAuthEnvironment(
+      {
+        BETTER_AUTH_URL: devOrigin,
+        BETTER_AUTH_SECRET: "binding-auth-test-secret-long-enough",
+        GOOGLE_CLIENT_ID: "fixture-google-client",
+        GOOGLE_CLIENT_SECRET: "fixture-google-secret",
+      },
+      { BETTER_AUTH_URL: origin },
+    ),
+  );
+  // Better Auth skips origin validation in NODE_ENV=test by default.
+  // Exercise the browser protection enabled in development and production.
+  (await devAuth.$context).skipOriginCheck = false;
+  const start = (requestOrigin: string) =>
+    devAuth.handler(
+      new Request(`${devOrigin}/api/auth/sign-in/social`, {
+        method: "POST",
+        headers: {
+          Origin: requestOrigin,
+          Cookie: "origin-check=fixture",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          provider: "google",
+          callbackURL: "/dashboard",
+          disableRedirect: true,
+        }),
+      }),
+    );
+  const valid = await start(devOrigin);
+  expect(valid.status).toBe(200);
+  const target = new URL((await valid.json()).url);
+  expect(target.hostname).toBe("accounts.google.com");
+  expect(target.searchParams.get("redirect_uri")).toBe(
+    `${devOrigin}/api/auth/callback/google`,
+  );
+  const invalid = await start("https://untrusted.example");
+  expect(invalid.status).toBe(403);
+  expect((await invalid.json()).code).toBe("INVALID_ORIGIN");
+});
 
 it("returns canceled Google authorization to the login page with the original invitation destination", async () => {
   const sessionsBefore = await db.session.count();

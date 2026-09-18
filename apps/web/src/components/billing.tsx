@@ -107,7 +107,7 @@ export function Billing({ canEdit }: { canEdit: boolean }) {
     }
   }
   return (
-    <div style={{ display: "grid", gap: 24 }}>
+    <div className="billing">
       {error && (
         <p className="notice error" role="alert">
           {error}
@@ -129,7 +129,7 @@ export function Billing({ canEdit }: { canEdit: boolean }) {
             </p>
           )}
           <section className="panel">
-            <div className="panel-header">
+            <div className="panel-head">
               <h2>Workspace plan</h2>
               <Link href="/pricing" className="text-link">
                 Compare plans →
@@ -193,7 +193,7 @@ export function Billing({ canEdit }: { canEdit: boolean }) {
             </div>
           </section>
           <section className="panel">
-            <div className="panel-header">
+            <div className="panel-head">
               <h2>Prepaid usage balance</h2>
               <button
                 className="button secondary small"
@@ -292,14 +292,7 @@ export function Billing({ canEdit }: { canEdit: boolean }) {
                   />{" "}
                   Automatically top up my balance using my saved card
                 </label>
-                <div
-                  style={{
-                    display: "flex",
-                    gap: 16,
-                    flexWrap: "wrap",
-                    margin: "16px 0",
-                  }}
-                >
+                <div className="billing-topup-fields">
                   {[
                     [
                       "amount",
@@ -323,7 +316,7 @@ export function Billing({ canEdit }: { canEdit: boolean }) {
                       1000,
                     ],
                   ].map(([name, label, value, min, max]) => (
-                    <label key={name} style={{ display: "grid", gap: 8 }}>
+                    <label key={name}>
                       {label}
                       <input
                         name={String(name)}
@@ -334,12 +327,6 @@ export function Billing({ canEdit }: { canEdit: boolean }) {
                         defaultValue={Number(value)}
                         disabled={!canEdit}
                         required
-                        style={{
-                          padding: 10,
-                          border: "1px solid var(--line)",
-                          borderRadius: 6,
-                          maxWidth: 160,
-                        }}
                       />
                     </label>
                   ))}
@@ -360,7 +347,7 @@ export function Billing({ canEdit }: { canEdit: boolean }) {
             </div>
           </section>
           <section className="panel">
-            <div className="panel-header">
+            <div className="panel-head">
               <h2>Phone rentals</h2>
             </div>
             <div className="panel-body">
@@ -392,7 +379,7 @@ export function Billing({ canEdit }: { canEdit: boolean }) {
             </div>
           </section>
           <section className="panel">
-            <div className="panel-header">
+            <div className="panel-head">
               <h2>Usage transactions</h2>
             </div>
             <div className="panel-body">

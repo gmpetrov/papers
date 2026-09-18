@@ -181,8 +181,8 @@
       },
       {
         "name": "passport-page",
-        "value": "8px 20px 30px -20px #14151855",
-        "purpose": "Inner passport sheet."
+        "value": "8px 24px 36px -24px #14151855",
+        "purpose": "Two facing pages with an inset fold; code left and identity right."
       }
     ],
     "motion": [
@@ -299,7 +299,7 @@
   ],
   "narrative": {
     "northStar": "Paper Credentials",
-    "overview": "The supplied `Design.html` establishes the visual authority: warm paper, crisp ink rules, editorial serif headings, and red credential stamps. A navy passport with gold lettering supplies the signature interaction. The result should feel like a carefully typeset document with practical software controls.\n\nThe same vocabulary supports two surface modes: the landing page uses **Persuade**, with generous composition and an interactive passport; the dashboard uses **Operate**, with compact navigation, clear actions, data tables, and live resource counts. These modes change density and hierarchy, not the underlying palette.",
+    "overview": "The supplied `Design.html` establishes the visual authority: warm paper, crisp ink rules, editorial serif headings, and red credential stamps. A navy passport with gold lettering supplies the signature interaction. The result should feel like a carefully typeset document with practical software controls.\n\nThe same vocabulary supports two surface modes: the landing page uses **Persuade**, with generous composition and an interactive passport; the dashboard uses **Operate**, with compact navigation, clear actions, data tables, and live resource counts. These modes change density and hierarchy, not the underlying palette.\n\nThe open passport is a two-page code-and-identity spread, including on mobile. The decorative guilloche is positioned against the full hero and extends beyond its viewport boundaries rather than being cropped by the book column.",
     "keyCharacteristics": [
       "Warm paper surfaces separated by thin ink rules.",
       "Editorial headings paired with compact, readable controls.",

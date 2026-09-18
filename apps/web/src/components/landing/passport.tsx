@@ -9,65 +9,121 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Guilloche, Stamp } from "@/components/design-system/paper";
+import { CodeExample } from "@/components/design-system/code-example";
+import { Stamp } from "@/components/design-system/paper";
 
 export function Passport() {
   const [open, setOpen] = useState(false);
   return (
     <div className="passport-stage">
-      <Guilloche />
       <div className={`passport-book ${open ? "is-open" : ""}`}>
         <div
-          className="passport-page"
+          className="passport-spread"
           id="passport-preview"
           aria-hidden={!open}
           inert={!open}
         >
-          <div className="passport-page-heading">
-            Agent passport <span>Type P</span>
-          </div>
-          <Fingerprint
-            size={58}
-            strokeWidth={1}
-            className="passport-fingerprint"
-          />
-          <div className="passport-field">
-            <small>Holder</small>
-            <strong>research-agent</strong>
-          </div>
-          <div className="passport-field">
-            <small>
-              <Mail size={12} /> Inbox
-            </small>
-            <span>research@papers.bot</span>
-          </div>
-          <div className="passport-field">
-            <small>
-              <Phone size={12} /> Number
-            </small>
-            <span>Dedicated · two-way SMS</span>
-          </div>
-          <div className="passport-field">
-            <small>
-              <ShieldCheck size={12} /> Access
-            </small>
-            <span>Your scopes. Your limits.</span>
-          </div>
-          <Stamp>Illustrative passport</Stamp>
-          <Link href="/login" className="passport-create">
-            Create your workspace <ArrowUpRight size={14} />
-          </Link>
-          <div className="passport-mrz" aria-hidden="true">
-            P&lt;BOT&lt;RESEARCH&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
-            <br />
-            INBOX&lt;NUMBER&lt;&lt;PAPERS&lt;&lt;
-          </div>
+          <section
+            className="passport-code-page"
+            aria-label="Passport code example"
+          >
+            <CodeExample
+              compact
+              samples={[
+                {
+                  label: "Python",
+                  code: `from papers import Papers
+import os
+
+with Papers(
+  os.environ["PAPERS_API_KEY"],
+  base_url="https://www.papers.bot",
+) as papers:
+  inbox = papers.create_inbox(
+    name="Research",
+    local_part="research",
+    idempotency_key="research-001",
+  )
+  print(inbox.address)`,
+                },
+                {
+                  label: "TS",
+                  code: `import { Papers } from
+  "@papers.bot/sdk";
+
+const papers = new Papers({
+  apiKey: process.env.PAPERS_API_KEY!,
+  baseUrl: "https://www.papers.bot",
+});
+
+const inbox = await papers.inboxes.create(
+  { name: "Research", localPart: "research" },
+  { idempotencyKey: "research-001" }
+);`,
+                },
+                {
+                  label: "cURL",
+                  code: `curl https://www.papers.bot/v1/inboxes \\
+  -H "Authorization: Bearer $PAPERS_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -H "Idempotency-Key: research-001" \\
+  -d '{"name":"Research", "localPart":"research"}'`,
+                },
+              ]}
+            />
+            <div className="passport-code-caption">
+              One API. Real capabilities.
+            </div>
+          </section>
+          <section className="passport-page" aria-label="Agent identity page">
+            <div className="passport-page-heading">
+              Agent passport <span>Type P</span>
+            </div>
+            <Fingerprint
+              size={58}
+              strokeWidth={1}
+              className="passport-fingerprint"
+            />
+            <div className="passport-field">
+              <small>Holder</small>
+              <strong>research-agent</strong>
+            </div>
+            <div className="passport-field">
+              <small>
+                <Mail size={12} /> Inbox
+              </small>
+              <span>research@papers.bot</span>
+            </div>
+            <div className="passport-field">
+              <small>
+                <Phone size={12} /> Number
+              </small>
+              <span>Dedicated · two-way SMS</span>
+            </div>
+            <div className="passport-field">
+              <small>
+                <ShieldCheck size={12} /> Access
+              </small>
+              <span>Your scopes. Your limits.</span>
+            </div>
+            <Stamp>Illustrative passport</Stamp>
+            <Link href="/login" className="passport-create">
+              Create your workspace <ArrowUpRight size={14} />
+            </Link>
+            <div className="passport-mrz" aria-hidden="true">
+              P&lt;BOT&lt;RESEARCH&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
+              <br />
+              INBOX&lt;NUMBER&lt;&lt;PAPERS&lt;&lt;
+            </div>
+          </section>
         </div>
         <button
           type="button"
           className="passport-cover"
           onClick={() => setOpen(!open)}
           aria-expanded={open}
+          tabIndex={open ? -1 : 0}
+          aria-hidden={open}
           aria-controls="passport-preview"
           aria-label={open ? "Close example passport" : "Open example passport"}
         >

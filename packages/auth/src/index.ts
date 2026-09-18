@@ -1,4 +1,5 @@
 import { planFor } from "@agentinfra/contracts";
+export { resolveAuthEnvironment } from "./environment";
 import { authErrorDiagnostics } from "./error-diagnostics";
 import { resourceConsentDatabase } from "./resource-consent";
 import { betterAuth } from "better-auth";

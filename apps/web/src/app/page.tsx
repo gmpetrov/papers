@@ -127,6 +127,7 @@ export default function Landing() {
       <PublicNav />
       <main id="main-content">
         <section className="papers-hero">
+          <Guilloche className="hero-guilloche" />
           <div className="papers-hero-copy">
             <h1>
               Papers for
