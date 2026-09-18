@@ -1,0 +1,327 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-18T19:27:03.013414+00:00",
+  "title": "Design System: Papers",
+  "extensions": {
+    "colorMeta": {
+      "ink": {
+        "displayName": "Ink",
+        "role": "primary",
+        "tonalRamp": [
+          "oklch(15% 0.0062 271.09)",
+          "oklch(27% 0.0062 271.09)",
+          "oklch(38% 0.0062 271.09)",
+          "oklch(49% 0.0062 271.09)",
+          "oklch(61% 0.0062 271.09)",
+          "oklch(72% 0.0062 271.09)",
+          "oklch(84% 0.0062 271.09)",
+          "oklch(95% 0.0062 271.09)"
+        ]
+      },
+      "paper": {
+        "displayName": "Paper",
+        "role": "neutral",
+        "tonalRamp": [
+          "oklch(15% 0.0111 89.72)",
+          "oklch(27% 0.0111 89.72)",
+          "oklch(38% 0.0111 89.72)",
+          "oklch(49% 0.0111 89.72)",
+          "oklch(61% 0.0111 89.72)",
+          "oklch(72% 0.0111 89.72)",
+          "oklch(84% 0.0111 89.72)",
+          "oklch(95% 0.0111 89.72)"
+        ]
+      },
+      "card": {
+        "displayName": "Card",
+        "role": "neutral",
+        "tonalRamp": [
+          "oklch(15% 0.0054 95.10)",
+          "oklch(27% 0.0054 95.10)",
+          "oklch(38% 0.0054 95.10)",
+          "oklch(49% 0.0054 95.10)",
+          "oklch(61% 0.0054 95.10)",
+          "oklch(72% 0.0054 95.10)",
+          "oklch(84% 0.0054 95.10)",
+          "oklch(95% 0.0054 95.10)"
+        ]
+      },
+      "stamp": {
+        "displayName": "Stamp",
+        "role": "primary",
+        "tonalRamp": [
+          "oklch(15% 0.1741 32.16)",
+          "oklch(27% 0.1741 32.16)",
+          "oklch(38% 0.1741 32.16)",
+          "oklch(49% 0.1741 32.16)",
+          "oklch(61% 0.1741 32.16)",
+          "oklch(72% 0.1741 32.16)",
+          "oklch(84% 0.1741 32.16)",
+          "oklch(95% 0.1741 32.16)"
+        ]
+      },
+      "navy": {
+        "displayName": "Navy",
+        "role": "secondary",
+        "tonalRamp": [
+          "oklch(15% 0.0801 269.86)",
+          "oklch(27% 0.0801 269.86)",
+          "oklch(38% 0.0801 269.86)",
+          "oklch(49% 0.0801 269.86)",
+          "oklch(61% 0.0801 269.86)",
+          "oklch(72% 0.0801 269.86)",
+          "oklch(84% 0.0801 269.86)",
+          "oklch(95% 0.0801 269.86)"
+        ]
+      },
+      "gold": {
+        "displayName": "Gold",
+        "role": "secondary",
+        "tonalRamp": [
+          "oklch(15% 0.1173 88.61)",
+          "oklch(27% 0.1173 88.61)",
+          "oklch(38% 0.1173 88.61)",
+          "oklch(49% 0.1173 88.61)",
+          "oklch(61% 0.1173 88.61)",
+          "oklch(72% 0.1173 88.61)",
+          "oklch(84% 0.1173 88.61)",
+          "oklch(95% 0.1173 88.61)"
+        ]
+      },
+      "secondary": {
+        "displayName": "Secondary",
+        "role": "neutral",
+        "tonalRamp": [
+          "oklch(15% 0.0153 90.24)",
+          "oklch(27% 0.0153 90.24)",
+          "oklch(38% 0.0153 90.24)",
+          "oklch(49% 0.0153 90.24)",
+          "oklch(61% 0.0153 90.24)",
+          "oklch(72% 0.0153 90.24)",
+          "oklch(84% 0.0153 90.24)",
+          "oklch(95% 0.0153 90.24)"
+        ]
+      },
+      "muted-foreground": {
+        "displayName": "Muted Foreground",
+        "role": "neutral",
+        "tonalRamp": [
+          "oklch(15% 0.0102 84.59)",
+          "oklch(27% 0.0102 84.59)",
+          "oklch(38% 0.0102 84.59)",
+          "oklch(49% 0.0102 84.59)",
+          "oklch(61% 0.0102 84.59)",
+          "oklch(72% 0.0102 84.59)",
+          "oklch(84% 0.0102 84.59)",
+          "oklch(95% 0.0102 84.59)"
+        ]
+      },
+      "input": {
+        "displayName": "Input",
+        "role": "neutral",
+        "tonalRamp": [
+          "oklch(15% 0.0211 87.54)",
+          "oklch(27% 0.0211 87.54)",
+          "oklch(38% 0.0211 87.54)",
+          "oklch(49% 0.0211 87.54)",
+          "oklch(61% 0.0211 87.54)",
+          "oklch(72% 0.0211 87.54)",
+          "oklch(84% 0.0211 87.54)",
+          "oklch(95% 0.0211 87.54)"
+        ]
+      },
+      "rule": {
+        "displayName": "Rule",
+        "role": "neutral",
+        "tonalRamp": [
+          "oklch(15% 0.0184 89.37)",
+          "oklch(27% 0.0184 89.37)",
+          "oklch(38% 0.0184 89.37)",
+          "oklch(49% 0.0184 89.37)",
+          "oklch(61% 0.0184 89.37)",
+          "oklch(72% 0.0184 89.37)",
+          "oklch(84% 0.0184 89.37)",
+          "oklch(95% 0.0184 89.37)"
+        ]
+      },
+      "success": {
+        "displayName": "Success",
+        "role": "neutral",
+        "tonalRamp": [
+          "oklch(15% 0.0662 153.74)",
+          "oklch(27% 0.0662 153.74)",
+          "oklch(38% 0.0662 153.74)",
+          "oklch(49% 0.0662 153.74)",
+          "oklch(61% 0.0662 153.74)",
+          "oklch(72% 0.0662 153.74)",
+          "oklch(84% 0.0662 153.74)",
+          "oklch(95% 0.0662 153.74)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "purpose": "Landing hero headings."
+      },
+      "headline": {
+        "purpose": "Dashboard page headings."
+      },
+      "body": {
+        "purpose": "Controls and explanatory text."
+      },
+      "label": {
+        "purpose": "Stamps and compact metadata."
+      }
+    },
+    "shadows": [
+      {
+        "name": "passport-cover",
+        "value": "8px 24px 30px -14px #14151855",
+        "purpose": "Dimensional landing passport cover."
+      },
+      {
+        "name": "passport-page",
+        "value": "8px 20px 30px -20px #14151855",
+        "purpose": "Inner passport sheet."
+      }
+    ],
+    "motion": [
+      {
+        "name": "control-colors",
+        "value": "150ms",
+        "purpose": "Control background and text color transitions."
+      },
+      {
+        "name": "passport-open",
+        "value": "650ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Passport opening transform."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "0.01ms",
+        "purpose": "Animation and transition duration under prefers-reduced-motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "narrow-phone",
+        "value": "380px"
+      },
+      {
+        "name": "mobile-navigation",
+        "value": "760px"
+      },
+      {
+        "name": "compact-desktop",
+        "value": "1100px"
+      },
+      {
+        "name": "wide-hero",
+        "value": "1600px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "description": "Base UI button visual variant; React implementation preserves semantics and state.",
+      "html": "<button type=\"button\" class=\"ds-button-primary\">Primary action</button>",
+      "css": ".ds-button-primary{font-family:var(--font-sans);border:1px solid var(--border);border-radius:4px;height:40px;padding:0 16px;cursor:pointer;transition:background-color 150ms,color 150ms;background:var(--primary);color:var(--primary-foreground);border-color:transparent;}.ds-button-primary:hover{background:color-mix(in srgb,var(--primary) 80%,transparent);}.ds-button-primary:focus-visible{outline:2px solid var(--stamp);outline-offset:4px}.ds-button-primary:active{transform:translateY(1px)}.ds-button-primary:disabled{opacity:.5;pointer-events:none}",
+      "refersTo": "button-primary"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "description": "Base UI button visual variant; React implementation preserves semantics and state.",
+      "html": "<button type=\"button\" class=\"ds-button-outline\">Outline action</button>",
+      "css": ".ds-button-outline{font-family:var(--font-sans);border:1px solid var(--border);border-radius:4px;height:40px;padding:0 16px;cursor:pointer;transition:background-color 150ms,color 150ms;background:var(--background);color:var(--foreground);}.ds-button-outline:hover{background:var(--muted);}.ds-button-outline:focus-visible{outline:2px solid var(--stamp);outline-offset:4px}.ds-button-outline:active{transform:translateY(1px)}.ds-button-outline:disabled{opacity:.5;pointer-events:none}",
+      "refersTo": "button-outline"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "description": "Base UI button visual variant; React implementation preserves semantics and state.",
+      "html": "<button type=\"button\" class=\"ds-button-secondary\">Secondary action</button>",
+      "css": ".ds-button-secondary{font-family:var(--font-sans);border:1px solid var(--border);border-radius:4px;height:40px;padding:0 16px;cursor:pointer;transition:background-color 150ms,color 150ms;background:var(--secondary);color:var(--secondary-foreground);border-color:transparent;}.ds-button-secondary:hover{background:color-mix(in oklch,var(--secondary),var(--foreground) 5%);}.ds-button-secondary:focus-visible{outline:2px solid var(--stamp);outline-offset:4px}.ds-button-secondary:active{transform:translateY(1px)}.ds-button-secondary:disabled{opacity:.5;pointer-events:none}"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "description": "Base UI button visual variant; React implementation preserves semantics and state.",
+      "html": "<button type=\"button\" class=\"ds-button-ghost\">Ghost action</button>",
+      "css": ".ds-button-ghost{font-family:var(--font-sans);border:1px solid var(--border);border-radius:4px;height:40px;padding:0 16px;cursor:pointer;transition:background-color 150ms,color 150ms;background:transparent;color:var(--foreground);border-color:transparent;}.ds-button-ghost:hover{background:var(--muted);}.ds-button-ghost:focus-visible{outline:2px solid var(--stamp);outline-offset:4px}.ds-button-ghost:active{transform:translateY(1px)}.ds-button-ghost:disabled{opacity:.5;pointer-events:none}"
+    },
+    {
+      "name": "Destructive Button",
+      "kind": "button",
+      "description": "Base UI button visual variant; React implementation preserves semantics and state.",
+      "html": "<button type=\"button\" class=\"ds-button-destructive\">Destructive action</button>",
+      "css": ".ds-button-destructive{font-family:var(--font-sans);border:1px solid var(--border);border-radius:4px;height:40px;padding:0 16px;cursor:pointer;transition:background-color 150ms,color 150ms;background:color-mix(in srgb,var(--destructive) 10%,transparent);color:var(--destructive);border-color:transparent;}.ds-button-destructive:hover{background:color-mix(in srgb,var(--destructive) 20%,transparent);}.ds-button-destructive:focus-visible{outline:2px solid var(--stamp);outline-offset:4px}.ds-button-destructive:active{transform:translateY(1px)}.ds-button-destructive:disabled{opacity:.5;pointer-events:none}"
+    },
+    {
+      "name": "Link Button",
+      "kind": "button",
+      "description": "Base UI button visual variant; React implementation preserves semantics and state.",
+      "html": "<button type=\"button\" class=\"ds-button-link\">Link action</button>",
+      "css": ".ds-button-link{font-family:var(--font-sans);border:1px solid var(--border);border-radius:4px;height:40px;padding:0 16px;cursor:pointer;transition:background-color 150ms,color 150ms;background:transparent;color:var(--primary);border-color:transparent;}.ds-button-link:hover{background:transparent;text-decoration:underline;}.ds-button-link:focus-visible{outline:2px solid var(--stamp);outline-offset:4px}.ds-button-link:active{transform:translateY(1px)}.ds-button-link:disabled{opacity:.5;pointer-events:none}"
+    },
+    {
+      "name": "Resource Search",
+      "kind": "input",
+      "description": "Card-filled search field used in resource toolbars.",
+      "html": "<label for=\"ds-search\">Search resources</label><input id=\"ds-search\" class=\"ds-search\" placeholder=\"Search resources\" />",
+      "css": ".ds-search{display:block;height:40px;padding:0 12px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--foreground);font-family:var(--font-sans)}.ds-search:hover{border-color:var(--input)}.ds-search:focus-visible{outline:2px solid var(--stamp);outline-offset:4px}"
+    },
+    {
+      "name": "Paper Panel",
+      "kind": "card",
+      "refersTo": "paper-panel",
+      "description": "Flat ruled container for operational content.",
+      "html": "<section class=\"ds-panel\"><header>Workspace resources</header><div>Panel content</div></section>",
+      "css": ".ds-panel{border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--foreground);font:14px var(--font-sans);overflow:hidden}.ds-panel header{padding:16px 20px;border-bottom:1px solid var(--border);font-weight:600}.ds-panel>div{padding:20px}"
+    },
+    {
+      "name": "Stamp",
+      "kind": "chip",
+      "refersTo": "stamp",
+      "description": "Static credential label, never an implied verification claim.",
+      "html": "<span class=\"ds-stamp\">Workspace</span>",
+      "css": ".ds-stamp{display:inline-flex;border:1px solid var(--stamp);border-radius:2px;padding:5px 8px;color:var(--stamp);font:10px/1.3 var(--font-mono);letter-spacing:.1em;text-transform:uppercase;transform:rotate(-2deg);white-space:nowrap}"
+    },
+    {
+      "name": "Active Navigation",
+      "kind": "nav",
+      "description": "Current page row with paper fill, ink border, and red marker.",
+      "html": "<nav aria-label=\"Workspace\"><a class=\"ds-nav\" href=\"#overview\" aria-current=\"page\">Overview<span aria-hidden=\"true\"></span></a></nav>",
+      "css": ".ds-nav{display:flex;align-items:center;gap:11px;padding:9px 12px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--foreground);font:600 13px var(--font-sans);text-decoration:none}.ds-nav span{margin-left:auto;width:6px;height:6px;border-radius:50%;background:var(--stamp)}.ds-nav:hover{background:var(--secondary)}.ds-nav:focus-visible{outline:2px solid var(--stamp);outline-offset:4px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Paper Credentials",
+    "overview": "The supplied `Design.html` establishes the visual authority: warm paper, crisp ink rules, editorial serif headings, and red credential stamps. A navy passport with gold lettering supplies the signature interaction. The result should feel like a carefully typeset document with practical software controls.\n\nThe same vocabulary supports two surface modes: the landing page uses **Persuade**, with generous composition and an interactive passport; the dashboard uses **Operate**, with compact navigation, clear actions, data tables, and live resource counts. These modes change density and hierarchy, not the underlying palette.",
+    "keyCharacteristics": [
+      "Warm paper surfaces separated by thin ink rules.",
+      "Editorial headings paired with compact, readable controls.",
+      "Red stamps and navy credential details used with restraint.",
+      "Product capabilities and operational states remain accurate."
+    ],
+    "rules": [
+      {
+        "name": "The Token Source Rule",
+        "body": "`src/app/tokens.css` is the implementation source of truth; change semantic tokens there before adding new literal colors. Compatibility aliases such as `--green` resolve to stamp red and must not be interpreted by their historical names.",
+        "section": "colors"
+      }
+    ],
+    "dos": [
+      "**Do** reuse semantic tokens and paper compositions across landing and dashboard surfaces.",
+      "**Do** preserve explicit labels, keyboard focus, reduced motion, and scrollable tables.",
+      "**Do** show real resource data and preserve permissions, pending states, and error feedback."
+    ],
+    "donts": [
+      "**Don't** add decorative shadows to flat operational panels.",
+      "**Don't** use passport illustrations as evidence of unimplemented product capabilities.",
+      "**Don't** use `asChild` with the Base UI Button or omit `type=\"submit\"` from a submit action."
+    ]
+  }
+}

@@ -1,9 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CodeExample } from "@/components/design-system/code-example";
+import { PaperPanel, Stamp } from "@/components/design-system/paper";
 
-const clients = ["cURL", "TypeScript", "Python", "MCP"] as const;
-type Client = (typeof clients)[number];
 export function WorkspaceSetup({
   inbox,
   canManage,
@@ -15,142 +17,105 @@ export function WorkspaceSetup({
   onCreateInbox: () => void;
   onCreateKey: () => void;
 }) {
-  const [client, setClient] = useState<Client>("cURL");
-  const [origin, setOrigin] = useState("");
-  const [copyStatus, setCopyStatus] = useState("");
+  const [origin, setOrigin] = useState("https://www.papers.bot");
   useEffect(() => {
     setOrigin(window.location.origin);
   }, []);
   const inboxId = inbox?.id ?? "INBOX_ID";
-  const base = origin || "https://YOUR_PAPERS_HOST";
-  const snippets: Record<Client, string> = {
-    cURL: `curl '${base}/v1/inboxes/${encodeURIComponent(inboxId)}/messages' \\\n  -H "Authorization: Bearer $PAPERS_API_KEY"`,
-    TypeScript: `import { Papers } from "@papers.bot/sdk";
+  const samples = [
+    {
+      label: "cURL",
+      code: `curl '${origin}/v1/inboxes/${encodeURIComponent(inboxId)}/messages' \\\n  -H "Authorization: Bearer $PAPERS_API_KEY"`,
+    },
+    {
+      label: "TypeScript",
+      code: `import { Papers } from "@papers.bot/sdk";
 
 const papers = new Papers({
   apiKey: process.env.PAPERS_API_KEY!,
-  baseUrl: ${JSON.stringify(base)},
+  baseUrl: ${JSON.stringify(origin)},
 });
 const page = await papers.messages.list(${JSON.stringify(inboxId)});
 console.log(page.data);`,
-    Python: `import os
+    },
+    {
+      label: "Python",
+      code: `import os
 from papers import Papers
 
-with Papers(os.environ["PAPERS_API_KEY"], base_url=${JSON.stringify(base)}) as papers:
+with Papers(os.environ["PAPERS_API_KEY"],
+            base_url=${JSON.stringify(origin)}) as papers:
     page = papers.list_messages(${JSON.stringify(inboxId)})
     print(page["data"])`,
-    MCP: `${base}/mcp`,
-  };
+    },
+    {
+      label: "MCP",
+      code: `${origin}/mcp
+
+Connect with an OAuth-compatible MCP client.
+Select your workspace and permissions.
+Ask it to list messages for inbox ${inboxId}.`,
+    },
+  ];
   return (
-    <section className="panel" aria-labelledby="workspace-setup-title">
-      <div className="panel-head">
-        <h2 id="workspace-setup-title">Connect your first inbox</h2>
-        <Link href="/docs">Full quickstart ↗</Link>
-      </div>
-      <div className="panel-body">
-        <ol style={{ paddingLeft: 22, display: "grid", gap: 20 }}>
+    <PaperPanel
+      title="Connect your first inbox"
+      action={<Stamp>{inbox ? "Inbox ready" : "Start here"}</Stamp>}
+    >
+      <div className="setup-layout">
+        <ol className="paper-steps">
           <li>
             <strong>{inbox ? "Your inbox is ready" : "Create an inbox"}</strong>
-            <p>
+            <p className={inbox ? "font-mono" : ""}>
               {inbox
                 ? inbox.address
-                : "Choose a workspace address. No agent registration is needed."}
+                : "Choose a workspace address. No agent registration needed."}
             </p>
             {!inbox &&
               (canManage ? (
-                <button
-                  className="button secondary small"
-                  onClick={onCreateInbox}
-                >
+                <Button variant="outline" size="sm" onClick={onCreateInbox}>
                   Create inbox
-                </button>
+                </Button>
               ) : (
                 <p>Ask a workspace owner or admin to create an inbox.</p>
               ))}
           </li>
           <li>
-            <strong>Choose how to connect</strong>
+            <strong>Issue a scoped key</strong>
             <p>
-              For API access, create a key with <code>inboxes:read</code> and
-              select this inbox. Set the key as <code>PAPERS_API_KEY</code> in
-              your local environment. Add send access only when needed.
+              Create a key with <code>inboxes:read</code> and select this inbox.
+              Add send access only when needed. MCP clients can connect with
+              OAuth instead.
             </p>
             {canManage ? (
-              <button
-                className="button secondary small"
-                onClick={onCreateKey}
+              <Button
+                variant="outline"
+                size="sm"
                 disabled={!inbox}
+                onClick={onCreateKey}
               >
                 Create scoped API key
-              </button>
+              </Button>
             ) : (
               <p>A workspace owner or admin manages API keys.</p>
             )}
-            <p>
-              For OAuth-capable MCP clients, sign in through the connection flow
-              and select your workspace and permissions.
-            </p>
           </li>
           <li>
             <strong>Read your messages</strong>
-            <div className="field" style={{ marginTop: 16 }}>
-              <label htmlFor="setup-client">Connection method</label>
-              <select
-                id="setup-client"
-                value={client}
-                onChange={(e) => {
-                  setClient(e.target.value as Client);
-                  setCopyStatus("");
-                }}
-              >
-                {clients.map((value) => (
-                  <option key={value}>{value}</option>
-                ))}
-              </select>
-            </div>
-            {client === "MCP" ? (
-              <p>
-                Use this URL in a compatible remote MCP client. After
-                connecting, ask it to list messages for inbox{" "}
-                <code>{inboxId}</code>. Client directory listings are not yet
-                available.
-              </p>
-            ) : (
-              <p>
-                The example reads message summaries. An empty result is expected
-                until an email arrives.
-              </p>
-            )}
-            {(client === "TypeScript" || client === "Python") && (
-              <p>
-                The SDK currently builds from this repository. See the{" "}
-                <Link href="/docs">installation instructions</Link>; public
-                package releases are pending.
-              </p>
-            )}
-            <pre className="code-block" style={{ margin: "16px 0" }}>
-              <code>{snippets[client]}</code>
-            </pre>
-            <button
-              className="button secondary small"
-              disabled={!origin}
-              onClick={async () => {
-                try {
-                  await navigator.clipboard.writeText(snippets[client]);
-                  setCopyStatus("Copied");
-                } catch {
-                  setCopyStatus(
-                    "Copy unavailable. Select and copy the example above.",
-                  );
-                }
-              }}
-            >
-              Copy {client === "MCP" ? "MCP URL" : "example"}
-            </button>
-            <p role="status">{copyStatus}</p>
+            <p>An empty result is expected until the first email arrives.</p>
           </li>
         </ol>
+        <div className="min-w-0">
+          <CodeExample compact samples={samples} />
+          <p className="setup-install-note">
+            For SDK installation and setup, follow the repository instructions
+            in the quickstart.
+          </p>
+          <Link className="setup-quickstart" href="/docs">
+            Full quickstart <ArrowUpRight size={14} />
+          </Link>
+        </div>
       </div>
-    </section>
+    </PaperPanel>
   );
 }

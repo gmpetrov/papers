@@ -184,7 +184,7 @@ export function Billing({ canEdit }: { canEdit: boolean }) {
                   Manage subscription & invoices
                 </button>
               </div>
-              <p style={{ color: "var(--muted)", marginTop: 16 }}>
+              <p style={{ color: "var(--muted-foreground)", marginTop: 16 }}>
                 Upgrades are prorated. Workspace safety limits still apply;
                 adjust them in Organization settings when you need more
                 capacity. Downgrades take effect at renewal. Cancellation takes
@@ -223,7 +223,7 @@ export function Billing({ canEdit }: { canEdit: boolean }) {
                   ["Available to spend", data.availableMicros],
                 ].map(([label, value]) => (
                   <div key={label}>
-                    <div style={{ color: "var(--muted)", marginBottom: 8 }}>
+                    <div style={{ color: "var(--muted-foreground)", marginBottom: 8 }}>
                       {label}
                     </div>
                     <strong style={{ fontSize: 25 }}>{dollars(value!)}</strong>
@@ -250,7 +250,7 @@ export function Billing({ canEdit }: { canEdit: boolean }) {
               <p
                 style={{
                   lineHeight: 1.7,
-                  color: "var(--muted)",
+                  color: "var(--muted-foreground)",
                   marginTop: 16,
                 }}
               >
@@ -351,7 +351,7 @@ export function Billing({ canEdit }: { canEdit: boolean }) {
                   Save automatic top-up settings
                 </button>
                 {!data.hasPaymentMethod && (
-                  <p style={{ marginTop: 12, color: "var(--muted)" }}>
+                  <p style={{ marginTop: 12, color: "var(--muted-foreground)" }}>
                     Make a manual top-up first to save a card. Automatic top-ups
                     require your explicit opt-in.
                   </p>
@@ -368,7 +368,7 @@ export function Billing({ canEdit }: { canEdit: boolean }) {
                 Standard US numbers are $3/month each, with prepaid SMS charged
                 separately.
               </p>
-              <p style={{ marginTop: 12, color: "var(--muted)" }}>
+              <p style={{ marginTop: 12, color: "var(--muted-foreground)" }}>
                 Choose your number first, then subscribe through Stripe.
                 Canceling a rental releases its number at the end of the paid
                 period; unpaid rentals are suspended and released after seven

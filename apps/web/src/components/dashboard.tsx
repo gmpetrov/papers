@@ -1,4 +1,9 @@
 "use client";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import { Metric, PageHeading } from "./design-system/paper";
+import { Search, Menu } from "lucide-react";
 import { Billing } from "./billing";
 import Link from "next/link";
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -147,9 +152,9 @@ function NameForm({
         <small>{errors.name?.message}</small>
       </div>
       {error && <div className="notice error">{error}</div>}
-      <button className="button full" disabled={isSubmitting}>
+      <Button type="submit" className="button full" disabled={isSubmitting}>
         {isSubmitting ? "Creating…" : "Create"}
-      </button>
+      </Button>
     </form>
   );
 }
@@ -163,25 +168,27 @@ function Modal({
   children: React.ReactNode;
 }) {
   return (
-    <div className="modal-backdrop" onClick={close}>
-      <section
-        className="modal"
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
-        onClick={(e) => e.stopPropagation()}
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) close();
+      }}
+    >
+      <DialogContent
+        className="max-h-[85dvh] overflow-y-auto border border-border p-6 sm:max-w-xl"
+        aria-describedby={undefined}
       >
-        <div className="modal-head">
-          <h2>{title}</h2>
-          <button className="icon-button" aria-label="Close" onClick={close}>
-            <X size={19} />
-          </button>
-        </div>
+        <DialogHeader>
+          <DialogTitle className="font-serif text-3xl font-normal">
+            {title}
+          </DialogTitle>
+        </DialogHeader>
         {children}
-      </section>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
+
 export function Dashboard({
   user,
   organizations,
@@ -267,6 +274,21 @@ export function Dashboard({
       dailyNumberLimit: number | null;
     }[]
   >([]);
+  const [mobileNav, setMobileNav] = useState(false);
+  const [inboxSearch, setInboxSearch] = useState("");
+  const [numberSummary, setNumberSummary] = useState<{
+    count: number;
+    more: boolean;
+  } | null>(null);
+  useEffect(() => {
+    setMobileNav(false);
+    setInboxSearch("");
+  }, [section]);
+  const visibleInboxes = inboxes.filter((inbox) =>
+    `${inbox.name ?? ""} ${inbox.address ?? ""}`
+      .toLowerCase()
+      .includes(inboxSearch.toLowerCase()),
+  );
   const org = organizations.find((o) => o.id === activeOrganizationId);
   const admin = org?.role === "owner" || org?.role === "admin";
   const load = useCallback(async () => {
@@ -285,6 +307,16 @@ export function Dashboard({
         if (generation !== inboxGeneration.current) return;
         setInboxes(i.data);
         setInboxCursor(i.nextCursor);
+      }
+      if (section === "overview") {
+        const numbers = await api<{ data: Row[]; nextCursor: string | null }>(
+          "/phone-numbers",
+        );
+        if (generation !== inboxGeneration.current) return;
+        setNumberSummary({
+          count: numbers.data.length,
+          more: Boolean(numbers.nextCursor),
+        });
       }
       if (section === "api-keys" && admin)
         setKeys((await api<{ data: Row[] }>("/api-keys")).data);
@@ -390,7 +422,23 @@ export function Dashboard({
   const title = nav.find((n) => n[0] === section)?.[1] ?? "Overview";
   return (
     <div className="app-shell" data-dashboard-ready={!loading}>
-      <aside className="sidebar">
+      <a className="skip-link" href="#main-content">
+        Skip to content
+      </a>
+      <aside
+        id="dashboard-navigation"
+        aria-label="Workspace navigation"
+        className={`sidebar ${mobileNav ? "is-mobile-open" : ""}`}
+      >
+        <Button
+          className="dashboard-mobile-close"
+          variant="ghost"
+          size="icon"
+          aria-label="Close navigation"
+          onClick={() => setMobileNav(false)}
+        >
+          <X size={18} />
+        </Button>
         <Brand />
         <select
           className="workspace"
@@ -412,6 +460,7 @@ export function Dashboard({
           <Link
             className={`side-link ${section === id ? "active" : ""}`}
             key={id}
+            aria-current={section === id ? "page" : undefined}
             href={`/dashboard/${id}`}
           >
             <Icon />
@@ -432,6 +481,7 @@ export function Dashboard({
             <Link
               className={`side-link ${section === id ? "active" : ""}`}
               key={id}
+              aria-current={section === id ? "page" : undefined}
               href={`/dashboard/${id}`}
             >
               <Icon />
@@ -454,7 +504,9 @@ export function Dashboard({
               {user.name.slice(0, 1).toUpperCase()}
             </span>
             <span>{user.name}</span>
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               aria-label="Sign out"
               onClick={async () => {
                 await authClient.signOut();
@@ -462,7 +514,7 @@ export function Dashboard({
               }}
             >
               <LogOut size={15} />
-            </button>
+            </Button>
           </div>
         </div>
       </aside>
@@ -470,17 +522,28 @@ export function Dashboard({
         {impersonatedBy && (
           <div className="status-banner">
             Impersonating {user.name}
-            <button
+            <Button
               onClick={async () => {
                 await authClient.admin.stopImpersonating();
                 router.refresh();
               }}
             >
               Stop impersonating
-            </button>
+            </Button>
           </div>
         )}
         <header className="app-header">
+          <Button
+            className="dashboard-mobile-toggle"
+            variant="ghost"
+            size="icon"
+            aria-label="Toggle navigation"
+            aria-expanded={mobileNav}
+            aria-controls="dashboard-navigation"
+            onClick={() => setMobileNav(!mobileNav)}
+          >
+            <Menu size={18} />
+          </Button>
           <span>
             {org?.name ?? "Your workspace"}{" "}
             <span style={{ margin: "0 12px", color: "#bbc2b4" }}>/</span>{" "}
@@ -490,7 +553,7 @@ export function Dashboard({
             Developer docs <ArrowUpRight size={14} />
           </Link>
         </header>
-        <main className="main-content">
+        <main id="main-content" className="main-content">
           {!activeOrganizationId ? (
             <>
               <div className="page-title">
@@ -523,33 +586,36 @@ export function Dashboard({
             </>
           ) : (
             <>
-              <div className="page-title">
-                <div>
-                  <h1>
-                    {section === "overview"
-                      ? `Good to see you, ${user.name.split(" ")[0]}.`
-                      : title}
-                  </h1>
-                  <p>
-                    {section === "overview"
-                      ? "A little infrastructure. A world of possibilities."
-                      : section === "inboxes"
-                        ? "A dedicated home for every conversation."
-                        : section === "numbers"
-                          ? "A direct line between your agents and the world."
-                          : "Your workspace, connected and under control."}
-                  </p>
-                </div>
-                {["inboxes", "api-keys"].includes(section) && admin && (
-                  <button
-                    className="button small"
-                    onClick={() => setModal(section)}
-                  >
-                    <Plus size={16} />
-                    {section === "inboxes" ? "Create inbox" : "Create API key"}
-                  </button>
-                )}
-              </div>
+              <PageHeading
+                title={
+                  section === "overview"
+                    ? `Good to see you, ${user.name.split(" ")[0]}.`
+                    : title
+                }
+                description={
+                  section === "overview"
+                    ? `${org?.name ?? "Your workspace"} · Your agents’ connection to the world.`
+                    : section === "inboxes"
+                      ? "A persistent address for every conversation. Sent and received mail stays on the record."
+                      : section === "numbers"
+                        ? "A direct line between your agents and the world. Check availability and activation requirements before ordering."
+                        : section === "api-keys"
+                          ? "Scoped keys, one per integration. Choose the resources and actions each key can access."
+                          : section === "approvals"
+                            ? "Review the exact action requested. Approving permits one matching retry; it does not execute the action."
+                            : "Your workspace, connected and under control."
+                }
+                action={
+                  ["inboxes", "api-keys"].includes(section) && admin ? (
+                    <Button onClick={() => setModal(section)}>
+                      <Plus size={16} />
+                      {section === "inboxes"
+                        ? "Create inbox"
+                        : "Create API key"}
+                    </Button>
+                  ) : undefined
+                }
+              />
               {notice && (
                 <div className="notice error" role="alert">
                   {notice}
@@ -561,8 +627,48 @@ export function Dashboard({
                 <>
                   {section === "overview" && (
                     <>
+                      <div className="stats">
+                        <Metric
+                          label="Inboxes"
+                          icon={<Mail />}
+                          value={
+                            inboxes.filter((i) => i.status === "active").length
+                          }
+                          description={
+                            inboxCursor
+                              ? "Active in the first 100 results"
+                              : "Active workspace inboxes"
+                          }
+                        />
+                        <Metric
+                          label="Phone numbers"
+                          icon={<Phone />}
+                          value={
+                            numberSummary
+                              ? `${numberSummary.count}${numberSummary.more ? "+" : ""}`
+                              : "—"
+                          }
+                          description={
+                            numberSummary?.more
+                              ? "More numbers available in your list"
+                              : "Dedicated to your workspace"
+                          }
+                        />
+                        <Metric
+                          label="Messages"
+                          icon={<Activity />}
+                          value={inboxes.reduce(
+                            (n, i) => n + (i._count?.messages ?? 0),
+                            0,
+                          )}
+                          description={
+                            inboxCursor
+                              ? "Across the first 100 inboxes"
+                              : "Across your workspace inboxes"
+                          }
+                        />
+                      </div>
                       <WorkspaceSetup
-                        key={activeOrganizationId}
                         inbox={inboxes.find(
                           (inbox) => inbox.status === "active",
                         )}
@@ -570,82 +676,36 @@ export function Dashboard({
                         onCreateInbox={() => setModal("inboxes")}
                         onCreateKey={() => setModal("api-keys")}
                       />
-                      <div className="stats">
-                        <div className="stat">
-                          <div className="stat-label">
-                            EMAIL INBOXES <Mail />
+                      <div className="overview-bottom">
+                        <div className="panel">
+                          <div className="panel-head">
+                            <h2>Your inboxes</h2>
+                            <Link href="/dashboard/inboxes">
+                              View all{" "}
+                              <ArrowUpRight size={13} className="inline" />
+                            </Link>
                           </div>
-                          <strong>
-                            {
-                              inboxes.filter((i) => i.status === "active")
-                                .length
-                            }
-                          </strong>
-                          <small>
-                            {inboxCursor
-                              ? "Active inboxes in the first 100 results"
-                              : "Connected through Resend"}
-                          </small>
-                        </div>
-                        <div className="stat">
-                          <div className="stat-label">
-                            MESSAGES <Activity />
-                          </div>
-                          <strong>
-                            {inboxes.reduce(
-                              (n, i) => n + (i._count?.messages ?? 0),
-                              0,
-                            )}
-                          </strong>
-                          <small>
-                            {inboxCursor
-                              ? "Across the first 100 inboxes"
-                              : "Across all your inboxes"}
-                          </small>
-                        </div>
-                      </div>
-                      <div className="panel">
-                        <div className="panel-head">
-                          <h2>Your inboxes</h2>
-                          <Link href="/dashboard/inboxes">
-                            View all <span>↗</span>
-                          </Link>
-                        </div>
-                        {inboxes.length ? (
-                          <ResourceTable
-                            rows={inboxes}
-                            onClick={() => router.push("/dashboard/inboxes")}
-                          />
-                        ) : (
-                          <Empty
-                            title="Create your first inbox."
-                            text="Choose an email address for your workspace."
-                            action={admin ? "Create inbox" : undefined}
-                            onClick={() => setModal("inboxes")}
-                          />
-                        )}
-                      </div>
-                      <div className="grid-two">
-                        <div className="setup-card">
-                          <Terminal size={22} />
-                          <h3>From zero to connected.</h3>
-                          <p>
-                            One API key. Your agent's favorite language.
-                            <br />
-                            Get your first integration running.
-                          </p>
-                          <Link className="text-link" href="/docs">
-                            Open the quickstart <ArrowUpRight size={14} />
-                          </Link>
+                          {inboxes.length ? (
+                            <ResourceTable
+                              rows={inboxes}
+                              onClick={() => router.push("/dashboard/inboxes")}
+                            />
+                          ) : (
+                            <Empty
+                              title="Create your first inbox."
+                              text="Choose an email address for your workspace."
+                              action={admin ? "Create inbox" : undefined}
+                              onClick={() => setModal("inboxes")}
+                            />
+                          )}
                         </div>
                         <div className="setup-card">
                           <Phone size={22} />
-                          <h3>A phone number for your workspace.</h3>
+                          <h3>Give your agent a number.</h3>
                           <p>
-                            Search available numbers and choose your address for
-                            SMS.
-                            <br />
-                            Send and receive messages through the same API.
+                            Search available numbers, see activation
+                            requirements, and order one. SMS goes through the
+                            same API as email.
                           </p>
                           <Link className="text-link" href="/dashboard/numbers">
                             View phone availability <ArrowRight size={14} />
@@ -657,7 +717,8 @@ export function Dashboard({
                   {section === "inboxes" &&
                     (selected ? (
                       <>
-                        <button
+                        <Button
+                          variant="ghost"
                           className="back"
                           onClick={() => {
                             ++messageGeneration.current;
@@ -667,18 +728,20 @@ export function Dashboard({
                           }}
                         >
                           <ArrowLeft size={14} /> All inboxes
-                        </button>
+                        </Button>
                         <div className="panel">
                           <div className="panel-head">
                             <h2>{selected.address}</h2>
                             <div className="row-actions">
-                              <button
+                              <Button
+                                variant="outline"
+                                size="sm"
                                 className="button secondary small"
                                 onClick={() => void openInbox(selected)}
                               >
                                 Refresh
-                              </button>
-                              <button
+                              </Button>
+                              <Button
                                 className="button small"
                                 onClick={() => setModal("compose")}
                                 disabled={
@@ -686,7 +749,7 @@ export function Dashboard({
                                 }
                               >
                                 <Plus size={14} /> Compose
-                              </button>
+                              </Button>
                             </div>
                           </div>
                           {selected.status === "archived" && (
@@ -718,19 +781,20 @@ export function Dashboard({
                           )}
                           {message ? (
                             <>
-                              <button
+                              <Button
+                                variant="ghost"
                                 className="back"
                                 style={{ margin: 20 }}
                                 onClick={() => setMessage(null)}
                               >
                                 <ArrowLeft size={14} /> Messages
-                              </button>
+                              </Button>
                               <div className="panel-body">
                                 <h2>{message.subject}</h2>
                                 <p
                                   style={{
                                     marginTop: 10,
-                                    color: "var(--muted)",
+                                    color: "var(--muted-foreground)",
                                   }}
                                 >
                                   From {message.from}
@@ -739,7 +803,7 @@ export function Dashboard({
                                   className="row-actions"
                                   style={{ marginTop: 16 }}
                                 >
-                                  <button
+                                  <Button
                                     className="button small"
                                     onClick={() => setModal("reply")}
                                     disabled={
@@ -747,8 +811,10 @@ export function Dashboard({
                                     }
                                   >
                                     Reply
-                                  </button>
-                                  <button
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
                                     className="button secondary small"
                                     onClick={() =>
                                       void act(async () => {
@@ -767,7 +833,7 @@ export function Dashboard({
                                     {message.unread
                                       ? "Mark as read"
                                       : "Mark as unread"}
-                                  </button>
+                                  </Button>
                                 </div>
                               </div>
                               {conversation.map((item) => (
@@ -845,7 +911,9 @@ export function Dashboard({
                           )}
                           {!message && messageCursor && (
                             <div className="panel-body">
-                              <button
+                              <Button
+                                variant="outline"
+                                size="sm"
                                 className="button secondary small"
                                 disabled={loadingMessages}
                                 onClick={() =>
@@ -855,39 +923,98 @@ export function Dashboard({
                                 {loadingMessages
                                   ? "Loading messages…"
                                   : "Load older messages"}
-                              </button>
+                              </Button>
                             </div>
                           )}
                         </div>
                       </>
                     ) : (
-                      <div className="panel">
-                        {inboxes.length ? (
-                          <>
-                            <ResourceTable rows={inboxes} onClick={openInbox} />
-                            {inboxCursor && (
-                              <div className="panel-body">
-                                <button
-                                  className="button secondary small"
-                                  disabled={loadingInboxes}
-                                  onClick={() => void loadMoreInboxes()}
-                                >
-                                  {loadingInboxes
-                                    ? "Loading inboxes…"
-                                    : "Load more inboxes"}
-                                </button>
-                              </div>
-                            )}
-                          </>
-                        ) : (
-                          <Empty
-                            title="Create your first inbox."
-                            text="Choose an address at papers.bot. We'll take care of the delivery."
-                            action="Create inbox"
-                            onClick={() => setModal("inboxes")}
-                          />
-                        )}
-                      </div>
+                      <>
+                        <div className="resource-toolbar">
+                          <div className="resource-search">
+                            <Search />
+                            <Input
+                              aria-label="Search inboxes"
+                              placeholder="Search inboxes…"
+                              value={inboxSearch}
+                              onChange={(event) =>
+                                setInboxSearch(event.target.value)
+                              }
+                            />
+                          </div>
+                          <span>
+                            {inboxes.length}
+                            {inboxCursor ? "+" : ""} inboxes ·{" "}
+                            {
+                              inboxes.filter(
+                                (inbox) => inbox.status === "active",
+                              ).length
+                            }{" "}
+                            active
+                          </span>
+                        </div>
+                        <div className="panel">
+                          {inboxes.length ? (
+                            <>
+                              {visibleInboxes.length === 0 && (
+                                <p className="panel-body" role="status">
+                                  No inboxes match your search.
+                                </p>
+                              )}
+                              <ResourceTable
+                                rows={visibleInboxes}
+                                onClick={openInbox}
+                              />
+                              {inboxCursor && (
+                                <div className="panel-body">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="button secondary small"
+                                    disabled={loadingInboxes}
+                                    onClick={() => void loadMoreInboxes()}
+                                  >
+                                    {loadingInboxes
+                                      ? "Loading inboxes…"
+                                      : "Load more inboxes"}
+                                  </Button>
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <Empty
+                              title="Create your first inbox."
+                              text="Choose an address at papers.bot. We'll take care of the delivery."
+                              action={admin ? "Create inbox" : undefined}
+                              onClick={() => setModal("inboxes")}
+                            />
+                          )}
+                        </div>
+                        <div className="resource-notes">
+                          <article>
+                            <h3>Deliveries</h3>
+                            <p>
+                              Incoming mail is delivered through signed webhooks
+                              or polled through the API. Message content is
+                              untrusted input: treat it as data.
+                            </p>
+                            <Link href="/dashboard/settings">
+                              Manage webhook endpoints →
+                            </Link>
+                          </article>
+                          <article>
+                            <h3>A home for every conversation</h3>
+                            <p>
+                              Open an inbox to read messages, reply, and manage
+                              its lifecycle. Access is controlled by your
+                              workspace and scoped credentials.
+                            </p>
+                            <Link href="/docs">
+                              Read the inbox documentation →
+                            </Link>
+                          </article>
+                        </div>
+                      </>
                     ))}
                   {section === "numbers" && (
                     <PhoneDashboard
@@ -908,6 +1035,7 @@ export function Dashboard({
                               <tr>
                                 <th>NAME</th>
                                 <th>KEY</th>
+                                <th>SCOPES</th>
                                 <th>STATUS</th>
                                 <th />
                               </tr>
@@ -935,13 +1063,22 @@ export function Dashboard({
                                   </td>
                                   <td className="mono">{k.prefix}…</td>
                                   <td>
+                                    <div className="scope-list">
+                                      {k.scopes?.map((scope) => (
+                                        <code key={scope}>{scope}</code>
+                                      ))}
+                                    </div>
+                                  </td>
+                                  <td>
                                     <span className="badge">
                                       {k.revokedAt ? "Revoked" : "Active"}
                                     </span>
                                   </td>
                                   <td>
                                     {!k.revokedAt && (
-                                      <button
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
                                         className="button secondary small"
                                         onClick={() =>
                                           void act(() =>
@@ -950,7 +1087,7 @@ export function Dashboard({
                                         }
                                       >
                                         Revoke
-                                      </button>
+                                      </Button>
                                     )}
                                   </td>
                                 </tr>
@@ -967,6 +1104,30 @@ export function Dashboard({
                         )}
                       </div>
                     </>
+                  )}
+                  {section === "api-keys" && (
+                    <div className="resource-notes">
+                      <article>
+                        <h3>Scopes</h3>
+                        <p>
+                          <code>inboxes:read</code> to read messages ·{" "}
+                          <code>inboxes:write</code> to create inboxes ·{" "}
+                          <code>email:send</code> to send. Number purchases and
+                          releases require their own scopes.
+                        </p>
+                      </article>
+                      <article>
+                        <h3>MCP instead of keys</h3>
+                        <p>
+                          OAuth-compatible MCP clients connect through{" "}
+                          <code>/mcp</code>. Review their permissions and revoke
+                          access under Integrations.
+                        </p>
+                        <Link href="/dashboard/integrations">
+                          Manage integrations →
+                        </Link>
+                      </article>
+                    </div>
                   )}
                   {section === "approvals" &&
                     (admin && !impersonatedBy ? (
@@ -1047,7 +1208,9 @@ export function Dashboard({
                                     )}
                                   </td>
                                   <td>
-                                    <button
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
                                       className="button secondary small"
                                       disabled={!!impersonatedBy}
                                       onClick={() =>
@@ -1061,7 +1224,7 @@ export function Dashboard({
                                       }
                                     >
                                       Revoke
-                                    </button>
+                                    </Button>
                                   </td>
                                 </tr>
                               ))}
@@ -1089,7 +1252,7 @@ export function Dashboard({
                               <h3 style={{ margin: "15px 0 10px" }}>{n}</h3>
                               <p
                                 style={{
-                                  color: "var(--muted)",
+                                  color: "var(--muted-foreground)",
                                   lineHeight: 1.8,
                                   fontSize: 12,
                                 }}
@@ -1124,12 +1287,12 @@ export function Dashboard({
                         <div className="panel-head">
                           <h2>Workspace members</h2>
                           {admin && (
-                            <button
+                            <Button
                               className="button small"
                               onClick={() => setModal("invite")}
                             >
                               <Plus size={14} /> Invite member
-                            </button>
+                            </Button>
                           )}
                         </div>
                         <table className="table">
@@ -1186,7 +1349,9 @@ export function Dashboard({
                                   {admin &&
                                     m.role !== "owner" &&
                                     m.user?.email !== user.email && (
-                                      <button
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
                                         className="button secondary small"
                                         onClick={() =>
                                           void act(async () => {
@@ -1200,7 +1365,7 @@ export function Dashboard({
                                         }
                                       >
                                         Remove
-                                      </button>
+                                      </Button>
                                     )}
                                 </td>
                               </tr>
@@ -1213,12 +1378,14 @@ export function Dashboard({
                           <div className="panel-head">
                             <h2>Teams</h2>
                             {admin && (
-                              <button
+                              <Button
+                                variant="outline"
+                                size="sm"
                                 className="button secondary small"
                                 onClick={() => setModal("team")}
                               >
                                 <Plus size={14} /> New team
-                              </button>
+                              </Button>
                             )}
                           </div>
                           {teams.map((t) => (
@@ -1248,7 +1415,9 @@ export function Dashboard({
                                 <p>{i.email}</p>
                                 <small>{i.role}</small>
                                 {admin && (
-                                  <button
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
                                     className="button secondary small"
                                     onClick={() =>
                                       void act(async () => {
@@ -1270,10 +1439,12 @@ export function Dashboard({
                                     }
                                   >
                                     Resend
-                                  </button>
+                                  </Button>
                                 )}
                                 {admin && (
-                                  <button
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
                                     className="button secondary small"
                                     onClick={() =>
                                       void act(async () => {
@@ -1287,7 +1458,7 @@ export function Dashboard({
                                     }
                                   >
                                     Cancel
-                                  </button>
+                                  </Button>
                                 )}
                               </div>
                             ))}
@@ -1338,12 +1509,12 @@ export function Dashboard({
                 Copy this key now. It won't be shown again.
               </div>
               <pre className="code-block">{token}</pre>
-              <button
+              <Button
                 className="button full"
                 onClick={() => void navigator.clipboard.writeText(token)}
               >
                 <Copy size={15} /> Copy API key
-              </button>
+              </Button>
             </>
           ) : (
             <ActionForm
@@ -1421,7 +1592,9 @@ export function Dashboard({
                     "POST",
                     {
                       text: values.text,
-                      ...(values.attachments ? { attachments: JSON.parse(values.attachments) } : {}),
+                      ...(values.attachments
+                        ? { attachments: JSON.parse(values.attachments) }
+                        : {}),
                     },
                     idempotencyKey,
                   );
@@ -1435,7 +1608,9 @@ export function Dashboard({
                       to: [values.to],
                       subject: values.subject,
                       text: values.text,
-                      ...(values.attachments ? { attachments: JSON.parse(values.attachments) } : {}),
+                      ...(values.attachments
+                        ? { attachments: JSON.parse(values.attachments) }
+                        : {}),
                     },
                     idempotencyKey,
                   );
@@ -1468,10 +1643,10 @@ function Empty({
       <h3>{title}</h3>
       <p>{text}</p>
       {action && (
-        <button className="button small" onClick={onClick}>
+        <Button className="button small" onClick={onClick}>
           <Plus size={14} />
           {action}
-        </button>
+        </Button>
       )}
     </div>
   );
@@ -1489,6 +1664,7 @@ function ResourceTable({
         <tr>
           <th>INBOX</th>
           <th>CREATED</th>
+          <th>MESSAGES</th>
           <th>STATUS</th>
         </tr>
       </thead>
@@ -1497,6 +1673,13 @@ function ResourceTable({
           <tr
             key={r.id}
             className={onClick ? "clickable" : ""}
+            tabIndex={onClick ? 0 : undefined}
+            onKeyDown={(event) => {
+              if (onClick && (event.key === "Enter" || event.key === " ")) {
+                event.preventDefault();
+                onClick(r);
+              }
+            }}
             onClick={() => onClick?.(r)}
           >
             <td>
@@ -1513,6 +1696,7 @@ function ResourceTable({
               </div>
             </td>
             <td>{new Date(r.createdAt!).toLocaleDateString()}</td>
+            <td>{r._count?.messages ?? 0}</td>
             <td>
               <span className="badge green">
                 <span className="live-dot" />
@@ -1614,7 +1798,10 @@ function ActionForm({
     <form
       onSubmit={handleSubmit(async (v) => {
         try {
-          if (["compose", "reply"].includes(kind) && files.length) v.attachments = JSON.stringify(await encodeAttachments(files, 5 * 1024 * 1024));
+          if (["compose", "reply"].includes(kind) && files.length)
+            v.attachments = JSON.stringify(
+              await encodeAttachments(files, 5 * 1024 * 1024),
+            );
           const payload = JSON.stringify(v);
           const key = requestKeys.current.get(payload) ?? crypto.randomUUID();
           requestKeys.current.set(payload, key);
@@ -1737,8 +1924,15 @@ function ActionForm({
           {error}
         </div>
       )}
-      {["compose", "reply"].includes(kind) && <AttachmentPicker files={files} onChange={setFiles} maxBytes={5 * 1024 * 1024} disabled={isSubmitting} />}
-      <button className="button full" disabled={isSubmitting}>
+      {["compose", "reply"].includes(kind) && (
+        <AttachmentPicker
+          files={files}
+          onChange={setFiles}
+          maxBytes={5 * 1024 * 1024}
+          disabled={isSubmitting}
+        />
+      )}
+      <Button type="submit" className="button full" disabled={isSubmitting}>
         {isSubmitting
           ? "Working…"
           : ["compose", "reply"].includes(kind)
@@ -1746,7 +1940,7 @@ function ActionForm({
             : kind === "invite"
               ? "Send invitation"
               : "Create"}
-      </button>
+      </Button>
     </form>
   );
 }

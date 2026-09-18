@@ -69,7 +69,7 @@ export function NumberPurchase({
             Your first paid phone rental includes $0.50 of usage credit, once
             per workspace. No initial top-up required.
           </p>
-          <p style={{ margin: "12px 0", color: "var(--muted)" }}>
+          <p style={{ margin: "12px 0", color: "var(--muted-foreground)" }}>
             Activation starts after payment. If this number becomes unavailable,
             we cancel and refund the rental. Cancel anytime; the number is
             released at the end of your paid period. Carrier registration may be
