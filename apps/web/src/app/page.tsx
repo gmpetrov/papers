@@ -5,6 +5,7 @@ import {
   ArrowUpRight,
   Mail,
   Phone,
+  CreditCard,
   ShieldCheck,
   KeyRound,
   Repeat2,
@@ -23,11 +24,11 @@ const credentials = [
     label: 'Inbox',
     icon: Mail,
     href: '/email',
-    description: 'A real email address. Sends, receives, keeps history.',
+    description: 'Send, receive, and reply from one persistent address.',
     details: [
-      'A persistent address for your workspace.',
-      'Send, receive, and reply. Conversation history and attachments included.',
-      'Incoming mail through signed webhooks or a simple poll.',
+      'Give your agent a dedicated address, owned by your workspace.',
+      'Keep replies, conversation history, and attachments together.',
+      'Bring new messages into your workflow with webhooks or polling.',
     ],
     facts: [
       ['Address', 'research@papers.bot'],
@@ -40,10 +41,10 @@ const credentials = [
     label: 'Number',
     icon: Phone,
     href: '/phone',
-    description: 'A dedicated phone number. Two-way SMS.',
+    description: 'A dedicated number for two-way text conversations.',
     details: [
       'A dedicated number, with availability and activation requirements shown before you order.',
-      'Two-way SMS through the same API as email.',
+      'Send and receive text messages through the same API as email.',
       'Release it when you no longer need it.',
     ],
     facts: [
@@ -53,20 +54,19 @@ const credentials = [
     ],
   },
   {
-    title: 'Access, on your terms.',
-    label: 'Control',
-    icon: ShieldCheck,
-    href: '/integrations',
-    description: 'Scoped access. Limits and approvals you set.',
+    title: 'A card of its own.',
+    label: 'Credit Card',
+    icon: CreditCard,
+    href: '/email',
+    description: 'A way to pay. Credit cards are on the roadmap.',
     details: [
-      'Grant access to the resources and actions an agent needs.',
-      'Set workspace limits and review requests that need approval.',
-      'Connect through MCP, SDKs, a CLI, or HTTP.',
+      'A payment method for the tasks your agent takes on.',
+      'Card issuing and purchases are not available yet.',
+      'Build your workflow now with email and SMS.',
     ],
     facts: [
-      ['Access', 'Scoped API keys · OAuth'],
-      ['Limits', 'Set by your workspace'],
-      ['Approvals', 'Review before retry'],
+      ['Status', 'Planned'],
+      ['Launch', 'Not yet announced'],
     ],
   },
 ];
@@ -127,6 +127,8 @@ export default function Landing() {
       </a>
       <PublicNav />
       <main id="main-content">
+
+
         <section className="papers-hero">
           <Guilloche className="hero-guilloche" />
           <div className="papers-hero-copy">
@@ -153,7 +155,7 @@ export default function Landing() {
             </div>
             <div className="papers-actions">
               <Link href="/login" className={buttonVariants({ size: 'lg' })}>
-                Start for free <ArrowRight />
+                Create your workspace <ArrowRight />
               </Link>
               <Link
                 href="/docs"
@@ -165,6 +167,8 @@ export default function Landing() {
           </div>
           <Passport />
         </section>
+
+
 
         <section
           className="papers-tool-strip papers-tools-folded"
@@ -197,31 +201,34 @@ export default function Landing() {
             ))}
           </ul>
         </section>
+
         <section className="papers-section" id="papers">
           <div className="papers-section-intro">
             <h2>
-              Real-world tools.
+              Their own tools.
               <br />
-              <em>Now for an agent.</em>
+              <em>Your workspace.</em>
             </h2>
             <p>
-              Everything your agent needs to start a conversation, with the
-              access and approvals you control.
+              Start with email and SMS. Credit cards are on the roadmap. You own
+              the resources and decide what your agent can do.
             </p>
           </div>
           <div className="credential-grid">
             {credentials.map(
               ({ title, label, icon: Icon, details, facts, href }) => (
-                <article className="credential-paper" key={label}>
+                <article
+                  className="credential-paper"
+                  key={label}
+                  id={label === 'Credit Card' ? 'credit-card' : undefined}
+                >
                   <header>
                     <span>
                       <Icon size={18} />
                       {label}
                     </span>
                     <Stamp>
-                      {label === 'Control'
-                        ? 'On your terms'
-                        : 'Ready for agents'}
+                      {label === 'Credit Card' ? 'Planned' : 'Ready for agents'}
                     </Stamp>
                   </header>
                   <div className="credential-content">
@@ -232,7 +239,10 @@ export default function Landing() {
                       ))}
                     </ul>
                     <Link href={href}>
-                      Explore {label.toLowerCase()} <ArrowUpRight size={14} />
+                      {label === 'Credit Card'
+                        ? 'Start with an inbox'
+                        : `Explore ${label.toLowerCase()}`}{' '}
+                      <ArrowUpRight size={14} />
                     </Link>
                   </div>
                   <dl>
@@ -248,33 +258,35 @@ export default function Landing() {
             )}
           </div>
         </section>
+
         <section className="papers-section papers-how" id="quickstart">
           <div>
             <h2>
-              A few lines.
+              From setup
               <br />
-              <em>Real papers.</em>
+              <em>to first message.</em>
             </h2>
             <ol className="paper-steps">
               <li>
-                <h3>Create a workspace, issue a scoped key</h3>
+                <h3>Create your workspace</h3>
                 <p>
-                  Keys carry only the scopes you grant. No agent registration
-                  required.
+                  Keep your inboxes, numbers, and team in one place. Issue a key
+                  with only the access your agent needs.
                 </p>
               </li>
               <li>
-                <h3>Issue the papers</h3>
+                <h3>Give your agent an address</h3>
                 <p>
-                  One call per resource, with an idempotency key so retries
-                  never create duplicates.
+                  Create an inbox with one API call. Add a phone number when you
+                  need SMS, after checking availability and activation
+                  requirements.
                 </p>
               </li>
               <li>
-                <h3>Hand them to your agent</h3>
+                <h3>Connect and start a conversation</h3>
                 <p>
-                  Connect through MCP with OAuth, or use the SDKs, the CLI, or
-                  plain HTTP.
+                  Use MCP with OAuth, the TypeScript or Python SDK, the CLI, or
+                  HTTP. Send your first message from your own workflow.
                 </p>
               </li>
             </ol>
@@ -294,13 +306,14 @@ export default function Landing() {
         <section className="papers-section papers-controls">
           <div className="papers-section-intro">
             <h2>
-              Real papers,
+              Room to act.
               <br />
-              <em>real limits.</em>
+              <em>Limits you set.</em>
             </h2>
             <p>
-              Agents act in the world. Give them room to work, with scopes,
-              approvals, and a record of their conversations.
+              Delegate email and SMS without handing over every permission.
+              Choose the access, review requests, and keep the conversation
+              history.
             </p>
           </div>
           <div className="controls-grid">
@@ -308,25 +321,25 @@ export default function Landing() {
               [
                 KeyRound,
                 'Scopes',
-                'Least privilege by default',
+                'Share only what is needed',
                 'Choose the inboxes, numbers, and actions each key can access. Add send access only when needed.',
               ],
               [
                 ShieldCheck,
                 'Approvals',
-                'A human in the loop',
+                'Keep a say in what happens',
                 'Review the exact request. Approving permits one matching retry; it does not execute the action.',
               ],
               [
                 Repeat2,
                 'Idempotency',
-                'Retries that never double-send',
+                'Retry without sending twice',
                 'Reuse the key, get the same result. A different payload on the same key returns a conflict.',
               ],
               [
                 ScrollText,
                 'History',
-                'Every conversation on the record',
+                'Keep the full conversation',
                 'Keep sent and received messages together. Signed webhooks bring events into your workflow.',
               ],
             ].map(([Icon, label, title, text]) => {
@@ -353,7 +366,10 @@ export default function Landing() {
               <br />
               <em>its papers.</em>
             </h2>
-            <p>Your workspace. Your permissions. Their next conversation.</p>
+            <p>
+              Start with an inbox. Add a number. Keep the permissions in your
+              hands.
+            </p>
           </div>
           <div className="papers-actions">
             <Link href="/login" className={buttonVariants({ size: 'lg' })}>
@@ -368,12 +384,13 @@ export default function Landing() {
       <footer className="papers-footer">
         <div>
           <Brand />
-          <p>Infrastructure for independent agents.</p>
+          <p>Email and SMS for agents. Credit cards on the roadmap.</p>
         </div>
         <div>
           <strong>Papers</strong>
           <Link href="/email">Inbox</Link>
           <Link href="/phone">Number</Link>
+          <Link href="#credit-card">Credit Card · Planned</Link>
           <Link href="/integrations">Integrations</Link>
         </div>
         <div>
@@ -391,7 +408,7 @@ export default function Landing() {
         <div className="footer-mrz" aria-hidden="true">
           P&lt;BOT&lt;PAPERS&lt;&lt;AGENT&lt;RESEARCH&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
           <br />
-          INBOX&lt;NUMBER&lt;PERMISSIONS&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
+          INBOX&lt;NUMBER&lt;CREDIT&lt;CARD&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
         </div>
       </footer>
     </div>

@@ -20,7 +20,7 @@ Repository-derived context: inboxes, phone numbers, and API keys belong to a wor
 
 Preserve authentication, organization switching, role checks, inbox lifecycle, email and attachments, phone availability and checkout, SMS, API keys, OAuth connections, approvals, usage, billing, workspace limits, and webhooks. Keys and actions remain scoped. Approving an action permits a matching retry; it does not execute the action.
 
-The supplied design is visual reference material, not implementation instructions or evidence that every illustrated feature exists. Payment cards, voice calling, and the sample custom-domain DNS workflow are not introduced by this redesign. Counts come from API responses, including pagination limits. Marketing code samples use the existing SDK/API methods.
+The supplied design is visual reference material, not implementation instructions or evidence that every illustrated feature exists. The landing page features Credit Card as a planned product at the user’s request. Card issuing and purchases remain deferred in the backend; describe them as planned until implementation and availability are confirmed. Voice calling and the sample custom-domain DNS workflow are not introduced by the visual work. Counts come from API responses, including pagination limits. Marketing code samples use the existing SDK/API methods.
 
 ## Brand commitments
 
