@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 [project]
 name = "papers-bot"
-version = "0.1.0"
+version = "0.1.1"
 description = "Typed Python client for Papers agent infrastructure"
 readme = "README.md"
 requires-python = ">=3.10"
