@@ -1,22 +1,23 @@
-"use client";
-import { useState } from "react";
+'use client';
+import { useState } from 'react';
 import {
   Fingerprint,
   Mail,
   Phone,
   ShieldCheck,
   ArrowUpRight,
-} from "lucide-react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { CodeExample } from "@/components/design-system/code-example";
-import { Stamp } from "@/components/design-system/paper";
+  CreditCard,
+} from 'lucide-react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { CodeExample } from '@/components/design-system/code-example';
+import { Stamp } from '@/components/design-system/paper';
 
 export function Passport() {
   const [open, setOpen] = useState(false);
   return (
-    <div className="passport-stage">
-      <div className={`passport-book ${open ? "is-open" : ""}`}>
+    <div className="passport-stage z-10">
+      <div className={`passport-book ${open ? 'is-open' : ''}`}>
         <div
           className="passport-spread"
           id="passport-preview"
@@ -31,7 +32,7 @@ export function Passport() {
               compact
               samples={[
                 {
-                  label: "Python",
+                  label: 'Python',
                   code: `from papers import Papers
 import os
 
@@ -47,7 +48,7 @@ with Papers(
   print(inbox.address)`,
                 },
                 {
-                  label: "TS",
+                  label: 'TS',
                   code: `import { Papers } from
   "@papers.bot/sdk";
 
@@ -62,7 +63,7 @@ const inbox = await papers.inboxes.create(
 );`,
                 },
                 {
-                  label: "cURL",
+                  label: 'cURL',
                   code: `curl https://www.papers.bot/v1/inboxes \\
   -H "Authorization: Bearer $PAPERS_API_KEY" \\
   -H "Content-Type: application/json" \\
@@ -71,14 +72,9 @@ const inbox = await papers.inboxes.create(
                 },
               ]}
             />
-            <div className="passport-code-caption">
-              One API. Real capabilities.
-            </div>
           </section>
           <section className="passport-page" aria-label="Agent identity page">
-            <div className="passport-page-heading">
-              Agent passport <span>Type P</span>
-            </div>
+            <div className="passport-page-heading">Agent passport</div>
             <Fingerprint
               size={58}
               strokeWidth={1}
@@ -86,34 +82,34 @@ const inbox = await papers.inboxes.create(
             />
             <div className="passport-field">
               <small>Holder</small>
-              <strong>research-agent</strong>
+              <strong>Georges</strong>
             </div>
             <div className="passport-field">
               <small>
                 <Mail size={12} /> Inbox
               </small>
-              <span>research@papers.bot</span>
+              <span>georges@papers.bot</span>
             </div>
             <div className="passport-field">
               <small>
                 <Phone size={12} /> Number
               </small>
-              <span>Dedicated · two-way SMS</span>
+              <span>+33661838314</span>
             </div>
             <div className="passport-field">
               <small>
-                <ShieldCheck size={12} /> Access
+                <CreditCard size={12} /> Payment Cards
               </small>
-              <span>Your scopes. Your limits.</span>
+              <span>Give agents a way to pay</span>
             </div>
-            <Stamp>Illustrative passport</Stamp>
-            <Link href="/login" className="passport-create">
+            <Stamp>Approved</Stamp>
+            {/* <Link href="/login" className="passport-create">
               Create your workspace <ArrowUpRight size={14} />
-            </Link>
+            </Link> */}
             <div className="passport-mrz" aria-hidden="true">
-              P&lt;BOT&lt;RESEARCH&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
+              P&lt;BOT&lt;GEORGES&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
               <br />
-              INBOX&lt;NUMBER&lt;&lt;PAPERS&lt;&lt;
+              INBOX&lt;NUMBER&lt;&lt;CARD&lt;&lt;
             </div>
           </section>
         </div>
@@ -125,7 +121,7 @@ const inbox = await papers.inboxes.create(
           tabIndex={open ? -1 : 0}
           aria-hidden={open}
           aria-controls="passport-preview"
-          aria-label={open ? "Close example passport" : "Open example passport"}
+          aria-label={open ? 'Close example passport' : 'Open example passport'}
         >
           <span className="passport-cover-label">
             Infrastructure
@@ -142,7 +138,7 @@ const inbox = await papers.inboxes.create(
               </defs>
               <text>
                 <textPath href="#passport-seal-type" textLength="365">
-                  PAPERS · BOT · PAPERS · BOT ·{" "}
+                  PAPERS · BOT · PAPERS · BOT ·{' '}
                 </textPath>
               </text>
             </svg>
@@ -160,7 +156,7 @@ const inbox = await papers.inboxes.create(
         aria-expanded={open}
         aria-controls="passport-preview"
       >
-        {open ? "Close passport" : "Click to open your agent’s passport"}
+        {open ? 'Close' : 'Click to open'}
       </Button>
     </div>
   );

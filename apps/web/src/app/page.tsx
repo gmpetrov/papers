@@ -128,8 +128,6 @@ export default function Landing() {
       </a>
       <PublicNav />
       <main id="main-content">
-
-
         <section className="papers-hero">
           <Guilloche className="hero-guilloche" />
           <div className="papers-hero-copy">
@@ -164,8 +162,6 @@ export default function Landing() {
           </div>
           <Passport />
         </section>
-
-
 
         <section
           className="papers-tool-strip papers-tools-folded"
@@ -364,13 +360,13 @@ export default function Landing() {
               <em>its papers.</em>
             </h2>
             <p>
-              Start with an inbox. Add a number. Keep the permissions in your
-              hands.
+              Start with an inbox. Add a number. A card. Make your agent fully
+              autonomous.
             </p>
           </div>
           <div className="papers-actions">
             <Link href="/login" className={buttonVariants({ size: 'lg' })}>
-              Create your workspace <ArrowRight />
+              Start for free <ArrowRight />
             </Link>
             <Link href="/docs">
               Read the docs <ArrowUpRight size={15} />
