@@ -191,6 +191,73 @@
     letter-spacing: -0.025em;
     margin-bottom: 28px;
   }
+  .hero-title-rotator {
+    position: relative;
+    display: inline-grid;
+    width: 100%;
+    white-space: nowrap;
+    isolation: isolate;
+  }
+  .hero-title-phrase {
+    position: relative;
+    grid-area: 1 / 1;
+    width: max-content;
+    color: var(--foreground);
+  }
+  .hero-title-ink {
+    display: block;
+    padding-block: 0.12em;
+    margin-block: -0.12em;
+  }
+  .hero-title-phrase-in .hero-title-ink {
+    mask-image: linear-gradient(100deg, #000 40%, transparent 58%);
+    mask-size: 300% 100%;
+    mask-repeat: no-repeat;
+    animation: hero-ink-reveal 1500ms 220ms cubic-bezier(0.25, 0.1, 0.35, 1) both;
+  }
+  .hero-title-phrase-out {
+    position: absolute;
+    inset: 0 auto auto 0;
+  }
+  .hero-title-phrase-out {
+    animation: hero-ink-dissolve 340ms ease-out both;
+  }
+  .hero-title-dust {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .hero-title-particle {
+    position: absolute;
+    left: var(--particle-x);
+    top: var(--particle-y);
+    width: var(--particle-size);
+    height: var(--particle-size);
+    border-radius: 50%;
+    background: var(--foreground);
+    opacity: 0;
+    animation: hero-ink-particle var(--particle-duration) var(--particle-delay) ease-out both;
+  }
+  .hero-title-particle:nth-child(4n) {
+    background: var(--stamp);
+  }
+  @keyframes hero-ink-reveal {
+    from { mask-position: 100% 0; }
+    to { mask-position: 0% 0; }
+  }
+  @keyframes hero-ink-dissolve {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+  @keyframes hero-ink-particle {
+    0% { opacity: 0; transform: translate(-7px, 5px) scale(0.3); }
+    20% { opacity: 0.55; }
+    55% { opacity: 0.3; }
+    100% {
+      opacity: 0;
+      transform: translate(var(--particle-dx), var(--particle-dy)) scale(0.1);
+    }
+  }
   .papers-hero-copy > p {
     font-size: 18px;
     line-height: 1.5;
@@ -1214,7 +1281,7 @@
       gap: 25px;
     }
     .papers-hero h1 {
-      font-size: 68px;
+      font-size: clamp(47px, 13.5vw, 68px);
     }
     .papers-hero-copy > p {
       max-width: 520px;
@@ -1433,7 +1500,7 @@
   }
   @media (max-width: 380px) {
     .papers-hero h1 {
-      font-size: 60px;
+      font-size: 45px;
     }
     .site-nav .nav-signin {
       display: none;
@@ -1457,6 +1524,12 @@
       animation-duration: 0.01ms !important;
       transition-duration: 0.01ms !important;
     }
+    .hero-title-phrase-in .hero-title-ink {
+      animation: none !important;
+      mask-image: none;
+    }
+    .hero-title-dust { display: none; }
+    .hero-title-phrase-out { display: none; }
   }
 }
 @layer design {

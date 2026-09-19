@@ -15,6 +15,7 @@ import { Brand } from '@/components/brand';
 import { PublicNav } from '@/components/public-page';
 import { buttonVariants } from '@/components/ui/button';
 import { Passport } from '@/components/landing/passport';
+import { RotatingHeroTitle } from '@/components/landing/rotating-hero-title';
 import { CodeExample } from '@/components/design-system/code-example';
 import { Guilloche, Stamp } from '@/components/design-system/paper';
 
@@ -132,11 +133,7 @@ export default function Landing() {
         <section className="papers-hero">
           <Guilloche className="hero-guilloche" />
           <div className="papers-hero-copy">
-            <h1>
-              Papers for
-              <br />
-              <em>AI agents</em>
-            </h1>
+            <RotatingHeroTitle />
             <p>
               Papers.bot is the identity API for AI agents. Every agent gets a
               real inbox, a real number, and a real card, the way a person gets
