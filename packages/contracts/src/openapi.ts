@@ -343,10 +343,9 @@ const endpoints: Endpoint[] = [
     summary: "Allocate an email address",
     scope: "inboxes:write",
     body: inboxInput,
-    idempotent: true,
     created: true,
     description:
-      "Read-only members cannot allocate inboxes. Workspace API keys need no agent registration; legacy agent-bound keys retain their restrictions.",
+      "Provide username (the part before @); the server supplies the domain. Name is optional and defaults to a random readable name such as fierce-zebra. Repeating the same request with the same credential returns the original inbox; no idempotency key is needed. Read-only members cannot allocate inboxes. Workspace API keys need no agent registration; legacy agent-bound keys retain their restrictions.",
   },
   {
     method: "get",

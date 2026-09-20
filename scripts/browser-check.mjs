@@ -53,9 +53,9 @@ await page
 if (await page.getByLabel("Agent", { exact: true }).count())
   throw new Error("Inbox requires an agent");
 await page.screenshot({ path: "test-results/create-inbox.png" });
-await page.getByLabel("Name", { exact: true }).fill("Research inbox");
+await page.getByLabel("Name (optional)", { exact: true }).fill("");
 await page
-  .getByLabel("Address (before @papers.bot)", { exact: true })
+  .getByLabel("Username (before @papers.bot)", { exact: true })
   .fill("dev-check-" + Date.now());
 await page.getByRole("button", { name: "Create", exact: true }).click();
 await page.getByRole("dialog").waitFor({ state: "hidden" });

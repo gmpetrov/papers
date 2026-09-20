@@ -7,13 +7,9 @@ import { Papers, PapersError } from "@papers.bot/sdk";
 
 const papers = new Papers({
   apiKey: process.env.PAPERS_API_KEY!,
-  baseUrl: "https://dev.chaindesk.ai",
 });
 
-const inbox = await papers.inboxes.create(
-  { name: "Research", localPart: "research-example" },
-  { idempotencyKey: "create-research-inbox-v1" },
-);
+const inbox = await papers.inboxes.create({ username: "georges" });
 for await (const message of papers.iterateMessages(inbox.id, { limit: 50 })) {
   console.log(message.id, message.subject);
 }
@@ -21,7 +17,7 @@ for await (const message of papers.iterateMessages(inbox.id, { limit: 50 })) {
 
 Use a Papers API key, not a provider credential. No agent registration is
 required. Keep API keys in server-side code; do not bundle them into a browser
-application. `baseUrl` defaults to the development service and must omit `/v1`.
+application. `baseUrl` is optional and defaults to `https://www.papers.bot`. Custom URLs must omit `/v1`.
 
 Resource methods cover inboxes, email, phone numbers, SMS, events, operations,
 identity, and capabilities. Email/SMS listing returns summaries; fetch the
@@ -42,6 +38,8 @@ poll. For events, save the last processed event ID and pass it as `cursor` on
 the next run. Manual page methods retain their existing signatures, with an
 optional final page-size argument: `events.list(cursor, limit)`,
 `messages.list(inboxId, cursor, limit)`, and `sms.list(numberId, cursor, limit)`.
+
+Inbox creation requires only `username`; `name` is optional and defaults to a random readable name such as `fierce-zebra`. Retry the same request to retrieve the same inbox. No idempotency key is needed.
 
 Send, purchase, and release operations require an explicit `idempotencyKey`.
 Reuse it when retrying the same action. Requests are never automatically retried.

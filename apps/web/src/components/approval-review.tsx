@@ -160,7 +160,7 @@ export function ApprovalReview() {
                       : `${row.route.startsWith("email.") ? "Email" : "SMS"} to ${Array.isArray(row.parameters.to) ? row.parameters.to.join(", ") : row.parameters.to}`}
                 </h3>
                 {row.route === "inbox.create" && (
-                  <p>Name: {row.parameters.name}</p>
+                  <p>Name: {row.parameters.name || "Generated automatically"}</p>
                 )}
                 {row.route === "number.provision" && (
                   <p>

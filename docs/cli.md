@@ -5,6 +5,7 @@ Build from the repository with `pnpm --filter @agentinfra/cli build`. Packages a
 ```sh
 node packages/cli/dist/index.js whoami
 node packages/cli/dist/index.js capabilities
+node packages/cli/dist/index.js inboxes create --username research
 node packages/cli/dist/index.js operations get OPERATION_ID
 node packages/cli/dist/index.js operations wait OPERATION_ID --timeout 120 --interval 2
 node packages/cli/dist/index.js events watch --interval 2

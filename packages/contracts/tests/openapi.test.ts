@@ -88,6 +88,13 @@ it("does not repeat parameters and gives approvals and SMS named response contra
 
 it("documents synchronous inbox creation separately from asynchronous sends and purchases", () => {
   const create = doc.paths["/inboxes"]!.post as any;
+  expect(create.parameters ?? []).not.toContainEqual(
+    expect.objectContaining({ name: "Idempotency-Key" }),
+  );
+  const input = create.requestBody.content["application/json"].schema;
+  expect(input.required).toEqual(["username"]);
+  expect(input.properties).toHaveProperty("username");
+  expect(input.properties).not.toHaveProperty("localPart");
   expect(Object.keys(create.responses).sort()).toEqual([
     "201",
     "429",

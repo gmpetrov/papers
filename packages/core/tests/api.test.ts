@@ -55,7 +55,7 @@ const req = (
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
-      "Idempotency-Key": key,
+      ...(path === "/v1/inboxes" ? {} : { "Idempotency-Key": key }),
     },
     body: body ? JSON.stringify(body) : undefined,
   });
@@ -304,13 +304,13 @@ describe("tenant and agent API", () => {
       (
         await req("/v1/inboxes", "POST", {
           name: "Bad",
-          localPart: "bad-agent",
+          username: "bad-agent",
           agentId: otherAgent,
         })
       ).status,
     ).toBe(404);
   });
-  it("requires idempotency keys", async () => {
+  it("requires username instead of the old localPart field", async () => {
     const r = await api.request("http://localhost:3000/v1/inboxes", {
       method: "POST",
       headers: {
@@ -321,8 +321,8 @@ describe("tenant and agent API", () => {
     });
     expect(r.status).toBe(400);
   });
-  it("creates exactly one inbox for concurrent retries", async () => {
-    const payload = { name: "Research", localPart: "research", agentId };
+  it("creates exactly one inbox and readable name for concurrent keyless retries", async () => {
+    const payload = { username: "research", agentId };
     const responses = await Promise.all([
       req("/v1/inboxes", "POST", payload),
       req("/v1/inboxes", "POST", payload),
@@ -330,15 +330,24 @@ describe("tenant and agent API", () => {
     expect(responses.map((r) => r.status)).toEqual([201, 201]);
     const [a, b] = await Promise.all(responses.map((r) => r.json()));
     expect(a.id).toBe(b.id);
+    expect(a.name).toMatch(/^[a-z]+-[a-z]+$/);
+    expect(b.name).toBe(a.name);
+    expect(a.address).toBe("research@example.test");
+    const replay = await req("/v1/inboxes", "POST", {
+      ...payload,
+      username: "RESEARCH",
+    });
+    expect(replay.status).toBe(201);
+    expect((await replay.json()).id).toBe(a.id);
     inboxId = a.id;
     expect(await db.inbox.count({ where: { agentId } })).toBe(1);
   });
-  it("rejects changed parameters for the same key", async () => {
+  it("rejects an already allocated username with different parameters", async () => {
     expect(
       (
         await req("/v1/inboxes", "POST", {
           name: "Changed",
-          localPart: "research",
+          username: "research",
           agentId,
         })
       ).status,
@@ -903,7 +912,7 @@ describe("tenant and agent API", () => {
     const response = await req(
       "/v1/inboxes",
       "POST",
-      { name: "Workspace inbox", localPart: "workspace-inbox" },
+      { name: "Workspace inbox", username: "workspace-inbox" },
       "workspace-create",
       "workspace-key",
     );
@@ -1073,7 +1082,7 @@ describe("tenant and agent API", () => {
     const created = await req(
       "/v1/inboxes",
       "POST",
-      { name: "Blocked", localPart: "legacy-paused", agentId },
+      { name: "Blocked", username: "legacy-paused", agentId },
       "legacy-inbox-paused",
       "workspace-key",
     );

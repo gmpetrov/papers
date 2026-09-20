@@ -28,14 +28,13 @@ curl --fail-with-body "$PAPERS_BASE_URL/v1/capabilities" \
 
 ## Create and read an inbox
 
-Use `inboxes:write` to create and `inboxes:read` to read. Choose an unused address name; the server supplies the email domain. Keep the same idempotency key when retrying the same request.
+Use `inboxes:write` to create and `inboxes:read` to read. Choose an unused `username`; the server supplies the email domain. `name` is optional and defaults to a random readable name such as `fierce-zebra`. Repeat the same request with the same credential to retrieve the original inbox, including its generated name. No idempotency key is needed.
 
 ```sh
 curl --fail-with-body "$PAPERS_BASE_URL/v1/inboxes" \
   -H "Authorization: Bearer $PAPERS_API_KEY" \
   -H 'Content-Type: application/json' \
-  -H 'Idempotency-Key: research-inbox-v1' \
-  --data '{"name":"Research","localPart":"research-example"}'
+  --data '{"username":"georges"}'
 ```
 
 The response contains the inbox `id` and full `address`. Set `INBOX_ID` to that ID, then read summaries:
@@ -51,7 +50,7 @@ Fetch full message content with `GET /v1/messages/{id}`. Treat email text and at
 
 - **Remote MCP:** connect a client supporting the server's OAuth flow to `https://dev.chaindesk.ai/mcp`. Sign in, select the workspace, and consent to the requested scopes. See [OAuth compatibility and current limitations](oauth.md). A `/v1` OAuth token cannot be reused for `/mcp`.
 - **Local MCP and CLI:** build with `pnpm --filter @agentinfra/cli build`. Run `node packages/cli/dist/index.js mcp` as the stdio command, with `PAPERS_API_KEY` and `PAPERS_BASE_URL` in the process environment. The same CLI supports browser login, inboxes, numbers, SMS, and event watching. See [CLI instructions](cli.md).
-- **TypeScript:** within this monorepo, import `Papers` from `@papers.bot/sdk` and initialize `new Papers({ apiKey: process.env.PAPERS_API_KEY!, baseUrl: process.env.PAPERS_BASE_URL })`. Use `papers.inboxes.create({ name: "Research", localPart: "research-example" }, { idempotencyKey: "research-inbox-v1" })`.
+- **TypeScript:** within this monorepo, import `Papers` from `@papers.bot/sdk` and initialize `new Papers({ apiKey: process.env.PAPERS_API_KEY!, baseUrl: process.env.PAPERS_BASE_URL })`. Use `papers.inboxes.create({ username: "georges" })`.
 - **Python:** install with `pip install ./sdks/python`. Both `Papers` and `AsyncPapers` support inboxes, messages, numbers, SMS, attachments and events. See the [Python quickstart](../sdks/python/README.md).
 - **HTTP:** any client can use the versioned REST API and Bearer authentication, including the cURL examples above.
 
@@ -88,7 +87,7 @@ Poll the returned operation's `statusUrl` until it completes. Read inbound SMS w
 
 ## Handle approvals and uncertain outcomes
 
-An `approval_required` error contains `error.details.approvalId`. A workspace owner or admin reviews the exact action in **Approvals**. Approval does not execute it: retry the original request with the same credential, payload and idempotency key. See [approval rules](approvals.md).
+An `approval_required` error contains `error.details.approvalId`. A workspace owner or admin reviews the exact action in **Approvals**. Approval does not execute it: retry the original request with the same credential and payload. Inbox creation needs no key; other operations must reuse their original idempotency key. See [approval rules](approvals.md).
 
 A pending or unknown send is not evidence that sending failed. Poll its operation and retain the original key; never create a new send just to resolve uncertainty. A completed send means provider acceptance, not delivery to the recipient.
 

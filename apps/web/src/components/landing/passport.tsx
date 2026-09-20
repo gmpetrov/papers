@@ -36,15 +36,8 @@ export function Passport() {
                   code: `from papers import Papers
 import os
 
-with Papers(
-  os.environ["PAPERS_API_KEY"],
-  base_url="https://www.papers.bot",
-) as papers:
-  inbox = papers.create_inbox(
-    name="Research",
-    local_part="research",
-    idempotency_key="research-001",
-  )
+with Papers(os.environ["PAPERS_API_KEY"]) as papers:
+  inbox = papers.create_inbox(username="research")
   print(inbox.address)`,
                 },
                 {
@@ -54,21 +47,16 @@ with Papers(
 
 const papers = new Papers({
   apiKey: process.env.PAPERS_API_KEY!,
-  baseUrl: "https://www.papers.bot",
 });
 
-const inbox = await papers.inboxes.create(
-  { name: "Research", localPart: "research" },
-  { idempotencyKey: "research-001" }
-);`,
+const inbox = await papers.inboxes.create({ username: "research" });`,
                 },
                 {
                   label: 'cURL',
                   code: `curl https://www.papers.bot/v1/inboxes \\
   -H "Authorization: Bearer $PAPERS_API_KEY" \\
   -H "Content-Type: application/json" \\
-  -H "Idempotency-Key: research-001" \\
-  -d '{"name":"Research", "localPart":"research"}'`,
+  -d '{"username":"research"}'`,
                 },
               ]}
             />

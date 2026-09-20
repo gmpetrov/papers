@@ -29,7 +29,12 @@ curl ${publicAppOrigin}/v1/capabilities -H "Authorization: Bearer $PAPERS_API_KE
         email:send to send.
       </p>
       <h2>1. Create an inbox</h2>
-      <pre className="code-block">{`curl ${publicAppOrigin}/v1/inboxes \\\n  -H "Authorization: Bearer $PAPERS_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -H "Idempotency-Key: research-inbox-001" \\\n  -d '{"name":"Research","localPart":"my-research-agent"}'`}</pre>
+      <pre className="code-block">{`curl ${publicAppOrigin}/v1/inboxes \\\n  -H "Authorization: Bearer $PAPERS_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '{"username":"my-research-agent"}'`}</pre>
+      <p>
+        Only username is required. Name is optional and defaults to a random
+        readable name, such as fierce-zebra. Retrying the same request returns
+        the original inbox; no idempotency key is needed.
+      </p>
       <h2>2. Read incoming messages</h2>
       <pre className="code-block">{`curl ${publicAppOrigin}/v1/inboxes/INBOX_ID/messages \\\n  -H "Authorization: Bearer $PAPERS_API_KEY"`}</pre>
       <p>
@@ -41,17 +46,18 @@ curl ${publicAppOrigin}/v1/capabilities -H "Authorization: Bearer $PAPERS_API_KE
       <pre className="code-block">{`curl ${publicAppOrigin}/v1/inboxes/INBOX_ID/messages \\\n  -H "Authorization: Bearer $PAPERS_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -H "Idempotency-Key: email-001" \\\n  -d '{"to":["recipient@example.com"],"subject":"Hello","text":"Sent by my agent."}'`}</pre>
       <h2>Predictable by design.</h2>
       <p>
-        Reuse the same idempotency key when retrying a mutation. A different
-        payload with the same key returns a conflict. Asynchronous or uncertain
-        operations return an operation ID that you can poll. Keys expire and can
-        be revoked at any time.
+        Reuse the same idempotency key when retrying a send or phone operation.
+        A different payload with the same key returns a conflict. Asynchronous
+        or uncertain operations return an operation ID that you can poll. Keys
+        expire and can be revoked at any time.
       </p>
       <h2>Approvals</h2>
       <p>
         If a request returns approval_required, keep its approvalId and original
-        idempotency key. An owner or admin reviews the action under Dashboard →
-        Approvals. After approval, retry the same request with the same
-        credential, payload and key. Approving an action does not execute it.
+        idempotency key, if required. Inbox creation needs no key. An owner or
+        admin reviews the action under Dashboard → Approvals. After approval,
+        retry the same request with the same credential, payload and key.
+        Approving an action does not execute it.
       </p>
       <h2>Attachments and updates</h2>
       <p>
@@ -98,10 +104,7 @@ const papers = new Papers({
   apiKey: process.env.PAPERS_API_KEY!,
   baseUrl: "${publicAppOrigin}",
 });
-const inbox = await papers.inboxes.create(
-  { name: "Research", localPart: "my-research-agent" },
-  { idempotencyKey: "research-inbox-001" },
-);
+const inbox = await papers.inboxes.create({ username: "my-research-agent" });
 console.log(inbox.address);`}</pre>
       <h3>Python</h3>
       <p>
@@ -112,10 +115,7 @@ console.log(inbox.address);`}</pre>
 from papers import Papers
 
 with Papers(os.environ["PAPERS_API_KEY"], base_url="${publicAppOrigin}") as papers:
-    inbox = papers.create_inbox(
-        name="Research", local_part="my-research-agent",
-        idempotency_key="research-inbox-001",
-    )
+    inbox = papers.create_inbox(username="my-research-agent")
     print(inbox.address)`}</pre>
       <h3>CLI and local MCP</h3>
       <pre className="code-block">{`pnpm --filter @agentinfra/cli build

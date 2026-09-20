@@ -59,7 +59,7 @@ const credentials = [
     label: 'Payment Card',
     icon: CreditCard,
     href: '/email',
-    description: 'A way to pay. Credit cards are on the roadmap.',
+    description: 'A way to pay for things easily.',
     details: [
       'A payment method for the tasks your agent takes on.',
       'Card issuing and purchases are not available yet.',
@@ -78,13 +78,9 @@ const samples = [
 
 const papers = new Papers({
   apiKey: process.env.PAPERS_API_KEY!,
-  baseUrl: "https://www.papers.bot",
 });
 
-const inbox = await papers.inboxes.create(
-  { name: "Research", localPart: "research" },
-  { idempotencyKey: "research-inbox-001" }
-);
+const inbox = await papers.inboxes.create({ username: "research" });
 
 console.log(inbox.address);`,
   },
@@ -93,14 +89,8 @@ console.log(inbox.address);`,
     code: `import os
 from papers import Papers
 
-with Papers(
-    os.environ["PAPERS_API_KEY"],
-    base_url="https://www.papers.bot",
-) as papers:
-    inbox = papers.create_inbox(
-        name="Research", local_part="research",
-        idempotency_key="research-inbox-001",
-    )
+with Papers(os.environ["PAPERS_API_KEY"]) as papers:
+    inbox = papers.create_inbox(username="research")
     print(inbox.address)`,
   },
   {
@@ -108,8 +98,7 @@ with Papers(
     code: `curl https://www.papers.bot/v1/inboxes \\
   -H "Authorization: Bearer $PAPERS_API_KEY" \\
   -H "Content-Type: application/json" \\
-  -H "Idempotency-Key: research-inbox-001" \\
-  -d '{"name":"Research","localPart":"research"}'`,
+  -d '{"username":"research"}'`,
   },
   {
     label: 'MCP',
@@ -137,14 +126,11 @@ export default function Landing() {
               real inbox, a real number, and a real card, the way a person gets
               them from Gmail, a carrier, and a bank.
             </p>
-            <div className="credential-summary credential-ledger">
-              {credentials.map(({ label, icon: Icon, description }) => (
-                <div key={label}>
-                  <strong>
-                    <Icon size={17} />
-                    {label}
-                  </strong>
-                  <p>{description}</p>
+            <div className="credential-type">
+              {credentials.map(({ label, icon: Icon }) => (
+                <div className="credential-type__item" key={label}>
+                  <Icon size={16} aria-hidden="true" />
+                  <span>{label}</span>
                 </div>
               ))}
             </div>

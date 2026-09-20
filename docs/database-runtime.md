@@ -37,5 +37,11 @@ Hyperdrive pooling or cache settings. Those require verification against the
 provisioned Cloudflare configuration before release. See [local development](https://developers.cloudflare.com/hyperdrive/configuration/local-development/).
 
 Changes to Wrangler bindings require restarting `pnpm dev` so OpenNext refreshes
-its development bindings. Production PostgreSQL and Hyperdrive are deployed; database connectivity and
-background processing were verified on September 17, 2026. See [deployment](deployment.md).
+its development bindings. Production now uses Neon PostgreSQL through the existing Hyperdrive binding.
+The September 20, 2026 cutover initialized all 32 migrations on an empty Neon
+database, with explicit approval to leave the old Prisma data behind. Hyperdrive
+connects to Neon’s direct endpoint; caching remains disabled and the origin
+connection limit remains five. Local production commands use the Neon pooled
+`DATABASE_URL` and direct `DIRECT_URL`. Both Workers Builds use the direct Neon
+URL as their encrypted `DATABASE_URL`, so migration locks bypass PgBouncer.
+Database connectivity and background processing were verified after cutover. See [deployment](deployment.md).

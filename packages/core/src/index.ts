@@ -32,6 +32,7 @@ import {
 import { getWorkspaceUsage } from "./usage";
 import { provisionNumber, releaseNumber } from "./phone-numbers";
 import { assertInboxCapacity } from "./inbox-limits";
+import { randomInboxName } from "./inbox-name";
 import {
   createWebhookEndpoint,
   listWebhookEndpoints,
@@ -714,14 +715,10 @@ export function createApi(
       "not_configured",
       "Email domain not configured",
     );
-    const key = c.req.header("Idempotency-Key");
-    assert(
-      key && key.length <= 200,
-      400,
-      "idempotency_key_required",
-      "Provide an Idempotency-Key",
-    );
     const requestHash = await hash(JSON.stringify(input));
+    // Inbox addresses are persistent. Identical normalized requests can safely
+    // share retry/approval tracking without exposing a key to callers.
+    const key = `inbox:${requestHash}`;
     const result = await db.$transaction(async (tx) => {
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${p.organizationId}))`;
       const prior = await tx.operation.findUnique({
@@ -750,7 +747,7 @@ export function createApi(
         : null;
       if (agentId) assert(agent, 404, "not_found", "Agent not found");
       await assertInboxCapacity(tx, p.organizationId, agent);
-      const address = `${input.localPart}@${env.EMAIL_DOMAIN}`;
+      const address = `${input.username}@${env.EMAIL_DOMAIN}`;
       assert(
         !(await tx.inbox.findUnique({ where: { address } })),
         409,
@@ -772,6 +769,7 @@ export function createApi(
           resourceId: address,
           parameters: { ...input, address, ...(agentId ? { agentId } : {}) },
           policyVersion: policy.policyVersion,
+          renewExpired: true,
         });
         if (approval.status !== "approved")
           return { approvalRequired: approval.id } as const;
@@ -785,7 +783,7 @@ export function createApi(
       );
       const inbox = await tx.inbox.create({
         data: {
-          name: input.name,
+          name: input.name ?? randomInboxName(),
           agentId,
           address,
           organizationId: p.organizationId,
@@ -823,7 +821,7 @@ export function createApi(
       throw new AppError(
         409,
         "approval_required",
-        "Ask a workspace owner or admin to review this inbox, then retry with the same idempotency key",
+        "Ask a workspace owner or admin to review this inbox, then retry the same request",
         false,
         { approvalId: result.approvalRequired! },
       );

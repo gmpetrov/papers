@@ -14,6 +14,7 @@ export async function requestActionApproval(
     resourceId: string;
     parameters: Prisma.InputJsonObject;
     policyVersion: number;
+    renewExpired?: boolean;
   },
 ) {
   const unique = {
@@ -56,6 +57,38 @@ export async function requestActionApproval(
         organizationId: p.organizationId,
         actorId: p.id,
         action: "approval.requested",
+        resourceId: row.id,
+      },
+    });
+  }
+  // Keyless inbox requests cannot pick a new retry key after expiry. Require a
+  // fresh human decision on the same request, without reviving denied actions.
+  if (input.renewExpired)
+    assert(
+      row.status !== "denied",
+      403,
+      "approval_denied",
+      "The requested action was denied",
+    );
+  if (
+    input.renewExpired &&
+    row.expiresAt <= new Date() &&
+    ["pending", "approved"].includes(row.status)
+  ) {
+    row = await tx.approval.update({
+      where: { id: row.id },
+      data: {
+        status: "pending",
+        expiresAt: new Date(Date.now() + 86400000),
+        decidedAt: null,
+        decidedBy: null,
+      },
+    });
+    await tx.auditEvent.create({
+      data: {
+        organizationId: p.organizationId,
+        actorId: p.id,
+        action: "approval.renewed",
         resourceId: row.id,
       },
     });

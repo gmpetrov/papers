@@ -22,17 +22,14 @@ import os
 from papers import Papers
 
 with Papers(os.environ["PAPERS_API_KEY"]) as papers:
-    inbox = papers.create_inbox(
-        name="Research", local_part="research-example",
-        idempotency_key="create-research-inbox-v1",
-    )
+    inbox = papers.create_inbox(username="georges")
     print(inbox.address)
     for message in papers.iter_messages(inbox.id, limit=25):
         print(message.id, message.subject)
 ```
 
 No agent registration or binding is required. The default base URL is the
-development service, `https://dev.chaindesk.ai`; pass `base_url` to change it.
+production service, `https://www.papers.bot`; optionally pass `base_url` to change it.
 The client adds `/v1/` automatically. Use a Papers API key, not a Resend or
 Telnyx provider key. The client supports a context manager and explicit `close()`.
 
@@ -56,6 +53,8 @@ SMS listing/read/send, operation lookup, and event listing/iteration. Email, SMS
 and event page methods accept `cursor` and keyword-only `limit` (1–100).
 `iter_events(cursor=...)` reads currently available events until exhausted; it
 does not continuously poll. Persist the last processed event ID to resume later.
+
+Inbox creation requires only `username`; `name` is optional and defaults to a random readable name such as `fierce-zebra`. Both sync and async clients use this interface. Retry the same request to retrieve the same inbox. No idempotency key is needed.
 
 Send, purchase, and release methods require an explicit `idempotency_key`.
 Keep it stable across retries of the same action. The SDK does not automatically

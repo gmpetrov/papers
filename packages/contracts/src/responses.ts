@@ -25,8 +25,8 @@ const smsParameters = z.object({
   attachments: approvalAttachments,
 });
 const inboxParameters = z.object({
-  name: z.string(),
-  localPart: z.string(),
+  name: z.string().optional(),
+  username: z.string(),
   address: z.string(),
   agentId: id.optional(),
 });

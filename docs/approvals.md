@@ -61,11 +61,17 @@ the same transaction. Resend receives the operation ID as its idempotency key.
 
 Provisioning approval defaults off. When enabled, delegated inbox creation and
 phone purchases return `approval_required` before creating or reserving resources.
-Inbox review shows its requested name and full address. Phone review shows the
+Inbox review shows its full address and requested name, when provided. An omitted
+name is randomly generated upon creation. Retry inbox creation with the same
+credential and body; its retry/approval identity is managed by the server.
+No idempotency key is required for inboxes. Phone review shows the
 E.164 number, country, upfront cost, monthly cost, and currency. A reviewer only
 permits a retry; approving does not purchase anything. Current capacity,
 availability, and phone prices still apply on retry. Changed requested parameters
-require a new key and decision. If the provider price changes, the approved
+require a new decision (and a new key for phone purchases). If the provider price changes, the approved
 operation fails without purchasing; a fresh quote requires a new request.
 Resource creation, operation creation, and approval consumption commit together.
 Neither creation flow requires an agent record.
+
+Retrying an expired, pending or approved inbox request renews it as pending and
+requires a fresh human decision. Denied inbox requests remain denied.

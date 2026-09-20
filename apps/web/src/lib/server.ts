@@ -42,18 +42,30 @@ export function providerEnv(): Environment {
 export async function runtime(request?: Request) {
   const bindings = getCloudflareContext().env;
   const db = createDatabase(bindings.HYPERDRIVE.connectionString);
-  const auth = createAuth(
-    db,
-    resolveAuthEnvironment(bindings, process.env),
-    {
+  let auth: ReturnType<typeof createAuth> | undefined;
+  let authSettled: Promise<void> | undefined;
+  let api: ReturnType<typeof createApi> | undefined;
+  let mcpApi: ReturnType<typeof createApi> | undefined;
+  const getAuth = () => {
+    if (auth) return auth;
+    auth = createAuth(db, resolveAuthEnvironment(bindings, process.env), {
       resourceGrants:
         request && new URL(request.url).pathname === "/api/auth/oauth2/consent"
           ? (request.headers.get("x-papers-resource-grants") ?? undefined)
           : undefined,
       organizationId:
         request?.headers.get("x-papers-organization-id") ?? undefined,
-    },
-  );
+    });
+    // Better Auth starts async OAuth resource seeding immediately. Observe its
+    // rejection even when a caller only reads options, and finish that work
+    // before disconnecting the request's database. API calls still receive the
+    // original rejected $context; this does not turn initialization into success.
+    authSettled = auth.$context.then(
+      () => {},
+      () => {},
+    );
+    return auth;
+  };
   const bucket = bindings.ATTACHMENTS;
   const environment: Environment = {
     ...providerEnv(),
@@ -73,10 +85,19 @@ export async function runtime(request?: Request) {
   };
   return {
     db,
-    auth,
-    api: createApi(db, auth, environment),
-    mcpApi: createApi(db, auth, environment, "/mcp"),
-    close: () => db.$disconnect(),
+    get auth() {
+      return getAuth();
+    },
+    get api() {
+      return (api ??= createApi(db, getAuth(), environment));
+    },
+    get mcpApi() {
+      return (mcpApi ??= createApi(db, getAuth(), environment, "/mcp"));
+    },
+    close: async () => {
+      await authSettled;
+      await db.$disconnect();
+    },
   };
 }
 export async function withRuntime<T>(

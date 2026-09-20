@@ -217,17 +217,15 @@ export function createMcpServer(call: ApiCall, download?: AttachmentDownload) {
     {
       title: "Create an inbox",
       description:
-        "Allocate a persistent address in the workspace. Requires inboxes:write. Reuse idempotencyKey when retrying.",
+        "Allocate a persistent address in the workspace using username (before @). Name is optional; omitted names are randomly generated, such as fierce-zebra. Requires inboxes:write. Retry the same request to retrieve the same inbox; no idempotency key is needed.",
       inputSchema: {
-        name: z.string(),
-        localPart: z.string(),
+        name: z.string().optional(),
+        username: z.string(),
         agentId: z.string().optional(),
-        idempotencyKey: z.string(),
       },
       annotations: write,
     },
-    ({ idempotencyKey, ...input }) =>
-      output(() => call("/inboxes", "POST", input, idempotencyKey)),
+    (input) => output(() => call("/inboxes", "POST", input)),
   );
   server.registerTool(
     "list_messages",
@@ -404,7 +402,7 @@ export function createMcpServer(call: ApiCall, download?: AttachmentDownload) {
     {
       title: "List approval requests",
       description:
-        "Page through requests belonging to this credential, newest first. Use nextCursor to retrieve older requests. Requires sms:send, email:send, inboxes:write, or numbers:provision. Humans approve in the Papers dashboard; agents cannot approve. After approval, retry the exact original request with the same idempotency key. Approval never overrides quotas or recipient restrictions.",
+        "Page through requests belonging to this credential, newest first. Use nextCursor to retrieve older requests. Requires sms:send, email:send, inboxes:write, or numbers:provision. Humans approve in the Papers dashboard; agents cannot approve. After approval, retry the exact original request. Inbox creation needs no idempotency key; other operations must reuse their original key. Approval never overrides quotas or recipient restrictions.",
       inputSchema: pageInput,
       annotations: read,
     },

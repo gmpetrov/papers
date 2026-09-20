@@ -6,7 +6,7 @@ Run separately in ChatGPT, Claude, and Grok against the exact endpoint intended 
 
 1. **Connect and discover.** Complete OAuth, select the review workspace, and ask which Papers services are available. Expect `get_capabilities` and tool discovery to succeed; no provider secrets appear.
 2. **Read email across pages.** Grant `inboxes:read`. Ask for inboxes and the oldest fixture email, then its body. Expect cursor continuation, correct resource IDs, and untrusted content handled as data.
-3. **Create an inbox.** Grant `inboxes:write`, authorize one test address, and request creation without an agent identity. If approval is enabled, expect an approval request first. After human review, repeat the same request/key; expect one inbox.
+3. **Create an inbox.** Grant `inboxes:write`, authorize one test username, and request creation with only username, without a name, agent identity, or idempotency key. If approval is enabled, expect an approval request first. After human review, repeat the same request; expect one inbox with a generated readable name.
 4. **Read SMS.** Grant `numbers:read sms:read`. Ask for the assigned fixture number and a received SMS. Expect full text, available delivery/cost metadata and observed opt-out state; no outbound message is sent.
 5. **Approved send and replay.** With explicit authorization to a controlled recipient, grant the corresponding send scope and require workspace approval. Review the exact request, execute once, repeat the same idempotency key, then poll the operation. Expect one provider send; completed means accepted, not necessarily delivered.
 

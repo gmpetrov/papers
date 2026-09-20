@@ -234,10 +234,10 @@ export class Papers {
   };
   constructor(options: ClientOptions) {
     this.options = {
-      baseUrl: "https://dev.chaindesk.ai",
       timeoutMs: 15000,
       fetch: globalThis.fetch,
       ...options,
+      baseUrl: options.baseUrl ?? "https://www.papers.bot",
     };
   }
   private async fetchResponse(
@@ -345,10 +345,8 @@ export class Papers {
       this.request<Inbox>(`/inboxes/${encodeURIComponent(id)}`),
     list: (cursor?: string, limit?: number) =>
       this.request<Page<InboxListItem>>(`/inboxes${pageQuery(cursor, limit)}`),
-    create: (
-      input: { name: string; localPart: string; agentId?: string },
-      options: MutationOptions,
-    ) => this.request<Inbox>("/inboxes", "POST", input, options),
+    create: (input: { username: string; name?: string; agentId?: string }) =>
+      this.request<Inbox>("/inboxes", "POST", input),
     archive: (id: string) =>
       this.request<{ status: "archived" }>(
         `/inboxes/${encodeURIComponent(id)}`,

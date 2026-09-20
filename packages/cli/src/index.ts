@@ -96,16 +96,16 @@ inboxes
   .action(async (o) => print(await client().inboxes.list(o.cursor, o.limit)));
 inboxes
   .command("create")
-  .requiredOption("--name <name>")
-  .requiredOption("--address <localPart>")
+  .requiredOption("--username <username>", "Email address username (before @)")
+  .option("--name <name>", "Display name (randomly generated if omitted)")
   .option("--agent <id>", "Legacy agent restriction (optional)")
-  .requiredOption("--idempotency-key <key>")
   .action(async (o) =>
     print(
-      await client().inboxes.create(
-        { name: o.name, localPart: o.address, agentId: o.agent },
-        { idempotencyKey: o.idempotencyKey },
-      ),
+      await client().inboxes.create({
+        username: o.username,
+        name: o.name,
+        agentId: o.agent,
+      }),
     ),
   );
 const messages = cli.command("messages");

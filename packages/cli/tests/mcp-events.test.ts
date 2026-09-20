@@ -2,6 +2,25 @@ import { expect, it, vi } from "vitest";
 import { handleMcp, toolScopes } from "../../../apps/mcp/src/index";
 import { PapersError } from "../../sdk-typescript/src/index";
 
+it("creates an inbox through MCP with only a username", async () => {
+  const inbox = {
+    id: "inbox",
+    name: "fierce-zebra",
+    address: "research@example.test",
+  };
+  const call = vi.fn().mockResolvedValue(inbox);
+  const response = await handleMcp(
+    request("create_inbox", { username: "research" }),
+    call,
+  );
+  const { result } = await response.json();
+  expect(result.isError).toBeUndefined();
+  expect(call).toHaveBeenCalledExactlyOnceWith("/inboxes", "POST", {
+    username: "research",
+  });
+  expect(result.structuredContent.data).toEqual(inbox);
+});
+
 function request(name: string, args: Record<string, unknown>) {
   return new Request("https://papers.test/mcp", {
     method: "POST",

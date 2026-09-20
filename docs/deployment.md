@@ -1,5 +1,40 @@
 # Production deployment
 
+## Neon cutover — September 20, 2026
+
+Prisma Postgres refused production connections with `planLimitReached`, including
+its direct export endpoint. With explicit approval to start with an empty database,
+all 32 migrations were applied to Neon PostgreSQL 18.6. The former Prisma database
+was left intact; its users, workspaces, inboxes, and message history were not copied.
+
+The shared `papers-production` Hyperdrive configuration now targets Neon's direct
+US-east-1 endpoint. Both existing Worker bindings retain the same configuration ID.
+Query caching stays disabled and the origin connection limit stays five. The local
+ignored `.env.production` now has Neon pooled/direct URLs; the previous values are
+preserved in the private ignored `.env.production.prisma-backup`. Both Workers
+Builds have an encrypted `DATABASE_URL` pointing to Neon's direct endpoint.
+
+After the switch, `/api/health` returned 200 with database connected, `/mcp` returned
+401 for an unauthenticated request, and session lookup returned 200. Live Resend
+callbacks resumed and background cycles completed with all eleven lanes healthy.
+A synthetic webhook signed with the local secret was rejected; the local Resend
+signing configuration could not authenticate that probe. Recovery evidence
+comes from actual live callbacks and completed provider jobs, not that probe.
+
+The web runtime now creates authentication and API objects only when used. This
+avoids OAuth resource seeding on webhook and health requests. When auth is used,
+its initialization rejection is observed immediately and initialization settles
+before the request disconnects its database. Three regression tests cover unused
+auth, initialization failure, and cleanup ordering. A full local OpenNext/Workers
+outage simulation also returned controlled 503 responses without unhandled
+rejections for health and signed Resend ingress. Web version
+`c4cebf23-bf83-45b3-8ca5-e91a97afd814` deploys this runtime fix from the verified
+previous production revision `c29ab0d`, preserving unrelated in-progress changes.
+Post-deployment health, session lookup, and unauthenticated MCP checks passed.
+
+The sections below record earlier deployment history and may describe superseded
+provider or cutover state.
+
 Deployed September 17, 2026 at **https://www.papers.bot**.
 
 | Resource | State |

@@ -2,6 +2,26 @@ import { describe, expect, it, vi } from "vitest";
 import { Papers, PapersError } from "../src/index";
 
 describe("TypeScript client", () => {
+  it("creates an inbox with only a username and no idempotency header", async () => {
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(
+        Response.json({
+          id: "inbox",
+          name: "fierce-zebra",
+          address: "research@example.test",
+        }),
+      );
+    const client = new Papers({ apiKey: "test", fetch: fetcher });
+    expect((await client.inboxes.create({ username: "research" })).name).toBe(
+      "fierce-zebra",
+    );
+    const request = fetcher.mock.calls[0]![1]!;
+    expect(JSON.parse(request.body as string)).toEqual({
+      username: "research",
+    });
+    expect(new Headers(request.headers).has("Idempotency-Key")).toBe(false);
+  });
   it("preserves field validation details and drops unexpected metadata", async () => {
     const details = [
       {

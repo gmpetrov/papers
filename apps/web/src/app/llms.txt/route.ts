@@ -19,7 +19,7 @@ Compatible remote MCP clients can use OAuth: sign in, select a workspace, and ap
 
 ## Email workflow
 
-1. POST /v1/inboxes with name, localPart, and an Idempotency-Key. No agent registration or assignment is required.
+1. POST /v1/inboxes with username. Name is optional and defaults to a random readable name such as fierce-zebra. No idempotency key, agent registration, or assignment is required. Retrying the same request with the same credential returns the original inbox.
 2. GET /v1/inboxes/{id}/messages; use cursor and limit for pagination.
 3. GET /v1/messages/{id} for body text and attachment metadata.
 4. POST /v1/inboxes/{id}/messages with to, subject, text, and an Idempotency-Key; or POST /v1/messages/{id}/reply with text and an Idempotency-Key.
@@ -29,7 +29,7 @@ Completed send operations mean provider acceptance, not recipient delivery. Read
 
 ## Approval workflow
 
-Workspace policies may require human approval for email, SMS, inbox creation, or number purchases. A 409 approval_required error includes error.details.approvalId. Use GET /v1/approvals to inspect your own requests. An owner/admin reviews the exact action in Dashboard → Approvals. Approval never executes the action: retry the same request, body, credential, and Idempotency-Key afterward. Do not change the key to bypass approval. Expired, denied, or superseded approvals do not authorize execution.
+Workspace policies may require human approval for email, SMS, inbox creation, or number purchases. A 409 approval_required error includes error.details.approvalId. Use GET /v1/approvals to inspect your own requests. An owner/admin reviews the exact action in Dashboard → Approvals. Approval never executes the action: retry the same request, body, and credential afterward. Inbox creation needs no key; other operations must reuse their original Idempotency-Key. Do not change request parameters or keys to bypass approval. Expired, denied, or superseded approvals do not authorize execution.
 
 ## Attachments
 

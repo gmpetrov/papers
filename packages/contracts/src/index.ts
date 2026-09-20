@@ -84,9 +84,10 @@ export const agentInput = z.object({
   description: z.string().max(500).default(""),
 });
 export const inboxInput = z.object({
-  name: z.string().trim().min(1).max(80),
-  localPart: z
+  name: z.string().trim().min(1).max(80).optional(),
+  username: z
     .string()
+    .trim()
     .toLowerCase()
     .regex(/^[a-z0-9][a-z0-9._-]{2,40}$/),
   agentId: z.string().min(1).optional(),

@@ -217,7 +217,7 @@ it("denies mutations outside the grant and creation beyond an explicit selection
   for (const [path, method, body] of requests)
     expect((await request(path, method, body)).status, path).toBe(404);
   expect(
-    (await request("/inboxes", "POST", { name: "New", localPart: "new-inbox" }))
+    (await request("/inboxes", "POST", { name: "New", username: "new-inbox" }))
       .status,
   ).toBe(403);
   expect((await request("/phone-numbers", "POST", {})).status).toBe(403);

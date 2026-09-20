@@ -53,7 +53,7 @@ const send = (
     headers: {
       Authorization: "Bearer fixture",
       "Content-Type": "application/json",
-      "Idempotency-Key": key,
+      ...(path === "/v1/inboxes" ? {} : { "Idempotency-Key": key }),
     },
     body: JSON.stringify(body),
   });
@@ -204,43 +204,83 @@ it("reviews resolved reply recipients and retains approval when a hard limit blo
   });
 });
 
-it("creates an approved inbox once without requiring an agent", async () => {
-  await db.organization.update({
-    where: { id: "org" },
-    data: { requireProvisioningApproval: true },
-  });
-  await db.apiKey.updateMany({ data: { scopes: ["inboxes:write"] } });
-  const input = { name: "Review inbox", localPart: "reviewed" };
-  const pending = await send("/v1/inboxes", input, "inbox");
-  expect(pending.status).toBe(409);
-  const id = (await pending.json()).error.details.approvalId;
-  expect(await db.inbox.count()).toBe(1);
-  expect(await db.operation.count()).toBe(0);
-  expect(
-    (await db.approval.findUniqueOrThrow({ where: { id } })).parameters,
-  ).toMatchObject({ address: "reviewed@example.test", name: input.name });
-  const list = await api.request("http://localhost:3000/v1/approvals", {
-    headers: { Authorization: "Bearer fixture" },
-  });
-  expect(list.status).toBe(200);
-  await decideApproval(db, owner, id, "approved");
-  const created = await Promise.all([
-    send("/v1/inboxes", input, "inbox"),
-    send("/v1/inboxes", input, "inbox"),
-  ]);
-  expect(created.map((r) => r.status)).toEqual([201, 201]);
-  const results = await Promise.all(created.map((r) => r.json()));
-  expect(results.every((body) => inboxSchema.safeParse(body).success)).toBe(
-    true,
-  );
-  expect(results[0].id).toBe(results[1].id);
-  expect(results[0].agentId).toBeNull();
-  expect(await db.inbox.count()).toBe(2);
-  expect((await db.approval.findUniqueOrThrow({ where: { id } })).status).toBe(
-    "consumed",
-  );
-  expect(mock.send).not.toHaveBeenCalled();
-});
+it.each(["Review inbox", undefined])(
+  "creates an approved inbox once with optional name %s and no key",
+  async (name) => {
+    await db.organization.update({
+      where: { id: "org" },
+      data: { requireProvisioningApproval: true },
+    });
+    await db.apiKey.updateMany({ data: { scopes: ["inboxes:write"] } });
+    const input = { ...(name ? { name } : {}), username: "reviewed" };
+    const pending = await send("/v1/inboxes", input, "inbox");
+    expect(pending.status).toBe(409);
+    const id = (await pending.json()).error.details.approvalId;
+    expect(await db.inbox.count()).toBe(1);
+    expect(await db.operation.count()).toBe(0);
+    expect(
+      (await db.approval.findUniqueOrThrow({ where: { id } })).parameters,
+    ).toMatchObject({ address: "reviewed@example.test", ...input });
+    const list = await api.request("http://localhost:3000/v1/approvals", {
+      headers: { Authorization: "Bearer fixture" },
+    });
+    expect(list.status).toBe(200);
+    expect(approvalPageSchema.safeParse(await list.json()).success).toBe(true);
+    await decideApproval(db, owner, id, "approved");
+    const created = await Promise.all([
+      send("/v1/inboxes", input, "inbox"),
+      send("/v1/inboxes", input, "inbox"),
+    ]);
+    expect(created.map((r) => r.status)).toEqual([201, 201]);
+    const results = await Promise.all(created.map((r) => r.json()));
+    expect(results.every((body) => inboxSchema.safeParse(body).success)).toBe(
+      true,
+    );
+    expect(results[0].id).toBe(results[1].id);
+    expect(results[0].name).toEqual(
+      name ?? expect.stringMatching(/^[a-z]+-[a-z]+$/),
+    );
+    expect(results[1].name).toBe(results[0].name);
+    expect(results[0].agentId).toBeNull();
+    expect(await db.inbox.count()).toBe(2);
+    expect(
+      (await db.approval.findUniqueOrThrow({ where: { id } })).status,
+    ).toBe("consumed");
+    expect(mock.send).not.toHaveBeenCalled();
+  },
+);
+
+it.each(["pending", "approved", "denied"])(
+  "handles expired %s keyless inbox approvals",
+  async (status) => {
+    await db.organization.update({
+      where: { id: "org" },
+      data: { requireProvisioningApproval: true },
+    });
+    await db.apiKey.updateMany({ data: { scopes: ["inboxes:write"] } });
+    const input = { username: "expired-review" };
+    const pending = await send("/v1/inboxes", input);
+    const id = (await pending.json()).error.details.approvalId;
+    await db.approval.update({
+      where: { id },
+      data: { status, expiresAt: new Date(0) },
+    });
+    const retry = await send("/v1/inboxes", input);
+    expect(retry.status).toBe(status === "denied" ? 403 : 409);
+    const row = await db.approval.findUniqueOrThrow({ where: { id } });
+    if (status === "denied") {
+      expect(row.status).toBe("denied");
+      expect((await retry.json()).error.code).toBe("approval_denied");
+    } else {
+      expect((await retry.json()).error.code).toBe("approval_required");
+      expect(row.status).toBe("pending");
+      expect(row.expiresAt.getTime()).toBeGreaterThan(Date.now());
+      expect(await db.operation.count()).toBe(0);
+      await decideApproval(db, owner, id, "approved");
+      expect((await send("/v1/inboxes", input)).status).toBe(201);
+    }
+  },
+);
 
 it("returns a terminal failed email replay with HTTP 200 and a typed operation without resending", async () => {
   await db.organization.update({
@@ -493,8 +533,8 @@ it("limits concurrent inbox creation per key and counts idempotent replay once",
   await db.apiKey.updateMany({
     data: { scopes: ["inboxes:write"], dailyInboxLimit: 1 },
   });
-  const create = (localPart: string, key: string) =>
-    send("/v1/inboxes", { name: localPart, localPart }, key);
+  const create = (username: string, key: string) =>
+    send("/v1/inboxes", { name: username, username }, key);
   const results = await Promise.all([
     create("first", "first"),
     create("second", "second"),
@@ -519,7 +559,7 @@ it("does not consume an inbox allowance while waiting for human approval", async
   });
   const response = await send(
     "/v1/inboxes",
-    { name: "Review", localPart: "review" },
+    { name: "Review", username: "review" },
     "review",
   );
   expect(response.status).toBe(409);

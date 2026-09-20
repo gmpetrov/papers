@@ -1700,7 +1700,7 @@
   .passport-code-page .code-example [data-slot="tabs-content"] {
     min-height: 0;
     display: flex;
-    align-items: center;
+    align-items: start;
   }
   .passport-code-page .code-example [data-slot="tabs-content"][hidden] {
     display: none;
@@ -1860,15 +1860,42 @@
 }
 
 @layer design {
+  .credential-type {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    margin-block: 26px;
+    color: var(--ink);
+  }
+  .credential-type__item {
+    flex: 1 1 0;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 8px;
+    padding-block: 9px;
+    font-family: var(--font-mono), "IBM Plex Mono", monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .07em;
+    line-height: 1.3;
+    text-transform: uppercase;
+  }
+  .credential-type__item svg { color: var(--stamp); flex: 0 0 auto; }
+  @media (max-width: 520px) {
+    .credential-type { flex-direction: column; gap: 4px; }
+    .credential-type__item { width: 100%; }
+  }
+
   .credential-summary.credential-ledger { margin-block:26px; }
   .credential-summary.credential-ledger > div { padding-block:16px; }
   .credential-summary.credential-ledger p { color:var(--muted-foreground); }
 
 
-  .credential-summary.credential-ledger { grid-template-columns:1fr; border-block:1px solid var(--rule); }
-  .credential-summary.credential-ledger > div { display:grid; grid-template-columns:120px minmax(0,1fr); gap:16px; align-items:center; padding-inline:0; border:0; border-bottom:1px dashed var(--rule); }
+  .credential-summary.credential-ledger { grid-template-columns:max-content minmax(0,1fr); border-block:1px solid var(--rule); }
+  .credential-summary.credential-ledger > div { display:grid; grid-column:1 / -1; grid-template-columns:subgrid; gap:20px; align-items:center; padding-inline:0; border:0; border-bottom:1px dashed var(--rule); }
   .credential-summary.credential-ledger > div:last-child { border:0; }
-  .credential-summary.credential-ledger strong { font-size:14px; gap:10px; }
+  .credential-summary.credential-ledger strong { font-size:14px; gap:10px; white-space:nowrap; }
   .credential-summary.credential-ledger strong svg { color:var(--stamp); width:20px; height:20px; }
   .credential-summary.credential-ledger p { margin:0; }
 

@@ -96,7 +96,7 @@ async function api<T>(
     method,
     headers: {
       "Content-Type": "application/json",
-      ...(method === "POST"
+      ...(method === "POST" && path !== "/inboxes"
         ? { "Idempotency-Key": idempotencyKey ?? crypto.randomUUID() }
         : {}),
     },
@@ -1528,7 +1528,10 @@ export function Dashboard({
               }
               onSave={async (values, idempotencyKey) => {
                 if (modal === "inboxes")
-                  await api("/inboxes", "POST", values, idempotencyKey);
+                  await api("/inboxes", "POST", {
+                    username: values.username,
+                    ...(values.name?.trim() ? { name: values.name.trim() } : {}),
+                  });
                 if (modal === "api-keys") {
                   const r = await api<{ token: string }>("/api-keys", "POST", {
                     ...values,
@@ -1722,8 +1725,15 @@ function ActionForm({
 }) {
   const shape: Record<string, z.ZodType<string, string>> = kind === "inboxes"
     ? {
-        name: z.string().min(1),
-        localPart: z.string().regex(/^[a-z0-9][a-z0-9._-]{2,40}$/),
+        username: z
+          .string()
+          .trim()
+          .toLowerCase()
+          .regex(
+            /^[a-z0-9][a-z0-9._-]{2,40}$/,
+            "Use 3–41 characters: letters, numbers, dots, underscores or hyphens",
+          ),
+        name: z.string().trim().max(80),
       }
     : kind === "api-keys"
       ? {
@@ -1836,7 +1846,7 @@ function ActionForm({
               {
                 (
                   {
-                    name: "Name",
+                    name: kind === "inboxes" ? "Name (optional)" : "Name",
                     permissionPreset: "Permissions",
                     resourceSelection: "Resource access",
                     phoneManagement: watch("resourceSelection")
@@ -1846,7 +1856,7 @@ function ActionForm({
                     dailyNumberLimit: "Daily number purchase limit (optional)",
                     dailyEmailLimit: "Daily email limit (optional)",
                     dailySmsLimit: "Daily SMS limit (optional)",
-                    localPart: "Address (before @papers.bot)",
+                    username: "Username (before @papers.bot)",
                     email: "Email address",
                     role: "Role",
                     teamId: "Team (optional)",
@@ -1903,7 +1913,30 @@ function ActionForm({
             ) : name === "text" ? (
               <textarea id={name} {...register(name)} />
             ) : (
-              <input id={name} {...register(name)} />
+              <input
+                id={name}
+                aria-describedby={
+                  kind === "inboxes" && name === "name"
+                    ? "inbox-name-hint"
+                    : undefined
+                }
+                placeholder={
+                  kind === "inboxes"
+                    ? name === "name"
+                      ? "e.g. fierce-zebra"
+                      : "e.g. research"
+                    : undefined
+                }
+                {...register(name)}
+              />
+            )}
+            {kind === "inboxes" && name === "name" && (
+              <small
+                id="inbox-name-hint"
+                style={{ color: "var(--muted-foreground)" }}
+              >
+                Leave blank to generate a random name, such as fierce-zebra.
+              </small>
             )}
             {[
               "dailyEmailLimit",

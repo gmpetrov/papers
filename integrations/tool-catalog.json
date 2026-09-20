@@ -120,7 +120,7 @@
     {
       "name": "create_inbox",
       "title": "Create an inbox",
-      "description": "Allocate a persistent address in the workspace. Requires inboxes:write. Reuse idempotencyKey when retrying.",
+      "description": "Allocate a persistent address in the workspace using username (before @). Name is optional; omitted names are randomly generated, such as fierce-zebra. Requires inboxes:write. Retry the same request to retrieve the same inbox; no idempotency key is needed.",
       "inputSchema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
@@ -128,20 +128,15 @@
           "name": {
             "type": "string"
           },
-          "localPart": {
+          "username": {
             "type": "string"
           },
           "agentId": {
             "type": "string"
-          },
-          "idempotencyKey": {
-            "type": "string"
           }
         },
         "required": [
-          "name",
-          "localPart",
-          "idempotencyKey"
+          "username"
         ]
       },
       "annotations": {
@@ -381,7 +376,7 @@
     {
       "name": "list_approvals",
       "title": "List approval requests",
-      "description": "Page through requests belonging to this credential, newest first. Use nextCursor to retrieve older requests. Requires sms:send, email:send, inboxes:write, or numbers:provision. Humans approve in the Papers dashboard; agents cannot approve. After approval, retry the exact original request with the same idempotency key. Approval never overrides quotas or recipient restrictions.",
+      "description": "Page through requests belonging to this credential, newest first. Use nextCursor to retrieve older requests. Requires sms:send, email:send, inboxes:write, or numbers:provision. Humans approve in the Papers dashboard; agents cannot approve. After approval, retry the exact original request. Inbox creation needs no idempotency key; other operations must reuse their original key. Approval never overrides quotas or recipient restrictions.",
       "inputSchema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",

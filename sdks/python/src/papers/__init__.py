@@ -217,7 +217,7 @@ class Papers:
     def __init__(
         self,
         api_key: str,
-        base_url: str = "https://dev.chaindesk.ai",
+        base_url: str = "https://www.papers.bot",
         timeout: float = 15,
         *,
         transport: httpx.BaseTransport | None = None,
@@ -383,9 +383,8 @@ class Papers:
     def create_inbox(
         self,
         *,
-        name: str,
-        local_part: str,
-        idempotency_key: str,
+        username: str,
+        name: str | None = None,
         agent_id: str | None = None,
     ):
         return Inbox.model_validate(
@@ -393,11 +392,10 @@ class Papers:
                 self._http.post(
                     "inboxes",
                     json={
-                        "name": name,
-                        "localPart": local_part,
+                        "username": username,
+                        **({"name": name} if name is not None else {}),
                         **({"agentId": agent_id} if agent_id else {}),
                     },
-                    headers={"Idempotency-Key": idempotency_key},
                 )
             )
         )
@@ -502,7 +500,7 @@ class AsyncPapers:
     def __init__(
         self,
         api_key: str,
-        base_url: str = "https://dev.chaindesk.ai",
+        base_url: str = "https://www.papers.bot",
         timeout: float = 15,
         *,
         transport: httpx.AsyncBaseTransport | None = None,
@@ -677,9 +675,8 @@ class AsyncPapers:
     async def create_inbox(
         self,
         *,
-        name: str,
-        local_part: str,
-        idempotency_key: str,
+        username: str,
+        name: str | None = None,
         agent_id: str | None = None,
     ):
         return Inbox.model_validate(
@@ -687,11 +684,10 @@ class AsyncPapers:
                 await self._http.post(
                     "inboxes",
                     json={
-                        "name": name,
-                        "localPart": local_part,
+                        "username": username,
+                        **({"name": name} if name is not None else {}),
                         **({"agentId": agent_id} if agent_id else {}),
                     },
-                    headers={"Idempotency-Key": idempotency_key},
                 )
             )
         )
