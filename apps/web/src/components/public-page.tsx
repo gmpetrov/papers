@@ -16,11 +16,8 @@ export function PublicNav() {
         <Link href="/docs">Docs</Link>
       </div>
       <div className="nav-actions">
-        <Link className="nav-signin" href="/login">
-          Sign in
-        </Link>
         <Link className="button small" href="/login">
-          Get papers <ArrowRight size={15} />
+          Sign In <ArrowRight size={15} />
         </Link>
       </div>
     </nav>

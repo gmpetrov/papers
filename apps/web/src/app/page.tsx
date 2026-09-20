@@ -22,7 +22,7 @@ import { Guilloche, Stamp } from '@/components/design-system/paper';
 const credentials = [
   {
     title: 'An inbox of its own.',
-    label: 'Inbox',
+    label: 'Email Inbox',
     icon: Mail,
     href: '/email',
     description: 'Send, receive, and reply from one persistent address.',
@@ -39,7 +39,7 @@ const credentials = [
   },
   {
     title: 'A direct line.',
-    label: 'Number',
+    label: 'Phone Number',
     icon: Phone,
     href: '/phone',
     description: 'A dedicated number for two-way text conversations.',
@@ -55,8 +55,8 @@ const credentials = [
     ],
   },
   {
-    title: 'A card of its own.',
-    label: 'Credit Card',
+    title: 'A way to pay.',
+    label: 'Payment Card',
     icon: CreditCard,
     href: '/email',
     description: 'A way to pay. Credit cards are on the roadmap.',
@@ -150,7 +150,7 @@ export default function Landing() {
             </div>
             <div className="papers-actions">
               <Link href="/login" className={buttonVariants({ size: 'lg' })}>
-                Create your workspace <ArrowRight />
+                Start for free <ArrowRight />
               </Link>
               <Link
                 href="/docs"
@@ -198,14 +198,10 @@ export default function Landing() {
         <section className="papers-section" id="papers">
           <div className="papers-section-intro">
             <h2>
-              Their own tools.
+              All the tools your agent needs
               <br />
-              <em>Your workspace.</em>
+              <em>to be fully autonomous.</em>
             </h2>
-            <p>
-              Start with email and SMS. Credit cards are on the roadmap. You own
-              the resources and decide what your agent can do.
-            </p>
           </div>
           <div className="credential-grid">
             {credentials.map(
@@ -231,12 +227,12 @@ export default function Landing() {
                         <li key={detail}>{detail}</li>
                       ))}
                     </ul>
-                    <Link href={href}>
+                    {/* <Link href={href}>
                       {label === 'Credit Card'
                         ? 'Start with an inbox'
                         : `Explore ${label.toLowerCase()}`}{' '}
                       <ArrowUpRight size={14} />
-                    </Link>
+                    </Link> */}
                   </div>
                   <dl>
                     {facts.map(([name, value]) => (
@@ -255,9 +251,9 @@ export default function Landing() {
         <section className="papers-section papers-how" id="quickstart">
           <div>
             <h2>
-              From setup
+              Emails, SMS, and Payments
               <br />
-              <em>to first message.</em>
+              <em>in one paste.</em>
             </h2>
             <ol className="paper-steps">
               <li>
@@ -296,7 +292,7 @@ export default function Landing() {
             </div>
           </div>
         </section>
-        <section className="papers-section papers-controls">
+        {/* <section className="papers-section papers-controls">
           <div className="papers-section-intro">
             <h2>
               Room to act.
@@ -349,7 +345,7 @@ export default function Landing() {
               );
             })}
           </div>
-        </section>
+        </section> */}
         <section className="papers-final">
           <Guilloche />
           <div>

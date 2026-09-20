@@ -9,7 +9,7 @@ const titles = [
   'Identity API',
   'Papers',
 ] as const;
-const cycleDelay = 5400;
+const cycleDelay = 2300;
 // Deterministic positions keep server rendering and hydration identical.
 const particles = Array.from({ length: 42 }, (_, index) => {
   const progress = index / 41;
