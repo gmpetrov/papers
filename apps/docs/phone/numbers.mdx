@@ -1,0 +1,39 @@
+---
+title: "Phone numbers"
+description: "Rent a US number and manage its lifecycle."
+---
+
+Phone numbers belong to your workspace. A paid plan and a separate number rental are required for self-service activation.
+
+## Rent a number
+
+1. Open **Phone numbers** in the [dashboard](https://www.papers.bot/dashboard/numbers).
+2. Search the available standard US numbers and select one.
+3. Review the monthly rental, then complete checkout as the workspace owner.
+4. Wait for provisioning to complete before sending messages.
+
+Papers rechecks inventory after payment. An abandoned checkout does not provision a number. If the selected number is definitively unavailable, the rental is cancelled and its payment is refunded. An uncertain provisioning result stays pending for reconciliation.
+
+See [billing](/workspace/billing) for rental and messaging charges.
+
+## Read numbers through the API
+
+`numbers:read` permits:
+
+- `GET /v1/phone-numbers` to list assigned numbers and onboarding status.
+- `GET /v1/phone-numbers/{id}` to read one number.
+- `GET /v1/phone-numbers/available?country=US` to search inventory.
+
+Number lists accept `cursor` and `limit` (1–100, default 100). Inventory search returns at most ten candidates with no cursor. Availability can change before checkout.
+
+`POST /v1/phone-numbers` assigns an existing paid rental and requires `numbers:provision` plus an idempotency key. New rentals are purchased through the owner checkout flow; an API key cannot create a billing checkout.
+
+## Release a number
+
+`DELETE /v1/phone-numbers/{id}` requires `numbers:release` and an `Idempotency-Key`. Poll the returned operation until it reaches a terminal status.
+
+<Warning>
+Releasing a number is permanent. You may not be able to get it back. Update any accounts or services that depend on it before release.
+</Warning>
+
+Cancelled rentals release their number after the paid period. Unpaid rentals are suspended and may be released after seven days without paid coverage.

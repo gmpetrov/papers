@@ -1,0 +1,45 @@
+---
+title: "Permissions"
+description: "Limit each connection to the actions and resources it needs."
+---
+
+Scopes and resource grants are separate. A scope permits an action; a resource grant limits where it can run. Workspace policy and the user's role can further restrict both.
+
+## Scopes
+
+| Scope | Access |
+| --- | --- |
+| `inboxes:read` | Read inboxes, email, and email attachments. |
+| `inboxes:write` | Create inboxes, archive or reactivate them, and update unread state. |
+| `email:send` | Send email and replies. |
+| `numbers:read` | List assigned numbers and search inventory. |
+| `numbers:provision` | Assign a number to an eligible paid rental. |
+| `numbers:release` | Permanently release a number. |
+| `sms:read` | Read phone messages. |
+| `sms:send` | Send text messages. |
+| `events:read` | Read the activity feed. |
+
+Legacy `agents:read` and `agents:write` scopes also exist. New integrations do not need an agent record.
+
+## Resource selection
+
+Choose workspace-wide access or selected inboxes and phone numbers when creating a key or authorizing OAuth. Selected-resource credentials cannot create inboxes or provision new numbers. They can act on selected existing resources when their scopes permit it.
+
+An empty selection grants no resource access. Up to 100 IDs of each resource type can be selected. Requests outside that selection return not found.
+
+For API-key creation, `resourceGrants` uses this shape:
+
+```json
+{
+  "inboxIds": ["INBOX_ID"],
+  "phoneNumberIds": []
+}
+```
+
+Omitting grants gives workspace-wide resource access within the scopes. An explicit empty object does not mean unrestricted access.
+
+## Human administration
+
+Owners and admins manage API keys, webhook endpoints, and approval decisions through the dashboard. Workspace policy and billing changes require the owner. Delegated credentials cannot approve their own actions or raise workspace limits.
+
+To change resource selection, replace the API key or revoke and reconnect the OAuth connection. Revoking a connection also revokes its access and refresh tokens.

@@ -1,0 +1,31 @@
+---
+title: "Webhooks"
+description: "Receive signed notifications for email, SMS, and resource changes."
+---
+
+Webhooks notify your application when events occur in Papers. The payload identifies the event and resource; retrieve message contents through the authenticated API.
+
+## Set up an endpoint
+
+1. Open **Integrations** in the dashboard as an owner or admin.
+2. Create a webhook endpoint with a name, public HTTPS URL, and event types.
+3. Save the signing secret in your receiver's secret store. It is shown once.
+4. Implement [signature verification](/webhooks/verification), then enable the endpoint.
+
+New endpoints start disabled. Enabling an endpoint subscribes to future events; it does not replay history. A workspace can have up to 20 endpoints.
+
+The URL must use a public DNS hostname and HTTPS, without credentials, a fragment, or a custom port. Redirects are not followed.
+
+## Handle delivery
+
+Verify the signature against the original request body. Validate the event, save its `webhook-id` for deduplication, and queue processing before returning a `2xx` response.
+
+Papers can deliver the same notification more than once. Retries keep the delivery ID and payload unchanged, with a fresh signature timestamp. Every non-`2xx` response counts as a failed attempt, including redirects. Requests time out after ten seconds.
+
+There are up to eight attempts, with exponential backoff starting at 30 seconds. View delivery history and attempt statuses under the endpoint in **Integrations**.
+
+## Change an endpoint
+
+Disabling an endpoint or changing its URL cancels waiting deliveries. A request already in flight may still finish. Re-enabling does not replay cancelled notifications.
+
+Rotating the secret shows the new value once. Both old and new secrets remain valid during a one-hour overlap. Update your receiver during that window.

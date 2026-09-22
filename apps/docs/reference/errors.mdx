@@ -1,0 +1,28 @@
+---
+title: "Errors"
+description: "Read error codes and choose the right next step."
+---
+
+API failures return an `error` object with a code and message. SDK exceptions also expose the HTTP status, request ID, retryability, and optional details.
+
+| Code | What to do |
+| --- | --- |
+| `validation_error` | Correct the fields listed in `error.details` before retrying. |
+| `unauthorized` | Check that the credential is valid, unexpired, and intended for this API audience. |
+| `approval_required` | Have an owner or admin review `error.details.approvalId`, then retry the same action after approval. |
+| `quota_exceeded` | Inspect the applicable daily or resource limit. |
+| `rate_limited` | Wait for the `Retry-After` delay. |
+| `invalid_cursor` | Restart the resource listing with a cursor accessible to this credential. |
+| `phone_rental_required` | Have the owner purchase an eligible phone rental in the dashboard. |
+
+## Validation details
+
+For `validation_error`, `details` is an array of issues with `code`, `path`, and `message`. A path can include an array index, such as `["to", 0]`.
+
+For `approval_required`, `details` is an object containing `approvalId`. Check the code before interpreting the details.
+
+## Retry carefully
+
+A `retryable` flag is a hint, not evidence that a previous mutation was rejected. Keep the original idempotency key and payload when retrying. For `pending` or `unknown` operations, follow [operation handling](/reference/operations).
+
+When reporting a failure, include the request ID and error code. Do not include API keys, signing secrets, or temporary attachment URLs.

@@ -1,0 +1,39 @@
+---
+title: "API basics"
+description: "Base URL, authentication, pagination, and response handling."
+---
+
+The API base URL is:
+
+```text
+https://www.papers.bot/v1
+```
+
+Use Bearer authentication and `Content-Type: application/json` for JSON bodies. The [OpenAPI document](https://www.papers.bot/openapi.json) describes endpoint parameters and request schemas.
+
+The documentation lives at `/docs`; API calls do not use that prefix.
+
+## Responses
+
+Resource creation can return a resource directly. Email sends and phone operations return an operation ID and `statusUrl`. Use the returned shape rather than assuming every mutation returns the created message.
+
+Message lists contain summaries. Retrieve an individual message to read its text and attachments.
+
+## Pagination
+
+Lists use `cursor`, `limit`, `data`, and `nextCursor`. Treat cursor values as opaque.
+
+| List | Order | Default limit |
+| --- | --- | ---: |
+| Inboxes and phone numbers | Newest first | 100 |
+| Email and SMS messages | Newest first | 25 |
+| Approvals | Newest first | 25 |
+| Events | Oldest first | 25 |
+
+The maximum page size is 100. For resource lists, stop when `nextCursor` is null. A deleted or inaccessible cursor can return `invalid_cursor`; restart the listing if needed.
+
+Events use a different checkpoint rule: preserve your last cursor when an empty poll returns null. See [event polling](/webhooks/events).
+
+## Administration
+
+API keys and delegated OAuth cover resource operations. Billing, key administration, webhook configuration, and approval decisions require an authorized human session. The endpoint reference identifies these restrictions; a broader API-key scope does not bypass them.

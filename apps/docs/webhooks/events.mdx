@@ -1,0 +1,32 @@
+---
+title: "Events and polling"
+description: "Subscribe to message events or resume polling from a saved cursor."
+---
+
+## Event types
+
+| Events | Resource |
+| --- | --- |
+| `email.received`, `email.sent`, `email.delivered`, `email.bounced`, `email.complained`, `email.failed`, `email.suppressed` | Email message |
+| `sms.received`, `sms.queued`, `sms.sent`, `sms.delivered`, `sms.failed` | SMS message |
+| `inbox.created`, `inbox.archived`, `inbox.reactivated` | Inbox |
+| `number.activated`, `number.released` | Phone number |
+
+An event includes its ID, type, resource ID, and creation time. For `email.received`, fetch `resourceId` with `GET /v1/messages/{id}`. For `sms.received`, use `GET /v1/sms/{id}`. The credential needs the corresponding read scope.
+
+## Poll events
+
+`GET /v1/events` requires `events:read` and returns events oldest first. Resource grants also filter the feed.
+
+```bash
+curl --get "https://www.papers.bot/v1/events" \
+  -H "Authorization: Bearer $PAPERS_API_KEY" \
+  --data-urlencode "limit=25" \
+  --data-urlencode "cursor=LAST_PROCESSED_EVENT_ID"
+```
+
+Omit `cursor` on the first request to start at the earliest retained event. Limits range from 1 to 100, with a default of 25.
+
+Process each event, then persist its ID. On a nonempty page, `nextCursor` is a checkpoint even if no more events are currently available. On an empty page, keep the previous checkpoint even though `nextCursor` is null.
+
+Deduplicate by event ID after a restart. Wait between empty polls and back off on errors. The SDK iterators and MCP `list_events` read available events; they do not subscribe in the background.

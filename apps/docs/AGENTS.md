@@ -1,33 +1,13 @@
-> **First-time setup**: Customize this file for your project. Prompt the user to customize this file for their project.
-> For Mintlify product knowledge (components, configuration, writing standards),
-> install the Mintlify skill: `npx skills add https://mintlify.com/docs`
+# Papers documentation
 
-# Documentation project instructions
+This Mintlify site documents the customer-facing Papers product at https://www.papers.bot/docs.
 
-## About this project
-
-- This is a documentation site built on [Mintlify](https://mintlify.com)
-- Pages are MDX files with YAML frontmatter
-- Configuration lives in `docs.json`
-- Run `mint dev` to preview locally
-- Run `mint broken-links` to check links
-
-## Terminology
-
-{/* Add product-specific terms and preferred usage */}
-{/* Example: Use "workspace" not "project", "member" not "user" */}
-
-## Style preferences
-
-{/* Add any project-specific style rules below */}
-
-- Use active voice and second person ("you")
-- Keep sentences concise — one idea per sentence
-- Use sentence case for headings
-- Bold for UI elements: Click **Settings**
-- Code formatting for file names, commands, paths, and code references
-
-## Content boundaries
-
-{/* Define what should and shouldn't be documented */}
-{/* Example: Don't document internal admin features */}
+- Use workspace, inbox, phone number, API key, connection, operation, and approval consistently. No agent registration is needed for new integrations.
+- Verify behavior against packages/contracts, packages/core, the SDKs, and the dashboard. Internal docs may describe older behavior or deployment history.
+- Write short, direct sentences. Explain the action, required permission, result, and relevant failure behavior. Avoid promotional filler.
+- Use production URLs in examples. Keep example credentials as placeholders and never include private configuration, customer data, provider secrets, or operational account IDs.
+- Do not describe planned features as available. Custom domains, voice, and self-service MMS are not currently offered.
+- Preserve idempotency keys across retries. Explain provider acceptance separately from delivery. Approval permits a retry; it does not execute an action.
+- Use standard Mintlify components and inherited typography. Do not reintroduce starter graphics, unrelated product features, or font-serif card overrides.
+- Regenerate the API reference with pnpm docs:openapi after contract changes. Do not edit openapi.json by hand.
+- Run mint validate and mint broken-links from apps/docs. Preview using mint dev --port 3002 --no-open.

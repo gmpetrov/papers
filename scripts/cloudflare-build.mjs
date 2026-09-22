@@ -7,7 +7,6 @@ const env = {
   BETTER_AUTH_URL: "https://www.papers.bot",
   MINTLIFY_DOCS_ORIGIN:
     process.env.MINTLIFY_DOCS_ORIGIN || "https://papers.mintlify.site",
-  MINTLIFY_DOCS_BASE_PATH: process.env.MINTLIFY_DOCS_BASE_PATH || "/docs",
 };
 const run = (args) => execFileSync("pnpm", args, { stdio: "inherit", env });
 run(["db:generate"]);

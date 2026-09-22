@@ -1,0 +1,29 @@
+---
+title: "Operations and idempotency"
+description: "Retry actions without sending or provisioning twice."
+---
+
+Email sends, replies, SMS sends, number provisioning, and number release require an `Idempotency-Key` header. Use one unique key per logical action and save it with the request.
+
+```http
+Idempotency-Key: research-summary-2026-09-22
+```
+
+Retry an identical request with its original key. Reusing a key with changed input returns a conflict. Attachment bytes are part of the input. A replay returns the original operation instead of executing it again.
+
+Inbox creation is different: repeat the same body and credential without an idempotency key.
+
+## Poll the outcome
+
+A send or number operation returns an ID and `statusUrl`. Read that URL using the same credential and workspace, or call `GET /v1/operations/{id}`.
+
+| Status | Next step |
+| --- | --- |
+| `pending` | Poll again after a delay. |
+| `unknown` | Acceptance is uncertain. Keep the original key and poll; do not submit a replacement action. |
+| `completed` | The action completed. For sends, check message delivery status separately. |
+| `failed` | Read the error before deciding whether a new action is appropriate. Replaying the same key will not execute it again. |
+
+HTTP `202` indicates a pending or unknown operation. First accepted email and SMS sends return `201`. A terminal replay returns `200`, which can include a failed operation: inspect `status`, not just the HTTP code.
+
+Network failures and timeouts do not prove that an action failed. If you lose a response, retry the same request with the same key to recover its result. Neither SDK retries automatically.

@@ -1,0 +1,46 @@
+---
+title: "CLI"
+description: "Run Papers commands and a local MCP adapter from source."
+---
+
+The CLI is currently available from the repository, not as a published npm package. It requires Node.js 22 or newer and the repository's pnpm toolchain.
+
+From a checkout of the repository:
+
+```bash
+pnpm install
+pnpm --filter @agentinfra/cli build
+export PAPERS_BASE_URL="https://www.papers.bot"
+node packages/cli/dist/index.js login
+node packages/cli/dist/index.js whoami
+node packages/cli/dist/index.js inboxes list --limit 25
+```
+
+Set `PAPERS_BASE_URL` explicitly: the current source CLI otherwise defaults to the development origin. Browser login uses OAuth. Alternatively, set `PAPERS_API_KEY`; an environment key takes precedence over saved login credentials.
+
+Use command-specific `--help` for arguments.
+
+## Wait for an operation
+
+```bash
+node packages/cli/dist/index.js operations wait OPERATION_ID --timeout 120 --interval 2
+```
+
+This polls without repeating the action. A failed operation or timeout exits with status 1.
+
+## Watch events
+
+```bash
+node packages/cli/dist/index.js events watch --interval 2
+node packages/cli/dist/index.js events watch --cursor LAST_PROCESSED_EVENT_ID
+```
+
+Each output line contains an event and its cursor. Save the cursor after processing so you can resume after a restart. Without a cursor, the command starts at the earliest retained event.
+
+## Local MCP
+
+Use `node packages/cli/dist/index.js mcp` as the stdio command and inherit `PAPERS_BASE_URL` plus your authentication environment. The adapter calls the REST API with the same permissions as the CLI.
+
+## Log out
+
+`node packages/cli/dist/index.js logout` revokes saved OAuth credentials and removes the local file. It does not revoke an environment API key. Use **API keys** in the dashboard for that.

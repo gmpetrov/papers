@@ -1,0 +1,28 @@
+---
+title: "Approvals"
+description: "Require human review before an agent sends or creates resources."
+---
+
+The workspace owner can require approvals for email, SMS, and resource provisioning under **Organization → Workspace limits**. Owners and admins review requests under **Approvals**.
+
+## Handle an approval request
+
+A delegated action that needs review returns HTTP `409` with code `approval_required`. Its `error.details.approvalId` identifies the request.
+
+1. Save the original request body and idempotency key.
+2. Ask an owner or admin to review the request in Papers.
+3. After approval, retry the exact action with the same credential, body, and key.
+
+Inbox creation does not require an idempotency key; repeat the same body and credential.
+
+Approval does not execute the action. It permits the original caller to retry. Current scopes, resource access, limits, and availability are checked again.
+
+## What is reviewed
+
+Email requests show the sender, resolved recipients, subject, and text. Reply approvals show the actual reply destination. Attachments are bound to the approved request, including their bytes. Number requests identify the number and costs.
+
+Approvals expire after 24 hours. Changed parameters or workspace policy can require a new decision. Do not retry a denied action under a different credential to bypass the decision.
+
+## Read requests programmatically
+
+`GET /v1/approvals` returns requests visible to the caller, newest first. It accepts `cursor` and `limit` (default 25, maximum 100). API keys and OAuth connections can read only their own requests with an applicable action scope; they cannot approve or deny them.

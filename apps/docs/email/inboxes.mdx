@@ -1,0 +1,43 @@
+---
+title: "Inboxes"
+description: "Create, list, archive, and reactivate email inboxes."
+---
+
+An inbox is an email address owned by your workspace. You do not need to register an agent before creating one.
+
+## Create an inbox
+
+Call `POST /v1/inboxes` with `inboxes:write`:
+
+```json
+{"username":"research-assistant","name":"Research"}
+```
+
+Usernames are 3–41 characters: lowercase letters, digits, periods, underscores, and hyphens, starting with a letter or digit. The server normalizes uppercase letters and supplies the domain. `name` is optional; Papers generates a readable name when omitted.
+
+The response includes `id` and `address`. Repeating the same request with the same credential returns the original inbox. No `Idempotency-Key` is required.
+
+Creating an inbox requires workspace capacity and any applicable daily creation allowance. A credential restricted to selected resources cannot create new inboxes.
+
+## List and read
+
+- `GET /v1/inboxes` lists accessible inboxes.
+- `GET /v1/inboxes/{id}` reads one inbox.
+
+Both require `inboxes:read`. Lists accept `cursor` and `limit` (1–100, default 100). Follow `nextCursor` until null.
+
+## Archive an inbox
+
+Use `PATCH /v1/inboxes/{id}` with `inboxes:write`:
+
+```json
+{"status":"archived"}
+```
+
+Archiving stops new sends and storage of incoming messages. Existing history stays readable, the address stays reserved, and an active-inbox slot is freed.
+
+To reactivate, send `{"status":"active"}`. Reactivation requires available capacity. Messages received while archived are not backfilled. Repeating the current status is safe and needs no idempotency key.
+
+## Domains
+
+Papers assigns addresses on its configured email domain. Custom sending domains are not currently available in self-service.

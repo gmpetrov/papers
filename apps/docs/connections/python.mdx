@@ -1,0 +1,52 @@
+---
+title: "Python SDK"
+description: "Use synchronous or asynchronous Python clients."
+---
+
+```bash
+pip install papers-bot
+```
+
+The package is `papers-bot`; the import is `papers`.
+
+```python
+import os
+from papers import Papers
+
+with Papers(os.environ["PAPERS_API_KEY"]) as papers:
+    inbox = papers.create_inbox(username="research-assistant")
+    print(inbox.id, inbox.address)
+    operation = papers.send_email(
+        inbox.id,
+        to=["you@example.com"],
+        subject="Hello",
+        text="My inbox is ready.",
+        idempotency_key="first-email-001",
+    )
+    print(operation)
+```
+
+Use a recipient you control. The default origin is `https://www.papers.bot`; a custom `base_url` must omit `/v1`. Use the context manager or call `close()` to release the client.
+
+## Async client
+
+```python
+import asyncio
+import os
+from papers import AsyncPapers
+
+async def main():
+    async with AsyncPapers(os.environ["PAPERS_API_KEY"]) as papers:
+        async for inbox in papers.iter_inboxes(limit=25):
+            print(inbox.address)
+
+asyncio.run(main())
+```
+
+Both clients provide inbox, email, number, SMS, attachment, operation, approval, and event methods. Iterators stop when available pages are exhausted; they do not poll continuously.
+
+## Errors and retries
+
+API errors raise `PapersError` with `status`, `code`, `request_id`, `details`, `retryable`, and `retry_after_seconds`. Network errors remain `httpx` exceptions.
+
+The client does not automatically retry. For sends and number operations, reuse `idempotency_key` for the same action. Check `get_operation(id)` if a response is pending or unknown.

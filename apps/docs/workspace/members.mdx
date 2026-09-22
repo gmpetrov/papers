@@ -1,0 +1,24 @@
+---
+title: "Members and teams"
+description: "Invite people to your workspace and manage their roles."
+---
+
+## Invite a member
+
+Open **Organization** in the dashboard, then select **Invite member** under **Workspace members**. Enter an email address, choose Member or Admin, and optionally select a team. Invitations are subject to the plan's member allowance.
+
+The recipient follows the invitation link and signs in to accept. Owners and admins can resend or cancel pending invitations from the same page.
+
+## Roles
+
+- **Owner:** controls billing and workspace policy, and can manage administrative access.
+- **Admin:** manages members, API keys, webhooks, and approval decisions. Cannot change owner-only billing or workspace limits.
+- **Member:** has restricted workspace access and cannot perform administrative actions.
+
+Use the role selector in **Workspace members** to change a role. Only an owner can assign the Owner role. Owners and admins can remove eligible members from the list.
+
+API keys and OAuth connections depend on the issuing user's current membership. Removing that access also stops credentials that rely on it.
+
+## Teams
+
+Under **Teams**, create a team and add workspace members. Teams organize people; use [resource grants](/workspace/permissions#resource-selection) to restrict which inboxes and phone numbers an integration can access.

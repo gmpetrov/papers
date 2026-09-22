@@ -2,102 +2,143 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "almond",
   "name": "Papers",
-  "description": "Step-by-step guides for every product—platform setup, analytics, and integrations in one place.",
+  "description": "Email and SMS for agents. API guides, SDKs, permissions, and webhooks.",
   "colors": {
     "primary": "#166E3F",
     "light": "#26BD6C",
     "dark": "#166E3F"
   },
-  "favicon": "/favicon.ico",
+  "favicon": "/favicon.svg",
   "icons": {
     "library": "lucide"
-  },
-  "styling": {
-    "eyebrows": "breadcrumbs"
-  },
-  "contextual": {
-    "options": [
-      "copy",
-      "view",
-      "assistant",
-      "mcp",
-      "add-mcp"
-    ]
-  },
-  "navigation": {
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Home",
-          "icon": "house",
-          "href": "/"
-        },
-        {
-          "anchor": "Changelog",
-          "icon": "scroll-text",
-          "href": "https://www.mintlify.com/docs/changelog"
-        },
-        {
-          "anchor": "Help",
-          "icon": "life-buoy",
-          "href": "https://www.mintlify.com/docs/contact-support"
-        }
-      ]
-    },
-    "directory": "card",
-    "groups": [
-      {
-        "group": "Platform",
-        "icon": "layers",
-        "expanded": true,
-        "pages": [
-          "platform/quickstart",
-          "platform/key-concepts",
-          "platform/configuration/settings",
-          "platform/configuration/user-management",
-          "platform/administration/roles-permissions"
-        ]
-      },
-      {
-        "group": "Analytics",
-        "icon": "chart-bar",
-        "expanded": true,
-        "pages": [
-          "analytics/quickstart",
-          "analytics/connect-data",
-          "analytics/dashboards/create-dashboard",
-          "analytics/reports/scheduled-reports"
-        ]
-      },
-      {
-        "group": "Integrations",
-        "icon": "plug",
-        "expanded": true,
-        "pages": [
-          "integrations/quickstart",
-          "integrations/authentication",
-          "integrations/connectors/crm",
-          "integrations/webhooks/configure"
-        ]
-      }
-    ]
   },
   "logo": {
     "light": "/logo/light.svg",
     "dark": "/logo/dark.svg"
   },
   "navbar": {
-    "links": [],
+    "links": [
+      {
+        "label": "Pricing",
+        "href": "https://www.papers.bot/pricing"
+      }
+    ],
     "primary": {
       "type": "button",
       "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
+      "href": "https://www.papers.bot/dashboard"
     }
   },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/yourcompany",
-      "linkedin": "https://linkedin.com/company/yourcompany"
+  "contextual": {
+    "options": [
+      "copy",
+      "view"
+    ]
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Guides",
+        "groups": [
+          {
+            "group": "Get started",
+            "pages": [
+              "index",
+              "quickstart",
+              "authentication"
+            ]
+          },
+          {
+            "group": "Email",
+            "pages": [
+              "email/inboxes",
+              "email/messages",
+              "email/threads",
+              "email/attachments"
+            ]
+          },
+          {
+            "group": "Phone and SMS",
+            "pages": [
+              "phone/numbers",
+              "phone/sms"
+            ]
+          },
+          {
+            "group": "Connect your agent",
+            "pages": [
+              "connections/typescript",
+              "connections/python",
+              "connections/mcp",
+              "connections/cli"
+            ]
+          },
+          {
+            "group": "Webhooks and events",
+            "pages": [
+              "webhooks/overview",
+              "webhooks/verification",
+              "webhooks/events"
+            ]
+          },
+          {
+            "group": "Workspace",
+            "pages": [
+              "workspace/members",
+              "workspace/permissions",
+              "workspace/approvals",
+              "workspace/limits",
+              "workspace/billing"
+            ]
+          },
+          {
+            "group": "Reference",
+            "pages": [
+              "reference/api-basics",
+              "reference/operations",
+              "reference/errors"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API reference",
+        "openapi": "openapi.json"
+      }
+    ]
+  },
+  "redirects": [
+    {
+      "source": "/platform/quickstart",
+      "destination": "/quickstart"
+    },
+    {
+      "source": "/platform/key-concepts",
+      "destination": "/index"
+    },
+    {
+      "source": "/platform/configuration/settings",
+      "destination": "/workspace/limits"
+    },
+    {
+      "source": "/platform/configuration/user-management",
+      "destination": "/workspace/members"
+    },
+    {
+      "source": "/platform/administration/roles-permissions",
+      "destination": "/workspace/permissions"
+    },
+    {
+      "source": "/integrations/quickstart",
+      "destination": "/connections/mcp"
+    },
+    {
+      "source": "/integrations/authentication",
+      "destination": "/authentication"
+    },
+    {
+      "source": "/integrations/webhooks/configure",
+      "destination": "/webhooks/overview"
     }
-  }
+  ]
 }

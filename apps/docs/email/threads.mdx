@@ -1,0 +1,19 @@
+---
+title: "Threads"
+description: "Follow conversations without matching on subject lines."
+---
+
+Messages include a `threadId`. Papers groups incoming messages using their `In-Reply-To` and `References` headers within the same inbox. A matching subject alone does not join messages into a thread.
+
+Filter the inbox message list to one conversation:
+
+```bash
+curl --get "https://www.papers.bot/v1/inboxes/INBOX_ID/messages" \
+  -H "Authorization: Bearer $PAPERS_API_KEY" \
+  --data-urlencode "threadId=THREAD_ID" \
+  --data-urlencode "limit=25"
+```
+
+Follow `nextCursor` to read additional pages. Fetch individual messages for their full content.
+
+Use the [reply endpoint](/email/messages#reply) to preserve the conversation. It sets reply headers when the parent's email Message-ID is available. If that identifier has not arrived yet, Papers keeps its internal thread, but an external mail client may show a separate conversation.

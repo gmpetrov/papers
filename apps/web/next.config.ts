@@ -8,16 +8,11 @@ if (process.env.NODE_ENV === "development") {
   });
 }
 
-const mintlifyDocsOrigin = (
-  process.env.MINTLIFY_DOCS_ORIGIN ??
-  (process.env.NODE_ENV === "development" ? "http://127.0.0.1:3001" : "")
-).replace(/\/$/, "");
-const mintlifyDocsIsLocal = /^https?:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?$/.test(
-  mintlifyDocsOrigin,
-);
-const mintlifyDocsBasePath = (
-  process.env.MINTLIFY_DOCS_BASE_PATH ?? (mintlifyDocsIsLocal ? "" : "/docs")
-).replace(/\/$/, "");
+// Rewrites are baked into the build. The upstream Mintlify deployment must
+// also use /docs as its base path so navigation and assets keep this prefix.
+const mintlifyDocsOrigin = (process.env.MINTLIFY_DOCS_ORIGIN ?? "")
+  .trim()
+  .replace(/\/$/, "");
 
 const config: NextConfig = {
   async rewrites() {
@@ -28,6 +23,10 @@ const config: NextConfig = {
     return {
       beforeFiles: [
         {
+          source: "/.well-known/vercel/:path*",
+          destination: `${mintlifyDocsOrigin}/.well-known/vercel/:path*`,
+        },
+        {
           source: "/_mintlify/:path*",
           destination: `${mintlifyDocsOrigin}/_mintlify/:path*`,
         },
@@ -37,38 +36,19 @@ const config: NextConfig = {
         },
         {
           source: "/docs",
-          destination: `${mintlifyDocsOrigin}${mintlifyDocsBasePath || "/"}`,
+          destination: `${mintlifyDocsOrigin}/docs`,
         },
         {
           source: "/docs/:path*",
-          destination: `${mintlifyDocsOrigin}${mintlifyDocsBasePath}/:path*`,
+          destination: `${mintlifyDocsOrigin}/docs/:path*`,
         },
         {
           source: "/mintlify-assets/:path*",
           destination: `${mintlifyDocsOrigin}/mintlify-assets/:path*`,
         },
-        ...(mintlifyDocsIsLocal
-          ? [
-              {
-                source: "/logo/:path*",
-                destination: `${mintlifyDocsOrigin}/logo/:path*`,
-              },
-              {
-                source: "/favicons/:path*",
-                destination: `${mintlifyDocsOrigin}/favicons/:path*`,
-              },
-            ]
-          : []),
       ],
       afterFiles: [],
-      fallback: mintlifyDocsIsLocal
-        ? [
-            {
-              source: "/_next/:path*",
-              destination: `${mintlifyDocsOrigin}/_next/:path*`,
-            },
-          ]
-        : [],
+      fallback: [],
     };
   },
   outputFileTracingIncludes: {

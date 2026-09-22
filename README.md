@@ -22,7 +22,18 @@ through Turborepo. Python dependencies are locked in `sdks/python/uv.lock`.
 
 `pnpm dev` starts both Next.js and the background jobs process, which processes incoming mail and Stripe billing events. Next.js listens on port 3000; the existing development tunnel points `https://dev.chaindesk.ai` there. PostgreSQL runs locally on port 55433. Use `pnpm jobs` only when running the web app separately. Restart `pnpm dev` after editing `.env`; Turbo explicitly forwards the billing and provider variables listed in `turbo.json`.
 
-Run `mint dev --port 3001 --no-open` from `apps/docs` for a live local authoring preview. Set `MINTLIFY_DOCS_ORIGIN` to the deployed `https://<subdomain>.mintlify.site` origin in both local and production environments to serve that site through `http://localhost:3000/docs` and `https://www.papers.bot/docs`. `MINTLIFY_DOCS_BASE_PATH` defaults to `/docs`. The web Worker proxies `/docs` and Mintlify's required root-level asset and API paths without changing the browser URL.
+Customer documentation lives in `apps/docs`. After API contract changes, run `pnpm docs:openapi` to regenerate its reference, then run `mint validate` and `mint broken-links` from `apps/docs`.
+
+Run `mint dev --port 3001 --no-open` from `apps/docs` and open `http://localhost:3001` for a live local authoring preview. The local preview serves at `/` and cannot be mounted at `/docs` with rewrites alone because its navigation uses root-relative links.
+
+To serve the deployed docs at `https://www.papers.bot/docs`:
+
+1. In Mintlify's **Custom domain setup**, enable **Host at**, enter `www.papers.bot`, and set the base path to `docs`. Connect the documentation source to `apps/docs` and publish. See [Mintlify's subpath setup](https://www.mintlify.com/docs/deploy/reverse-proxy).
+2. Verify that `https://papers.mintlify.site/docs` and a nested page work before deploying the web app. A 404 here means the Mintlify deployment is not ready; changing the proxy to target `/` will not fix navigation.
+3. Push to `main` to run the Cloudflare Workers Build pipeline (`pnpm cf:build:web`, then `pnpm cf:deploy:web`). The deploy script requires the CI main-branch context and production database build secret. The build script defaults `MINTLIFY_DOCS_ORIGIN` to `https://papers.mintlify.site`. Next.js bakes rewrites into the build, so changing only Worker runtime variables is insufficient: rebuild after changing the origin.
+4. Verify `/docs`, a nested page, assets, and `/docs/llms.txt` on `https://www.papers.bot`.
+
+For the same deployed docs at `http://localhost:3000/docs`, set `MINTLIFY_DOCS_ORIGIN=https://papers.mintlify.site` in `.env` and restart `pnpm dev`. Leave it empty to retain the web app's built-in docs page. The proxy forwards `/docs/*`, Mintlify asset/API routes, and `/.well-known/vercel/*` for domain verification. The upstream base path must remain `/docs` so generated links stay under our domain's `/docs` path. Keep the existing `www` Worker custom domain/DNS record: the Mintlify CNAME option sends the entire host to Mintlify and is not used for this reverse-proxy setup.
 
 Keep `.env` and `.dev.vars` local. Provider credentials belong only on the server. Google OAuth must allow the Better Auth callback at `/api/auth/callback/google` on the configured application origin. Resend webhooks use `/api/webhooks/resend`.
 

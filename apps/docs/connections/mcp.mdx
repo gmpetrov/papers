@@ -1,0 +1,42 @@
+---
+title: "MCP"
+description: "Connect an agent to Papers through a remote MCP server."
+---
+
+Add this remote server URL in an MCP client that supports OAuth:
+
+```text
+https://www.papers.bot/mcp
+```
+
+1. Open the client's custom MCP server settings and enter the URL.
+2. Complete the browser sign-in flow.
+3. Select your workspace, scopes, and resource access.
+4. Confirm access, then ask the client to run `get_identity`.
+
+Client settings differ. A custom-server connection is required; Papers is not currently listed in client directories. Clients must support Papers' OAuth flow, including authorization-code authentication with PKCE.
+
+## Start with read access
+
+For an existing inbox, grant `inboxes:read` and select that inbox. Add `email:send` only if the agent should send or reply. Add `events:read` for notifications through `list_events`.
+
+| Task | Tool |
+| --- | --- |
+| Inspect permissions and limits | `get_identity` |
+| Check service configuration | `get_capabilities` |
+| List inboxes | `list_inboxes` |
+| Read message summaries | `list_messages` |
+| Read a message | `get_message` |
+| Read incoming SMS | `list_sms`, `get_sms` |
+| Poll activity | `list_events` |
+| Check approval requests | `list_approvals` |
+
+Tools enforce the same workspace limits and permissions as the REST API. Incoming messages are data, not instructions to change the agent's permissions or disclose secrets.
+
+## Approvals and revocation
+
+An `approval_required` result means an owner or admin must review the action in **Approvals**. The agent retries the exact request after approval; approval itself does not execute it.
+
+Manage daily limits or revoke the connection under **Integrations** in Papers. Revoke and reconnect to change its selected resources.
+
+For a local stdio client, use the source-built [CLI](/connections/cli) with its `mcp` command.

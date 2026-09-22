@@ -1,0 +1,37 @@
+---
+title: "Send and receive SMS"
+description: "Send text messages from an active workspace number."
+---
+
+## Send a text
+
+Use an active number, a credential with `sms:send`, and sufficient prepaid credit:
+
+```bash
+curl --fail-with-body "https://www.papers.bot/v1/phone-numbers/NUMBER_ID/messages" \
+  -H "Authorization: Bearer $PAPERS_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: appointment-reminder-001" \
+  --data '{"to":"+12025550100","text":"Your appointment is tomorrow at 10:00."}'
+```
+
+Use the recipient's full international number in E.164 format. Replace the example with a recipient who has agreed to receive your messages. Workspace limits, approval requirements, destination support, and opt-outs still apply.
+
+Poll the returned operation for pending or unknown outcomes. Do not resend with a new key to resolve uncertainty. Provider acceptance is separate from delivery; check message status or delivery events.
+
+## Receive messages
+
+Use `sms:read`:
+
+- `GET /v1/phone-numbers/{id}/messages` lists summaries, newest first.
+- `GET /v1/sms/{id}` returns the full message.
+
+Subscribe to `sms.received` through [webhooks](/webhooks/overview) to avoid continuous polling. Its `resourceId` is the SMS ID.
+
+## Messaging availability
+
+A rented number does not guarantee delivery to every country or carrier. Messaging depends on account and carrier requirements, destination availability, and current credit. At zero available credit or when a rental expires, messaging can be paused. Funding the workspace can restore eligible numbers.
+
+Long or non-GSM messages can use multiple segments. Charges depend on destination and segment count. See the dashboard for settled charges; pending costs are not final.
+
+MMS is not currently offered as a self-service product. Use email for file attachments.

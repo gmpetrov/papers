@@ -1,0 +1,55 @@
+---
+title: "TypeScript SDK"
+description: "Use Papers from server-side JavaScript or TypeScript."
+---
+
+```bash
+npm install @papers.bot/sdk
+```
+
+```typescript
+import { Papers } from "@papers.bot/sdk";
+
+const papers = new Papers({ apiKey: process.env.PAPERS_API_KEY! });
+const inbox = await papers.inboxes.create({ username: "research-assistant" });
+console.log(inbox.id, inbox.address);
+
+const operation = await papers.messages.send(
+  inbox.id,
+  { to: ["you@example.com"], subject: "Hello", text: "My inbox is ready." },
+  { idempotencyKey: "first-email-001" },
+);
+console.log(operation);
+```
+
+Use a recipient you control. Keep the key stable if you retry the same action.
+
+The default API origin is `https://www.papers.bot`. A custom `baseUrl` must omit `/v1`. Keep this client on the server; do not expose its key in a browser bundle.
+
+## Read messages
+
+```typescript
+for await (const summary of papers.iterateMessages(inbox.id, { limit: 25 })) {
+  const message = await papers.messages.get(summary.id);
+  console.log(message.subject, message.text);
+}
+```
+
+`iterateInboxes`, `iteratePhoneNumbers`, `iterateMessages`, `iterateSms`, and `iterateEvents` read available pages. They do not poll continuously.
+
+## Handle errors
+
+```typescript
+import { PapersError } from "@papers.bot/sdk";
+
+try {
+  await papers.inboxes.list();
+} catch (error) {
+  if (!(error instanceof PapersError)) throw error;
+  console.error(error.status, error.code, error.requestId);
+}
+```
+
+`PapersError` also exposes `details`, `retryable`, and `retryAfterSeconds`. Network and cancellation errors propagate from `fetch`. The SDK does not automatically retry requests.
+
+You can supply `fetch`, `timeoutMs` (default 15,000), and an `AbortSignal` through `signal`. For uncertain mutations, [check the operation](/reference/operations) before deciding what to do next.

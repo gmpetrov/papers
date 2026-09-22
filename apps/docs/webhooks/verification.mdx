@@ -1,0 +1,50 @@
+---
+title: "Verify webhook signatures"
+description: "Authenticate the original request body before processing an event."
+---
+
+Papers signs webhook requests using the Standard Webhooks format. Each request includes:
+
+| Header | Purpose |
+| --- | --- |
+| `webhook-id` | Stable delivery ID for deduplication. |
+| `webhook-timestamp` | Unix timestamp in seconds. |
+| `webhook-signature` | Signature over the ID, timestamp, and raw body. |
+
+Use the signing secret shown when you create or rotate the endpoint. It is separate from your API key.
+
+## TypeScript
+
+```typescript
+import { verifyWebhook, WebhookVerificationError } from "@papers.bot/sdk";
+
+export async function readPapersEvent(request: Request): Promise<unknown> {
+  const rawBody = await request.text();
+  return verifyWebhook(
+    rawBody,
+    request.headers,
+    process.env.PAPERS_WEBHOOK_SECRET!,
+  );
+}
+```
+
+Catch `WebhookVerificationError` in your route and return HTTP `400` without processing the request. For valid deliveries, validate the event shape, deduplicate `webhook-id`, and persist work before returning `2xx`.
+
+## Python
+
+```python
+from papers import verify_webhook, WebhookVerificationError
+
+# Pass your framework's original request bytes and headers.
+try:
+    event = verify_webhook(raw_body, headers, signing_secret)
+except WebhookVerificationError:
+    # Respond with HTTP 400 and do not process the event.
+    raise
+
+# Validate event, persist webhook-id, and enqueue work before returning 2xx.
+```
+
+Do not parse and reserialize the body before verification. Both helpers enforce a five-minute timestamp tolerance, so keep your receiver's clock synchronized. During secret rotation, either valid signature in the header is sufficient.
+
+A valid signature confirms delivery from Papers. It does not make email or SMS content safe to execute as instructions.

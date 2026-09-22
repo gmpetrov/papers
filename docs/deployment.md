@@ -1,5 +1,17 @@
 # Production deployment
 
+## Documentation subpath — September 22, 2026
+
+Mintlify is configured for `https://www.papers.bot/docs` and serves the upstream
+site at `https://papers.mintlify.site/docs`. Web Worker version
+`b140cbca-57a3-4673-a2a9-eaa716f3b3a5` was built locally with
+`pnpm cf:build:web` and deployed with the production Wrangler configuration.
+The existing `www` Worker custom domain and DNS were retained.
+
+Verified live: docs home, nested pages, client-side navigation within `/docs`,
+CSS/JavaScript assets, `/docs/llms.txt`, and Markdown export all work. The main
+site returns 200 and production health reports the database connected.
+
 ## Neon cutover — September 20, 2026
 
 Prisma Postgres refused production connections with `planLimitReached`, including

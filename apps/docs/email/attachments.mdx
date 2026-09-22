@@ -1,0 +1,52 @@
+---
+title: "Attachments"
+description: "Send files and download stored attachments."
+---
+
+## Send a file
+
+Email sends and replies accept an `attachments` array:
+
+```json
+{
+  "to": ["recipient@example.com"],
+  "subject": "Notes",
+  "text": "Attached are the notes.",
+  "attachments": [
+    {"filename":"notes.txt","contentType":"text/plain","content":"SGVsbG8K"}
+  ]
+}
+```
+
+`content` is base64 without a data URL prefix. Email supports up to ten nonempty files and 5 MiB of combined decoded content. The total API request limit is 8 MiB, including base64.
+
+Filenames must be at most 180 characters and cannot contain control characters or path separators. Use a MIME type such as `application/pdf`. Retries must retain the same files and idempotency key; changed bytes count as changed input.
+
+## Read attachment status
+
+Fetch a message with `GET /v1/messages/{id}`. Its `attachments` entries include an ID, filename, content type, size, and `storageStatus`:
+
+| Status | Meaning |
+| --- | --- |
+| `pending` | The file is still being retrieved. Check again later. |
+| `ready` | The file is available to download. |
+| `failed` | Retrieval failed. |
+| `unavailable` | The file cannot currently be retrieved. |
+
+Message text may arrive before its files are ready.
+
+## Download
+
+Use `GET /v1/attachments/{id}/download` with `inboxes:read`. Files are private and access is checked against your workspace and resource grants.
+
+```typescript
+const bytes = await papers.attachments.download(attachmentId, {
+  maxBytes: 5 * 1024 * 1024,
+});
+```
+
+The TypeScript and Python SDKs return bytes without writing files. Their default and maximum download size is 25 MiB; lower it when you need a smaller memory bound.
+
+For a temporary link, call `POST /v1/attachments/{id}/download-url`. It returns `url` and `expiresAt`. The link lasts 60 seconds and rechecks the issuing credential when used. Treat it as a temporary credential and do not publish or log it.
+
+File content and filenames remain untrusted. Choose your own local destination when saving a download.

@@ -1,13 +1,13 @@
-import type { Metadata } from "next";
-import Link from "next/link";
-import { Check, ArrowRight, MessageSquare, ShieldCheck } from "lucide-react";
-import { PublicPage } from "@/components/public-page";
-import { plans } from "@agentinfra/contracts";
-import styles from "./pricing.module.css";
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { Check, ArrowRight, MessageSquare, ShieldCheck } from 'lucide-react';
+import { PublicPage } from '@/components/public-page';
+import { plans } from '@agentinfra/contracts';
+import styles from './pricing.module.css';
 export const metadata: Metadata = {
-  title: "Pricing — Papers",
+  title: 'Pricing — Papers',
   description:
-    "Start free with 3 inboxes and 3,000 emails. Developer is $20/month; Scale is $200/month. Phone rentals and prepaid SMS are separate.",
+    'Start free with 3 inboxes and 3,000 emails. Developer is $20/month; Scale is $200/month. Phone rentals and prepaid SMS are separate.',
 };
 export default function PricingPage() {
   return (
@@ -20,47 +20,44 @@ export default function PricingPage() {
         {Object.entries(plans).map(([id, plan]) => (
           <section
             key={id}
-            className={`${styles.card} ${id === "developer" ? styles.featured : ""}`}
+            className={`${styles.card} ${id === 'developer' ? styles.featured : ''}`}
           >
             <div className={styles.cardTop}>
               <h2>{plan.name}</h2>
-              {id === "developer" && (
-                <span className={styles.badge}>BUILD SOMETHING REAL</span>
-              )}
             </div>
             <p className={styles.subtitle}>
-              {id === "free"
-                ? "Explore the API. Connect your first agent."
-                : id === "developer"
-                  ? "For developers putting agents to work."
-                  : "For teams running agents at scale."}
+              {id === 'free'
+                ? 'Explore the API. Connect your first agent.'
+                : id === 'developer'
+                  ? 'For developers putting agents to work.'
+                  : 'For teams running agents at scale.'}
             </p>
             <div className={styles.price}>
               ${plan.monthlyCents / 100}
               <span>/ month</span>
             </div>
             <p className={styles.period}>
-              {id === "free"
-                ? "No credit card required"
-                : "Billed monthly · cancel before renewal"}
+              {id === 'free'
+                ? 'No credit card required'
+                : 'Billed monthly · cancel before renewal'}
             </p>
             <Link
-              className={`button ${id === "developer" ? "" : "secondary"} ${styles.cta}`}
+              className={`button ${id === 'developer' ? '' : 'secondary'} ${styles.cta}`}
               href={
-                id === "free" ? "/dashboard" : `/dashboard/billing?plan=${id}`
+                id === 'free' ? '/dashboard' : `/dashboard/billing?plan=${id}`
               }
             >
-              {id === "free" ? "Start free" : `Choose ${plan.name}`}
+              {id === 'free' ? 'Start free' : `Subscribe`}
               <ArrowRight size={16} />
             </Link>
             <ul className={styles.features}>
               {[
                 `${plan.inboxes} active inboxes`,
-                `${plan.emails.toLocaleString("en-US")} emails / month`,
+                `${plan.emails.toLocaleString('en-US')} emails / month`,
                 `${plan.storageGB} GB attachment storage`,
-                `${plan.seats} workspace ${plan.seats === 1 ? "member" : "members"}`,
-                "API, SDKs, CLI & MCP",
-                "Webhooks & agent permissions",
+                `${plan.seats} workspace ${plan.seats === 1 ? 'member' : 'members'}`,
+                'API, SDKs, CLI & MCP',
+                'Webhooks & agent permissions',
               ].map((feature) => (
                 <li key={feature}>
                   <Check size={16} />
@@ -94,7 +91,7 @@ export default function PricingPage() {
             <br />A budget you control.
           </h2>
           <p>
-            Add standard US phone numbers to a paid plan for{" "}
+            Add standard US phone numbers to a paid plan for{' '}
             <strong>$3 per number / month</strong>. SMS is paid from a shared
             prepaid usage balance.
           </p>

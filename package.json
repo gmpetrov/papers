@@ -20,7 +20,8 @@
     "release:check": "node --test scripts/release-tools.test.mjs && node scripts/sync-python-version.mjs --check && uv lock --project sdks/python --check && turbo run typecheck build --filter=@papers.bot/sdk --filter=papers-bot --filter=@agentinfra/cli && vitest run packages/sdk-typescript/tests packages/cli/tests && turbo run test --filter=papers-bot && node scripts/package-install-check.mjs && python3 scripts/python-package-check.py",
     "publish-packages": "pnpm release:check && node scripts/publish-packages.mjs",
     "publish:npm": "pnpm release:check && node scripts/publish-packages.mjs npm",
-    "publish:python": "pnpm release:check && node scripts/publish-packages.mjs python"
+    "publish:python": "pnpm release:check && node scripts/publish-packages.mjs python",
+    "docs:openapi": "tsx scripts/docs-openapi.ts"
   },
   "devDependencies": {
     "@changesets/cli": "^2.31.1",

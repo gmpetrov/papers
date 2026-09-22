@@ -1,0 +1,79 @@
+---
+title: "Quickstart"
+description: "Create an inbox and send your first email."
+---
+
+## 1. Create a workspace and API key
+
+Sign in to the [dashboard](https://www.papers.bot/dashboard) and create or select a workspace. In **API keys**, create a key with workspace-wide resource access and these scopes:
+
+- `inboxes:write` to create an inbox.
+- `inboxes:read` to read messages.
+- `email:send` to send and reply.
+
+Save the key in your server environment:
+
+```bash
+export PAPERS_API_KEY="YOUR_API_KEY"
+export PAPERS_BASE_URL="https://www.papers.bot"
+```
+
+Check the connection:
+
+```bash
+curl --fail-with-body "$PAPERS_BASE_URL/v1/me" \
+  -H "Authorization: Bearer $PAPERS_API_KEY"
+```
+
+The response identifies your workspace, scopes, resource access, and remaining daily allowances.
+
+## 2. Create an inbox
+
+Choose an available username. The response includes the inbox `id` and full email `address`.
+
+```bash
+curl --fail-with-body "$PAPERS_BASE_URL/v1/inboxes" \
+  -H "Authorization: Bearer $PAPERS_API_KEY" \
+  -H "Content-Type: application/json" \
+  --data '{"username":"research-assistant","name":"Research"}'
+```
+
+Set the returned ID:
+
+```bash
+export INBOX_ID="YOUR_INBOX_ID"
+```
+
+If your workspace requires approval, an owner or admin must approve the request in **Approvals**. Then repeat it unchanged.
+
+## 3. Send an email
+
+Replace the recipient with an address you control. Keep the same idempotency key if you retry this exact send; use a new key for a different message.
+
+```bash
+curl --fail-with-body "$PAPERS_BASE_URL/v1/inboxes/$INBOX_ID/messages" \
+  -H "Authorization: Bearer $PAPERS_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: first-email-001" \
+  --data '{"to":["you@example.com"],"subject":"Hello from Papers","text":"My inbox is ready."}'
+```
+
+The response includes an operation ID and `statusUrl`. Poll that URL with the same credential if the status is `pending` or `unknown`. `completed` means the provider accepted the message; delivery is tracked separately.
+
+## 4. Read the reply
+
+Reply from your own mailbox, then list messages:
+
+```bash
+curl --fail-with-body "$PAPERS_BASE_URL/v1/inboxes/$INBOX_ID/messages" \
+  -H "Authorization: Bearer $PAPERS_API_KEY"
+```
+
+Lists contain summaries. Fetch the full content using a returned message ID:
+
+```bash
+curl --fail-with-body "$PAPERS_BASE_URL/v1/messages/MESSAGE_ID" \
+  -H "Authorization: Bearer $PAPERS_API_KEY"
+```
+
+Next: [reply to a message](/email/messages), [use an SDK](/connections/typescript), or [subscribe to webhooks](/webhooks/overview).

@@ -1,0 +1,38 @@
+---
+title: "Usage and limits"
+description: "Understand daily controls, plan allowances, and API throttling."
+---
+
+Papers applies several independent limits. Passing one does not bypass another.
+
+## Workspace and credential controls
+
+The owner sets daily email and SMS limits and resource capacity under **Organization → Workspace limits**. API keys and OAuth connections can have additional daily send and creation limits.
+
+- `null` on a credential limit adds no extra cap; workspace limits still apply.
+- `0` blocks new actions of that type.
+- Daily counters reset at midnight UTC.
+- Lowering a limit does not delete resources or cancel already reserved work.
+
+A send reserves daily usage before contacting the provider. Failed or unknown provider outcomes retain this daily reservation. Replaying the same idempotency key does not consume another unit. Pending approvals consume none.
+
+Archiving an inbox frees active capacity, but does not refund its daily creation count. Reactivation needs available capacity. Phone numbers that are pending, active, or releasing can still count toward capacity.
+
+Use `GET /v1/me` to inspect `sendLimits` and `provisioningLimits` for your credential. These snapshots do not reserve allowance.
+
+## Plan allowances
+
+Monthly email and attachment storage allowances are separate from daily safety controls. A plan upgrade does not automatically raise the owner's chosen daily limits. See [billing](/workspace/billing).
+
+## API request limits
+
+Authenticated requests share fixed UTC-minute windows:
+
+| Limit | Requests per minute |
+| --- | ---: |
+| Per credential or signed-in user | 120 |
+| Per workspace | 1,200 |
+
+HTTP `429` uses code `rate_limited` and a `Retry-After` delay in seconds. Wait at least that long. A typical remote MCP tool call consumes an identity check plus its API operation.
+
+Daily quota errors use `quota_exceeded`; they are not resolved by the minute-window retry delay. SDKs expose retry delays but do not automatically replay requests.
