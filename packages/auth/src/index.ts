@@ -86,6 +86,25 @@ export function createAuth(
           }
         : {},
     session: { cookieCache: { enabled: false } },
+    databaseHooks: {
+      session: {
+        create: {
+          before: async (session) => {
+            const membership = await db.member.findFirst({
+              where: { userId: session.userId },
+              orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+              select: { organizationId: true },
+            });
+            return {
+              data: {
+                ...session,
+                activeOrganizationId: membership?.organizationId ?? null,
+              },
+            };
+          },
+        },
+      },
+    },
     account: {
       accountLinking: { enabled: true, trustedProviders: ["google"] },
     },

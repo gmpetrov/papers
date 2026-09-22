@@ -138,13 +138,61 @@ beforeAll(async () => {
         password: "organization-test-password",
       }),
     );
-    if (["owner", "admin", "member"].includes(id))
-      await data(
-        await call(id, "/organization/set-active", { organizationId: "org" }),
-      );
   }
 });
 afterAll(() => db.$disconnect());
+it("selects an existing workspace at sign-in and leaves new users without one", async () => {
+  for (const [user, organizationId] of [
+    ["owner", "org"],
+    ["admin", "org"],
+    ["member", "org"],
+    ["outsider", "other"],
+    ["invited", null],
+  ]) {
+    const session = await data(await call(user!, "/get-session"));
+    expect(session.session.activeOrganizationId).toBe(organizationId);
+  }
+});
+
+it("defaults to the earliest membership and preserves manual switching", async () => {
+  await db.member.create({
+    data: {
+      id: "owner-second-workspace",
+      organizationId: "other",
+      userId: "owner",
+      role: "member",
+      createdAt: new Date(Date.now() + 60_000),
+    },
+  });
+  try {
+    await data(
+      await call("owner", "/sign-in/email", {
+        email: "owner@example.test",
+        password: "organization-test-password",
+      }),
+    );
+    expect(
+      (await data(await call("owner", "/get-session"))).session
+        .activeOrganizationId,
+    ).toBe("org");
+    await data(
+      await call("owner", "/organization/set-active", {
+        organizationId: "other",
+      }),
+    );
+    expect(
+      (await data(await call("owner", "/get-session"))).session
+        .activeOrganizationId,
+    ).toBe("other");
+  } finally {
+    await data(
+      await call("owner", "/organization/set-active", {
+        organizationId: "org",
+      }),
+    );
+    await db.member.delete({ where: { id: "owner-second-workspace" } });
+  }
+});
 it("members cannot invite or manage membership", async () => {
   expect(
     (
