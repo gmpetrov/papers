@@ -27,9 +27,9 @@ const credentials = [
     href: '/email',
     description: 'Send, receive, and reply from one persistent address.',
     details: [
-      'Give your agent a dedicated address, owned by your workspace.',
-      'Keep replies, conversation history, and attachments together.',
-      'Bring new messages into your workflow with webhooks or polling.',
+      'Sign up for services and confirm the verification email.',
+      'Follow up with vendors and chase replies until it gets an answer.',
+      'Receive invoices and pull data out of the attachments.',
     ],
     facts: [
       ['Address', 'research@papers.bot'],
@@ -44,9 +44,9 @@ const credentials = [
     href: '/phone',
     description: 'A dedicated number for two-way text conversations.',
     details: [
-      'A dedicated number, with availability and activation requirements shown before you order.',
-      'Send and receive text messages through the same API as email.',
-      'Release it when you no longer need it.',
+      'Receive SMS verification codes to finish signups.',
+      'Text a contractor to confirm an appointment.',
+      'Send status alerts and take replies by text.',
     ],
     facts: [
       ['Number', 'Dedicated to your workspace'],
@@ -61,9 +61,9 @@ const credentials = [
     href: '/email',
     description: 'A way to pay for things easily.',
     details: [
-      'A payment method for the tasks your agent takes on.',
-      'Card issuing and purchases are not available yet.',
-      'Build your workflow now with email and SMS.',
+      'Book flights and hotels within a set budget.',
+      'Buy software subscriptions and API credits.',
+      'Order supplies and pay for one-off services.',
     ],
     facts: [
       ['Status', 'Planned'],
@@ -202,9 +202,9 @@ export default function Landing() {
                       <Icon size={18} />
                       {label}
                     </span>
-                    <Stamp>
+                    {/* <Stamp>
                       {label === 'Credit Card' ? 'Planned' : 'Ready for agents'}
-                    </Stamp>
+                    </Stamp> */}
                   </header>
                   <div className="credential-content">
                     <h3>{title}</h3>
@@ -220,14 +220,14 @@ export default function Landing() {
                       <ArrowUpRight size={14} />
                     </Link> */}
                   </div>
-                  <dl>
+                  {/* <dl>
                     {facts.map(([name, value]) => (
                       <div key={name}>
                         <dt>{name}</dt>
                         <dd>{value}</dd>
                       </div>
                     ))}
-                  </dl>
+                  </dl> */}
                 </article>
               ),
             )}
@@ -335,16 +335,16 @@ export default function Landing() {
         <section className="papers-final">
           <Guilloche />
           <div>
-            <Stamp>Ready to issue</Stamp>
+            {/* <Stamp>Ready to issue</Stamp> */}
             <h2>
               Give your agent
               <br />
               <em>its papers.</em>
             </h2>
-            <p>
+            {/* <p>
               Start with an inbox. Add a number. A card. Make your agent fully
               autonomous.
-            </p>
+            </p> */}
           </div>
           <div className="papers-actions">
             <Link href="/login" className={buttonVariants({ size: 'lg' })}>
@@ -359,7 +359,6 @@ export default function Landing() {
       <footer className="papers-footer">
         <div>
           <Brand />
-          <p>Email and SMS for agents. Credit cards on the roadmap.</p>
         </div>
         <div>
           <strong>Papers</strong>

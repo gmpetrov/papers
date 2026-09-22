@@ -42,9 +42,6 @@ export function PublicPage({
           <div className="eyebrow">{eyebrow}</div>
           <h1>{title}</h1>
           <p>{description}</p>
-          <Link href="/dashboard" className="button">
-            Open your workspace <ArrowRight size={17} />
-          </Link>
         </header>
         {children}
       </main>
