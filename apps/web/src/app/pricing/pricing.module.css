@@ -1,213 +1,314 @@
-.plans {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 20px;
-}
-.card {
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: 30px;
+/* The pricing page is one schedule of fees: plans as columns, line items as rows. */
+.header {
   display: flex;
-  flex-direction: column;
-}
-.featured {
-  border: 1.5px solid var(--green);
-  box-shadow: 0 8px 30px #315c4509;
-  background: #f4f7ef;
-}
-.cardTop {
-  display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 12px;
-  min-height: 42px;
+  gap: 64px;
+  margin-bottom: 44px;
 }
-.cardTop h2 {
-  font-size: 25px;
-  font-weight: 550;
-  letter-spacing: -0.7px;
+.header :global(.eyebrow) {
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: var(--stamp);
+}
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--stamp);
+  flex-shrink: 0;
+}
+.header h1 {
+  font: 400 clamp(40px, 5vw, 56px) / 1 var(--font-serif);
+  letter-spacing: -0.02em;
+  margin: 18px 0 0;
+}
+.header p {
+  max-width: 420px;
   margin: 0;
-}
-.badge {
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 9px;
-  letter-spacing: 0.6px;
-  color: var(--green);
-  background: #e2ecd8;
-  padding: 7px 8px;
-  border-radius: 4px;
-  max-width: 115px;
-}
-.subtitle {
+  font-size: 16px;
+  line-height: 1.5;
   color: var(--muted-foreground);
+}
+
+.sheet {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card);
+  overflow: hidden;
+}
+.scroll {
+  overflow-x: auto;
+}
+.sheet table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.part {
+  caption-side: top;
+  text-align: left;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--secondary);
+  color: var(--muted-foreground);
+  font: 10px/1.4 var(--font-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.label {
+  font: 10px/1.4 var(--font-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+.mono {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+/* Part one: plan columns */
+.plans th,
+.plans td {
+  padding: 15px 24px;
+  text-align: left;
+  font-weight: 400;
+}
+.plans thead th {
+  position: relative;
+  vertical-align: bottom;
+  padding: 26px 24px 22px;
+  border-bottom: 1px solid var(--border);
+}
+.plans thead th + th,
+.plans td {
+  border-left: 1px solid var(--rule);
+}
+.plans .corner {
+  width: 300px;
+}
+.plans tbody tr {
+  border-top: 1px solid var(--rule);
+}
+.plans tbody tr:first-child {
+  border-top: 0;
+}
+.plans td {
+  font: 500 14px/1.4 var(--font-mono);
+}
+.plans .featured {
+  background: color-mix(in srgb, var(--stamp) 9%, var(--card));
+}
+.plans .muted {
+  color: var(--muted-foreground);
+}
+.plans .prose {
+  font: 400 14px/1.4 var(--font-sans);
+  color: var(--muted-foreground);
+}
+.check {
+  display: block;
+  color: var(--stamp);
+}
+.stamp {
+  margin-bottom: 12px;
+  border-width: 1.5px;
+  background: var(--card);
+}
+.planName {
+  display: block;
+  font: 400 30px/1 var(--font-serif);
+}
+.planLine {
+  display: block;
+  min-height: 2.8em;
+  margin: 8px 0 16px;
   font-size: 14px;
-  line-height: 1.65;
-  min-height: 48px;
+  line-height: 1.4;
+  color: var(--muted-foreground);
 }
 .price {
-  font-size: 58px;
-  font-weight: 450;
-  letter-spacing: -3px;
-  margin: 20px 0 2px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font: 400 44px/1 var(--font-serif);
+  letter-spacing: -0.02em;
 }
 .price span {
-  font-size: 14px;
+  font: 12px var(--font-mono);
   letter-spacing: 0;
   color: var(--muted-foreground);
-  margin-left: 8px;
-}
-.period {
-  font-size: 12px;
-  color: var(--muted-foreground);
-  margin: 8px 0 27px;
 }
 .cta {
+  display: flex;
+  justify-content: center;
   width: 100%;
-  justify-content: space-between;
-}
-.features {
-  list-style: none;
-  padding: 25px 0 0;
-  margin: 25px 0 0;
-  border-top: 1px solid var(--line);
-  display: grid;
-  gap: 17px;
+  margin-top: 18px;
+  padding: 12px 16px;
   font-size: 14px;
 }
-.features li {
+
+/* Part two: usage on top */
+.usage {
+  border-top: 1px solid var(--border);
+}
+.usage th,
+.usage td {
+  padding: 15px 24px;
+  text-align: left;
+  font-weight: 400;
+  vertical-align: top;
+}
+.usage th {
+  width: 300px;
+}
+.usage tr + tr {
+  border-top: 1px solid var(--rule);
+}
+.usage .rate {
+  width: calc((100% - 300px) / 3);
+  border-left: 1px solid var(--rule);
+  font: 500 14px/1.4 var(--font-mono);
+}
+.usage .note {
+  border-left: 1px solid var(--rule);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+
+.closing {
   display: flex;
-  gap: 10px;
   align-items: flex-start;
+  justify-content: space-between;
+  gap: 56px;
+  margin-top: 44px;
 }
-.features svg {
-  color: var(--green);
+.closing p {
+  max-width: 760px;
+  margin: 0;
+  font: 11px/1.6 var(--font-mono);
+  color: var(--muted-foreground);
+}
+.start {
   flex: none;
-  margin-top: 2px;
-}
-.features small {
-  display: block;
-  color: var(--muted-foreground);
-  font-size: 11px;
-  margin-top: 4px;
-}
-.fine {
-  font-size: 12px;
-  color: var(--muted-foreground);
-  line-height: 1.7;
-  margin: 22px 0 65px;
-  max-width: 850px;
-}
-.phone {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 70px;
-  background: #f0f2ea;
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: 42px;
-}
-.kicker {
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 11px;
-  letter-spacing: 1px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 10px;
-  color: var(--green);
-}
-.phone h2 {
-  font-size: 35px;
-  line-height: 1.15;
-  letter-spacing: -1px;
-  font-weight: 450;
-  margin: 24px 0;
-}
-.phone p {
-  line-height: 1.8;
-  color: #687269;
-  font-size: 15px;
-}
-.wallet {
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 25px;
-}
-.walletHead {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  color: var(--green);
-  padding-bottom: 18px;
-  border-bottom: 1px solid var(--line);
-}
-.wallet ol {
-  padding-left: 22px;
-  margin-bottom: 0;
-}
-.wallet li {
-  padding-left: 5px;
-  margin-top: 20px;
-  color: var(--green);
-}
-.wallet strong {
-  font-weight: 550;
-}
-.wallet li span {
-  display: block;
-  font-size: 13px;
-  line-height: 1.65;
-  color: var(--muted-foreground);
-  margin-top: 5px;
-}
-.faq {
-  max-width: 800px;
-  margin: 75px auto 15px;
-}
-.faq h2 {
-  font-size: 32px;
-  font-weight: 450;
-  letter-spacing: -1px;
-  margin-bottom: 25px;
-}
-.faq details {
-  border-bottom: 1px solid var(--line);
-  padding: 20px 0;
-}
-.faq summary {
+  padding: 15px 24px;
   font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
 }
-.faq p {
-  color: #687269;
-  font-size: 14px;
-  line-height: 1.8;
-  max-width: 740px;
+
+/* Phones: Part one becomes one stacked section per plan. */
+.stacked {
+  display: none;
 }
+.stacked .part {
+  margin: 0;
+}
+.stackedPlan {
+  padding: 24px 20px;
+}
+.stackedPlan + .stackedPlan {
+  border-top: 1px solid var(--border);
+}
+.stackedPlan.featured {
+  background: color-mix(in srgb, var(--stamp) 9%, var(--card));
+}
+.stackedPlan .planLine {
+  min-height: 0;
+}
+.stackedPlan dl {
+  margin: 20px 0 0;
+}
+.stackedPlan dl > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 11px 0;
+  border-top: 1px solid var(--rule);
+}
+.stackedPlan dd {
+  margin: 0;
+  text-align: right;
+  font: 500 14px/1.4 var(--font-mono);
+}
+.stackedPlan dd.muted {
+  color: var(--muted-foreground);
+}
+.stackedPlan dd.prose {
+  font: 400 14px/1.4 var(--font-sans);
+  color: var(--muted-foreground);
+}
+.stackedPlan .check {
+  display: inline-block;
+}
+
 @media (max-width: 900px) {
-  .plans {
-    grid-template-columns: 1fr;
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
   }
-  .card {
-    padding: 26px;
+  .plans .corner {
+    width: 150px;
   }
-  .subtitle {
-    min-height: 0;
+  .plans thead th,
+  .plans th,
+  .plans td {
+    padding-left: 16px;
+    padding-right: 16px;
   }
-  .phone {
-    grid-template-columns: 1fr;
-    gap: 25px;
-    padding: 25px;
+  .usage th {
+    width: 150px;
   }
-  .price {
-    margin-top: 12px;
+  .usage .rate {
+    width: calc((100% - 150px) / 3);
   }
-  .fine {
-    margin-bottom: 35px;
+  .closing {
+    flex-direction: column;
+    gap: 24px;
   }
-  .faq {
-    margin-top: 45px;
+}
+
+@media (max-width: 760px) {
+  .scroll {
+    display: none;
+  }
+  .stacked {
+    display: block;
+  }
+  /* Usage rows stack: label, rate, then the note. */
+  .usage,
+  .usage tbody,
+  .usage tr,
+  .usage th,
+  .usage td,
+  .usage .rate,
+  .usage .note {
+    display: block;
+    width: auto;
+  }
+  .usage .part {
+    display: block;
+  }
+  .usage th,
+  .usage td {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  .usage th {
+    padding-bottom: 4px;
+  }
+  .usage .rate,
+  .usage .note {
+    border-left: 0;
+    padding-top: 4px;
+  }
+  .start {
+    justify-content: center;
+    width: 100%;
   }
 }

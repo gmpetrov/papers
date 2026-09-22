@@ -360,29 +360,28 @@ export default function Landing() {
         <div>
           <Brand />
         </div>
-        <div>
+        {/* <div>
           <strong>Papers</strong>
           <Link href="/email">Inbox</Link>
           <Link href="/phone">Number</Link>
           <Link href="#credit-card">Credit Card · Planned</Link>
           <Link href="/integrations">Integrations</Link>
-        </div>
+        </div> */}
         <div>
           <strong>Developers</strong>
           <Link href="/docs">Documentation</Link>
           <Link href="/openapi.json">OpenAPI spec</Link>
-          <Link href="/integrations">MCP connections</Link>
+          {/* <Link href="/integrations">MCP connections</Link> */}
         </div>
         <div>
           <strong>Workspace</strong>
           <Link href="/pricing">Pricing</Link>
           <Link href="/login">Sign in</Link>
-          <Link href="/dashboard">Dashboard</Link>
         </div>
         <div className="footer-mrz" aria-hidden="true">
-          P&lt;BOT&lt;PAPERS&lt;&lt;AGENT&lt;RESEARCH&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
+          PAPERS&lt;BOT&lt;&lt;AGENT&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
           <br />
-          INBOX&lt;NUMBER&lt;CREDIT&lt;CARD&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
+          INBOX&lt;NUMBER&lt;PAYMENT&lt;CARD&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
         </div>
       </footer>
     </div>

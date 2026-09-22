@@ -29,20 +29,22 @@ export function PublicPage({
   description,
   children,
 }: {
-  eyebrow: string;
-  title: string;
-  description: string;
+  eyebrow?: string;
+  title?: string;
+  description?: string;
   children: ReactNode;
 }) {
   return (
     <div className={`landing ${styles.page}`}>
       <PublicNav />
       <main className="public-content">
-        <header className="public-heading">
-          <div className="eyebrow">{eyebrow}</div>
-          <h1>{title}</h1>
-          <p>{description}</p>
-        </header>
+        {title && (
+          <header className="public-heading">
+            <div className="eyebrow">{eyebrow}</div>
+            <h1>{title}</h1>
+            <p>{description}</p>
+          </header>
+        )}
         {children}
       </main>
       <footer>

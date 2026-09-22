@@ -32,9 +32,28 @@ export function CodeExample({
             </TabsTrigger>
           ))}
         </TabsList>
-        {!compact && active.installation && (
-          <code className="code-install">{active.installation}</code>
-        )}
+        <div className="code-example-actions">
+          {!compact && active.installation && (
+            <code className="code-install">{active.installation}</code>
+          )}
+          <span role="status">{status !== "Copied" && status}</span>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={status === "Copied" ? "Copied" : "Copy example"}
+            title={status === "Copied" ? "Copied" : "Copy example"}
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(active.code);
+                setStatus("Copied");
+              } catch {
+                setStatus("Select the example to copy it manually.");
+              }
+            }}
+          >
+            {status === "Copied" ? <Check /> : <Copy />}
+          </Button>
+        </div>
       </div>
       {samples.map(({ label, code }) => (
         <TabsContent value={label} key={label}>
@@ -43,24 +62,6 @@ export function CodeExample({
           </pre>
         </TabsContent>
       ))}
-      <div className="code-example-footer">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={async () => {
-            try {
-              await navigator.clipboard.writeText(active.code);
-              setStatus("Copied");
-            } catch {
-              setStatus("Select the example to copy it manually.");
-            }
-          }}
-        >
-          {status === "Copied" ? <Check /> : <Copy />}
-          {status === "Copied" ? "Copied" : "Copy example"}
-        </Button>
-        <span role="status">{status !== "Copied" && status}</span>
-      </div>
     </Tabs>
   );
 }
