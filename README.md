@@ -22,6 +22,8 @@ through Turborepo. Python dependencies are locked in `sdks/python/uv.lock`.
 
 `pnpm dev` starts both Next.js and the background jobs process, which processes incoming mail and Stripe billing events. Next.js listens on port 3000; the existing development tunnel points `https://dev.chaindesk.ai` there. PostgreSQL runs locally on port 55433. Use `pnpm jobs` only when running the web app separately. Restart `pnpm dev` after editing `.env`; Turbo explicitly forwards the billing and provider variables listed in `turbo.json`.
 
+Run `mint dev --port 3001 --no-open` from `apps/docs` for a live local authoring preview. Set `MINTLIFY_DOCS_ORIGIN` to the deployed `https://<subdomain>.mintlify.site` origin in both local and production environments to serve that site through `http://localhost:3000/docs` and `https://www.papers.bot/docs`. `MINTLIFY_DOCS_BASE_PATH` defaults to `/docs`. The web Worker proxies `/docs` and Mintlify's required root-level asset and API paths without changing the browser URL.
+
 Keep `.env` and `.dev.vars` local. Provider credentials belong only on the server. Google OAuth must allow the Better Auth callback at `/api/auth/callback/google` on the configured application origin. Resend webhooks use `/api/webhooks/resend`.
 
 ## Current implementation

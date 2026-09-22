@@ -57,6 +57,8 @@
   "vars": {
     "BETTER_AUTH_URL": "https://www.papers.bot",
     "NEXT_PUBLIC_APP_URL": "https://www.papers.bot",
+    "MINTLIFY_DOCS_ORIGIN": "https://papers.mintlify.site",
+    "MINTLIFY_DOCS_BASE_PATH": "/docs",
     "EMAIL_DOMAIN": "papers.bot",
     "AUTH_EMAIL_FROM": "Papers <accounts@papers.bot>",
     "TELNYX_STATUS": "active",
