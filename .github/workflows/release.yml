@@ -2,6 +2,9 @@ name: Release SDKs
 on:
   push:
     branches: [main]
+    tags:
+      - "@papers.bot/sdk@*"
+      - "papers-bot@*"
   workflow_dispatch:
 
 concurrency:
@@ -52,10 +55,25 @@ jobs:
 
   verify:
     needs: version
-    if: needs.version.outputs.has_changesets == 'false'
+    if: always() && (github.ref_type == 'tag' || (needs.version.result == 'success' && needs.version.outputs.has_changesets == 'false'))
     runs-on: ubuntu-latest
+    outputs:
+      target: ${{ steps.target.outputs.target }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Validate release tag
+        if: github.ref_type == 'tag'
+        run: git merge-base --is-ancestor HEAD origin/main
+      - name: Select SDK
+        id: target
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then
+            node scripts/release-tag.mjs >> "$GITHUB_OUTPUT"
+          else
+            echo 'target=both' >> "$GITHUB_OUTPUT"
+          fi
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -80,6 +98,7 @@ jobs:
   npm:
     name: Publish npm
     needs: verify
+    if: needs.verify.outputs.target == 'both' || needs.verify.outputs.target == 'npm'
     runs-on: ubuntu-latest
     environment: npm
     permissions:
@@ -109,6 +128,7 @@ jobs:
   python:
     name: Publish PyPI
     needs: verify
+    if: needs.verify.outputs.target == 'both' || needs.verify.outputs.target == 'python'
     runs-on: ubuntu-latest
     environment: pypi
     permissions:

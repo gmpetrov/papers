@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { isPublished, releaseNotes } from "./release-state.mjs";
+import { isPublished, packageInfo, releaseNotes } from "./release-state.mjs";
+import { tagTarget } from "./release-tag.mjs";
 
 const info = { name: "papers-bot", version: "0.1.2" };
 const response = (status, body) => async () =>
@@ -50,4 +51,10 @@ test("release notes contain only the selected version and require an entry", () 
   } finally {
     rmSync(directory, { recursive: true });
   }
+});
+test("release tags select only the SDK whose current version matches", () => {
+  assert.equal(tagTarget(`refs/tags/${packageInfo("npm").tag}`), "npm");
+  assert.equal(tagTarget(`refs/tags/${packageInfo("python").tag}`), "python");
+  assert.throws(() => tagTarget("refs/tags/papers-bot@9.9.9"), /must match/);
+  assert.throws(() => tagTarget("refs/tags/other@0.1.0"), /must match/);
 });

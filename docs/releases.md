@@ -17,6 +17,16 @@ only a task/version wrapper; it is never published to npm.
    jobs. Each successful package gets a Git tag and GitHub release with its
    changelog entry, for example `@papers.bot/sdk@0.1.1` and `papers-bot@0.1.1`.
 
+You can also push one of those package tags after merging a release commit to
+`main`. A matching tag starts the same verification workflow and publishes only
+that SDK. The tag must match the package's current version and have a changelog
+entry; its commit must be on `main`. For example:
+
+```sh
+git tag '@papers.bot/sdk@0.1.1'
+git push origin '@papers.bot/sdk@0.1.1'
+```
+
 Versions are independent. Both SDKs need not be released together. Only stable
 x.y.z versions are supported by the Python bridge. GitHub explicitly dispatches
 CI on the bot-created release PR because commits created with `GITHUB_TOKEN`
@@ -39,7 +49,8 @@ Configure these exact trusted publisher identities in the respective registry:
 | Workflow filename  | `release.yml` | `release.yml` |
 | GitHub environment | `npm`         | `pypi`        |
 
-The GitHub environments accept only the `main` branch. Enable Actions to create
+The GitHub environments accept `main` and the matching package tag pattern
+(`@papers.bot/sdk@*` for `npm`, `papers-bot@*` for `pypi`). Enable Actions to create
 pull requests, and require `verify` on PRs into `main`. The version job can write
 PRs and dispatch CI; only publishing jobs receive `id-token: write`.
 
